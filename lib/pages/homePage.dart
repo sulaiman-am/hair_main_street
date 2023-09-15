@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
             color: Color(0xFF9DD9D2), borderRadius: BorderRadius.circular(16)),
-        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         padding: EdgeInsets.all(8),
         child: GNav(
           style: GnavStyle.google,
@@ -38,12 +38,16 @@ class _HomePageState extends State<HomePage> {
           tabBorder: Border.all(color: Colors.black, width: 1.5),
           //tabMargin: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           padding: EdgeInsets.all(6),
+          gap: 4,
           selectedIndex: _selectedTab,
           onTabChange: (value) {
             setState(() {
               _selectedTab = value;
             });
           },
+          textStyle: TextStyle(
+            fontSize: 20,
+          ),
           tabs: [
             /// Home
             GButton(
