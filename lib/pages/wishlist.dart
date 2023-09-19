@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class CartPage extends StatelessWidget {
-  const CartPage({super.key});
+class WishListPage extends StatelessWidget {
+  const WishListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class CartPage extends StatelessWidget {
               size: 24, color: Colors.black),
         ),
         title: const Text(
-          'Cart',
+          'Wishlist',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
@@ -68,39 +68,11 @@ class CartPage extends StatelessWidget {
           children: [
             ListView.builder(
               physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) => CartCard(),
+              itemBuilder: (context, index) => WishListCard(),
               itemCount: 5,
               shrinkWrap: true,
             ),
           ],
-        ),
-      ),
-      floatingActionButton: Container(
-        margin: EdgeInsets.fromLTRB(
-            screenWidth * 0.08, 0, screenWidth * 0.08, screenHeight * 0.07),
-        color: Colors.transparent,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF392F5A),
-            padding: EdgeInsets.symmetric(
-                vertical: 8, horizontal: screenWidth * 0.26),
-            //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-            shape: RoundedRectangleBorder(
-              side: const BorderSide(
-                width: 1.2,
-                color: Colors.black,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          onPressed: () {},
-          child: const Text(
-            "Proceed",
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.white,
-            ),
-          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/pages/homePage.dart';
+import 'package:hair_main_street/splash_screen.dart';
 
 import 'extras/colors.dart';
 
@@ -15,6 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      defaultTransition: Transition.fadeIn,
       debugShowCheckedModeBanner: false,
       title: 'Hair Main Street',
       theme: ThemeData(
@@ -22,7 +24,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: primary,
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const SplashScreen(),
     );
   }
 }

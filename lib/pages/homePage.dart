@@ -28,14 +28,14 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
             color: Color(0xFF9DD9D2), borderRadius: BorderRadius.circular(16)),
-        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        padding: EdgeInsets.all(8),
+        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: GNav(
           style: GnavStyle.google,
           //color: Colors.green,
           tabBackgroundColor: Color(0xFFF4D06F),
           tabBorderRadius: 16,
-          tabBorder: Border.all(color: Colors.black, width: 1.5),
+          tabBorder: Border.all(color: Colors.black, width: 2),
           //tabMargin: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           padding: EdgeInsets.all(6),
           gap: 4,

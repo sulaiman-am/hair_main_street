@@ -12,11 +12,12 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
+  List<bool> toggleSelection = [true, false, false];
   @override
   Widget build(BuildContext context) {
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
-    List<bool> _toggle_selection = [true, false, false];
+
     Gradient myGradient = const LinearGradient(
       colors: [
         Color.fromARGB(255, 255, 224, 139),
@@ -47,13 +48,8 @@ class _ProductPageState extends State<ProductPage> {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Get.back(),
-          icon: const Icon(
-            Symbols.arrow_back_ios_new_rounded,
-            size: 24,
-            color: Color(
-              0xFFFF8811,
-            ),
-          ),
+          icon: const Icon(Symbols.arrow_back_ios_new_rounded,
+              size: 24, color: Colors.black),
         ),
         title: const Text(
           'Details',
@@ -72,25 +68,16 @@ class _ProductPageState extends State<ProductPage> {
         actions: [
           IconButton(
             tooltip: "Cart",
-            onPressed: () => Get.to(CartPage(), transition: Transition.fade),
-            icon: const Icon(
-              Symbols.shopping_cart_rounded,
-              size: 28,
-              color: Color(
-                0xFFFF8811,
-              ),
-            ),
+            onPressed: () =>
+                Get.to(() => CartPage(), transition: Transition.fade),
+            icon: const Icon(Symbols.shopping_cart_rounded,
+                size: 28, color: Colors.black),
           ),
           IconButton(
             tooltip: "Chat with Vendor",
             onPressed: () {},
-            icon: const Icon(
-              Symbols.message_rounded,
-              size: 28,
-              color: Color(
-                0xFFFF8811,
-              ),
-            ),
+            icon: const Icon(Symbols.message_rounded,
+                size: 28, color: Colors.black),
           ),
         ],
         //backgroundColor: Colors.transparent,
@@ -160,27 +147,29 @@ class _ProductPageState extends State<ProductPage> {
             const SizedBox(
               height: 4,
             ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                ToggleButtons(
-                  selectedBorderColor: Colors.purple[800],
-                  onPressed: (index) {
-                    setState(() {
-                      for (int i = 0; i < _toggle_selection.length; i++) {
-                        if (index == i) {
-                          _toggle_selection[index] = true;
-                        } else {
-                          _toggle_selection[index] = false;
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  ToggleButtons(
+                    selectedBorderColor: Colors.black,
+                    borderWidth: 2.4,
+                    //selectedColor: Colors.red[50],
+                    fillColor: Colors.grey[200],
+                    isSelected: toggleSelection,
+                    children: [Toggles(), Toggles(), Toggles()],
+                    onPressed: (int index) {
+                      setState(() {
+                        for (int i = 0; i < toggleSelection.length; i++) {
+                          toggleSelection[i] = i == index;
                         }
-                      }
-                    });
-                  },
-                  isSelected: _toggle_selection,
-                  children: [Toggles(), Toggles(), Toggles()],
-                )
-              ],
+                      });
+                    },
+                  )
+                ],
+              ),
             ),
             const SizedBox(
               height: 8,
@@ -255,7 +244,7 @@ class _ProductPageState extends State<ProductPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(
-                  width: screenWidth * 0.34,
+                  width: screenWidth * 0.32,
                 ),
                 Icon(
                   Icons.star_half_outlined,
@@ -351,7 +340,7 @@ class _ProductPageState extends State<ProductPage> {
               overflow: TextOverflow.ellipsis,
             ),
             SizedBox(
-              width: screenWidth * 0.09,
+              width: screenWidth * .12,
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -374,7 +363,7 @@ class _ProductPageState extends State<ProductPage> {
               child: const Text(
                 "Add to Cart",
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 16,
                   color: Colors.white,
                 ),
               ),
@@ -402,7 +391,7 @@ class _ProductPageState extends State<ProductPage> {
               child: const Text(
                 "Buy Now",
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 16,
                   color: Colors.white,
                 ),
               ),

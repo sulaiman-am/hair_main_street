@@ -1,6 +1,13 @@
 //ignore_for_file: prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:hair_main_street/pages/cart.dart';
+import 'package:hair_main_street/pages/orders.dart';
+import 'package:hair_main_street/pages/profile.dart';
+import 'package:hair_main_street/pages/referral.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/vendor.dart';
+import 'package:hair_main_street/pages/wishlist.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class MenuPage extends StatelessWidget {
@@ -58,11 +65,12 @@ class MenuPage extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(gradient: myGradient),
         child: ListView(
-          padding: EdgeInsets.fromLTRB(8, screenHeight * 0.16, 8, 0),
+          padding: EdgeInsets.fromLTRB(8, screenHeight * 0.08, 8, 0),
           children: [
             MenuButton(
               text: "Profile",
               iconData: Symbols.person_2_rounded,
+              onPressed: () => Get.to(() => ProfilePage()),
             ),
             const SizedBox(
               height: 12,
@@ -70,6 +78,8 @@ class MenuPage extends StatelessWidget {
             MenuButton(
               text: "Wish List",
               iconData: Symbols.favorite_rounded,
+              onPressed: () =>
+                  Get.to(() => WishListPage(), transition: Transition.fadeIn),
             ),
             const SizedBox(
               height: 12,
@@ -77,20 +87,24 @@ class MenuPage extends StatelessWidget {
             MenuButton(
               text: "Orders",
               iconData: Symbols.local_shipping_rounded,
+              onPressed: () =>
+                  Get.to(() => OrdersPage(), transition: Transition.fadeIn),
             ),
             const SizedBox(
               height: 12,
             ),
             MenuButton(
-              text: "Referral",
-              iconData: Symbols.redeem_rounded,
-            ),
+                text: "Referral",
+                iconData: Symbols.redeem_rounded,
+                onPressed: () => Get.to(() => ReferralPage(),
+                    transition: Transition.fadeIn)),
             const SizedBox(
               height: 12,
             ),
             MenuButton(
-              text: "Wallet",
-              iconData: Symbols.wallet_rounded,
+              text: "Vendors",
+              iconData: Symbols.store,
+              onPressed: () => Get.to(() => VendorPage()),
             ),
             const SizedBox(
               height: 12,
@@ -105,8 +119,10 @@ class MenuPage extends StatelessWidget {
 class MenuButton extends StatelessWidget {
   final String? text;
   final IconData? iconData;
+  final Function? onPressed;
   const MenuButton({
     this.iconData,
+    this.onPressed,
     this.text,
     super.key,
   });
@@ -122,7 +138,7 @@ class MenuButton extends StatelessWidget {
           shadowColor: Theme.of(context).primaryColorDark
           //side: BorderSide(width: 0.5),
           ),
-      onPressed: () {},
+      onPressed: onPressed == null ? () {} : () => onPressed!(),
       child: Row(
         //mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

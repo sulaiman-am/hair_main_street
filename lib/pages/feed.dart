@@ -8,6 +8,7 @@ class FeedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    GlobalKey<FormState> formKey = GlobalKey();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -39,6 +40,9 @@ class FeedPage extends StatelessWidget {
     CarouselController carouselController = CarouselController();
     return Scaffold(
       appBar: AppBar(
+        // bottom: PreferredSize(
+        //     preferredSize: Size.fromHeight(screenHeight * 0.04),
+        //     child: Form(child: child)),
         title: const Text(
           'Hair Main Street',
           style: TextStyle(
@@ -53,6 +57,7 @@ class FeedPage extends StatelessWidget {
         flexibleSpace: Container(
           decoration: BoxDecoration(gradient: appBarGradient),
         ),
+
         //backgroundColor: Colors.transparent,
       ),
       extendBodyBehindAppBar: true,
