@@ -3,9 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/pages/authentication/authentication.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/referral.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/add_product.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/payment_settings.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/vendor_orders.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/wallet.dart';
 import 'package:hair_main_street/pages/wishlist.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -29,10 +33,10 @@ class _VendorPageState extends State<VendorPage> {
     ];
 
     List? vl = [
+      VendorOrdersPage(),
+      SignInUpPage(),
       WalletPage(),
-      WalletPage(),
-      WalletPage(),
-      WalletPage(),
+      PaymentSettingsPage(),
       WalletPage(),
     ];
 
@@ -81,7 +85,7 @@ class _VendorPageState extends State<VendorPage> {
         title: const Text(
           'Vendor Dashboard',
           style: TextStyle(
-            fontSize: 32,
+            fontSize: 30,
             fontWeight: FontWeight.w900,
             color: Color(
               0xFFFF8811,

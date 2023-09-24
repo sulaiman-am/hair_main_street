@@ -27,8 +27,12 @@ class _HomePageState extends State<HomePage> {
       body: _tabs.elementAt(_selectedTab),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-            color: Color(0xFF9DD9D2), borderRadius: BorderRadius.circular(16)),
-        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          color: Color(0xFF9DD9D2),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(16),
+          ),
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
         padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: GNav(
           style: GnavStyle.google,

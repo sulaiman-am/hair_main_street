@@ -60,6 +60,7 @@ class WalletPage extends StatelessWidget {
         //backgroundColor: Colors.transparent,
       ),
       body: ListView(
+        physics: NeverScrollableScrollPhysics(),
         children: [
           Container(
             height: screenHeight * 1,
@@ -145,46 +146,107 @@ class WalletPage extends StatelessWidget {
                   width: screenWidth * 1,
                   height: screenHeight * .73,
                   child: Container(
-                    padding: EdgeInsets.fromLTRB(12, 48, 12, 0),
-                    color: Colors.grey,
-                    child: Text(
-                      "Transaction History",
-                      style: TextStyle(
-                        fontSize: 24,
-                      ),
+                    padding: EdgeInsets.fromLTRB(12, 52, 12, 0),
+                    color: Colors.white,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Transaction History",
+                              style: TextStyle(
+                                fontSize: 20,
+                              ),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                //alignment: Alignment.centerLeft,
+                                //backgroundColor: Colors.red[400],
+                                shape: const RoundedRectangleBorder(
+                                  side: BorderSide(
+                                      color: Colors.black,
+                                      width: 1.6,
+                                      style: BorderStyle.solid),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(20),
+                                  ),
+                                ),
+                              ),
+                              onPressed: () {},
+                              child: const Text(
+                                "See all",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: screenHeight * .01,
+                        ),
+                        Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.black38,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            "Lorem Ipsum",
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                   ),
                 ),
                 Positioned(
                   top: screenHeight * .21,
-                  left: screenWidth * 0.17,
-                  child: TextButton.icon(
-                    style: TextButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-                      //alignment: Alignment.centerLeft,
-                      backgroundColor: Color(0xFF9DD9D2),
-                      shape: const RoundedRectangleBorder(
-                        side: BorderSide(color: Colors.black, width: 2),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(12),
+                  left: screenWidth * 0.08,
+                  right: screenWidth * 0.08,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 30),
+                          //alignment: Alignment.centerLeft,
+                          backgroundColor: Color(0xFF9DD9D2),
+                          shape: const RoundedRectangleBorder(
+                            side: BorderSide(color: Colors.black, width: 2),
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(12),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {},
+                        icon: Icon(
+                          Icons.wallet,
+                          size: 20,
+                          color: Colors.black,
+                        ),
+                        label: const Text(
+                          "Request Withdrawal",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
-                    ),
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.wallet,
-                      size: 20,
-                      color: Colors.black,
-                    ),
-                    label: const Text(
-                      "Request Withdrawal",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                    ],
                   ),
                 )
               ],
