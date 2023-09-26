@@ -388,184 +388,187 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                 if (widget.method == "installment") {
                   return Form(
                     key: formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.grey[200],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            child: Text(
-                              "Pay \nInstallmentally",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 40,
-                                fontWeight: FontWeight.w700,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.grey[200],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              child: Text(
+                                "Pay \nInstallmentally",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Order Total Amount:",
-                              style: TextStyle(
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Order Total Amount:",
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                "Price",
+                                style: TextStyle(
                                   fontSize: 20,
                                   color: Colors.black,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                            Text(
-                              "Price",
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    "Number of Installments:",
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w700),
-                                  ),
                                 ),
-                                Expanded(
-                                  child: DropdownMenu(
-                                    // trailingIcon: Icon(
-                                    //   Icons.arrow_drop_down_rounded,
-                                    //   color: Colors.white,
-                                    // ),
-                                    // textStyle: TextStyle(
-                                    //   color: Colors.white,
-                                    // ),
-                                    hintText: "Select",
-                                    menuStyle: MenuStyle(
-                                      backgroundColor:
-                                          MaterialStatePropertyAll<Color>(
-                                        Colors.grey.shade200,
-                                      ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      "Number of Installments:",
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w700),
                                     ),
-                                    //initialSelection: dropdownValue,
-                                    onSelected: (val) {
-                                      setState(() {
-                                        dropdownValue = val!;
-                                      });
-                                    },
-                                    dropdownMenuEntries:
-                                        List.generate(3, (index) {
-                                      int newIndex = index + 1;
-                                      return DropdownMenuEntry(
-                                        value: newIndex.toString(),
-                                        label: "$newIndex",
-                                      );
-                                    }),
                                   ),
-                                )
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            TextInputWidget(
-                              labelText: "Initial Installment Amount(NGN)",
-                              hintText: "1000",
-                              textInputType: TextInputType.number,
-                              controller: amountController,
-                              validator: (val) {
-                                if (val!.isEmpty) {
-                                  return "Enter an Amount";
-                                }
-                                return null;
-                              },
-                            )
-                          ],
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () {
-                                  tabController.animateTo(0);
-                                },
-                                style: TextButton.styleFrom(
-                                  // padding: EdgeInsets.symmetric(
-                                  //     horizontal: screenWidth * 0.24),
-                                  backgroundColor: Colors.white,
-                                  side: BorderSide(
-                                      color: Color(0xFF392F5A), width: 2),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  "Back",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 20),
-                                ),
+                                  Expanded(
+                                    child: DropdownMenu(
+                                      // trailingIcon: Icon(
+                                      //   Icons.arrow_drop_down_rounded,
+                                      //   color: Colors.white,
+                                      // ),
+                                      // textStyle: TextStyle(
+                                      //   color: Colors.white,
+                                      // ),
+                                      hintText: "Select",
+                                      menuStyle: MenuStyle(
+                                        backgroundColor:
+                                            MaterialStatePropertyAll<Color>(
+                                          Colors.grey.shade200,
+                                        ),
+                                      ),
+                                      //initialSelection: dropdownValue,
+                                      onSelected: (val) {
+                                        setState(() {
+                                          dropdownValue = val!;
+                                        });
+                                      },
+                                      dropdownMenuEntries:
+                                          List.generate(3, (index) {
+                                        int newIndex = index + 1;
+                                        return DropdownMenuEntry(
+                                          value: newIndex.toString(),
+                                          label: "$newIndex",
+                                        );
+                                      }),
+                                    ),
+                                  )
+                                ],
                               ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: TextButton(
-                                onPressed: () {
-                                  if (isVisible == true) {
-                                    bool? validate =
-                                        formKey?.currentState!.validate();
-                                    if (validate!) {
-                                      formKey?.currentState!.save();
-                                      debugPrint("isVible true");
-                                    }
-                                  } else {
-                                    debugPrint("isVible false");
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              TextInputWidget(
+                                labelText: "Initial Installment Amount(NGN)",
+                                hintText: "1000",
+                                textInputType: TextInputType.number,
+                                controller: amountController,
+                                validator: (val) {
+                                  if (val!.isEmpty) {
+                                    return "Enter an Amount";
                                   }
+                                  return null;
                                 },
-                                style: TextButton.styleFrom(
-                                  // padding: EdgeInsets.symmetric(
-                                  //     horizontal: screenWidth * 0.24),
-                                  backgroundColor: Color(0xFF392F5A),
-                                  side:
-                                      BorderSide(color: Colors.white, width: 2),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                              )
+                            ],
+                          ),
+                          SizedBox(
+                            height: 20,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: TextButton(
+                                  onPressed: () {
+                                    tabController.animateTo(0);
+                                  },
+                                  style: TextButton.styleFrom(
+                                    // padding: EdgeInsets.symmetric(
+                                    //     horizontal: screenWidth * 0.24),
+                                    backgroundColor: Colors.white,
+                                    side: BorderSide(
+                                        color: Color(0xFF392F5A), width: 2),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    "Back",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: Colors.black, fontSize: 20),
                                   ),
                                 ),
-                                child: Text(
-                                  "Proceed to Pay",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 20),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: TextButton(
+                                  onPressed: () {
+                                    if (isVisible == true) {
+                                      bool? validate =
+                                          formKey?.currentState!.validate();
+                                      if (validate!) {
+                                        formKey?.currentState!.save();
+                                        debugPrint("isVible true");
+                                      }
+                                    } else {
+                                      debugPrint("isVible false");
+                                    }
+                                  },
+                                  style: TextButton.styleFrom(
+                                    // padding: EdgeInsets.symmetric(
+                                    //     horizontal: screenWidth * 0.24),
+                                    backgroundColor: Color(0xFF392F5A),
+                                    side: BorderSide(
+                                        color: Colors.white, width: 2),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    "Proceed to Pay",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 20),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 } else if (widget.method == "once") {
