@@ -37,7 +37,7 @@ class _VendorPageState extends State<VendorPage> {
       SignInUpPage(),
       WalletPage(),
       PaymentSettingsPage(),
-      WalletPage(),
+      AddproductPage(),
     ];
 
     List<IconData> vendorButtonsIcons = [
