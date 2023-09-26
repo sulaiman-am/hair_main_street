@@ -96,15 +96,17 @@ class OrderDetailsPage extends StatelessWidget {
                       HeaderText(
                         text: "Delivery Status: ",
                       ),
-                      Text(
-                        "Awaiting Confirmation",
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 16,
-                            overflow: TextOverflow.ellipsis,
-                            fontWeight: FontWeight.w600),
-                        //overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
+                      Expanded(
+                        child: Text(
+                          "Awaiting Confirmation",
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              overflow: TextOverflow.ellipsis,
+                              fontWeight: FontWeight.w600),
+                          //overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
                       ),
                     ],
                   ),
@@ -222,7 +224,7 @@ class OrderDetailsPage extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Estimadted Delivery Date: "),
+                        Text("Estimated Delivery Date: "),
                         Text("12/08/2023"),
                       ],
                     ),
@@ -230,34 +232,39 @@ class OrderDetailsPage extends StatelessWidget {
                   SizedBox(
                     height: 4,
                   ),
-                  Container(
-                    margin: EdgeInsets.only(left: 270),
-                    child: TextButton(
-                      onPressed: () {
-                        Get.to(
-                          () => RefundPage(),
-                          transition: Transition.fadeIn,
-                        );
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: Color(0xFF392F5A),
-                        padding: EdgeInsets.all(4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                            width: 1.5,
-                            color: Colors.black,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        //margin: EdgeInsets.only(left: 270),
+                        child: TextButton(
+                          onPressed: () {
+                            Get.to(
+                              () => RefundPage(),
+                              transition: Transition.fadeIn,
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Color(0xFF392F5A),
+                            padding: EdgeInsets.all(4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(
+                                width: 1.5,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            "Refund",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                            ),
                           ),
                         ),
                       ),
-                      child: Text(
-                        "Refund",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
+                    ],
                   )
                 ],
               ),

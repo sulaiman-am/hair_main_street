@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class CartPage extends StatelessWidget {
-  const CartPage({super.key});
+class VendorOrdersPage extends StatelessWidget {
+  const VendorOrdersPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +44,9 @@ class CartPage extends StatelessWidget {
               size: 24, color: Colors.black),
         ),
         title: const Text(
-          'Cart',
+          'Vendors Orders',
           style: TextStyle(
-            fontSize: 32,
+            fontSize: 28,
             fontWeight: FontWeight.w900,
             color: Color(
               0xFFFF8811,
@@ -59,49 +59,13 @@ class CartPage extends StatelessWidget {
         ),
         //backgroundColor: Colors.transparent,
       ),
-      extendBody: false,
-      extendBodyBehindAppBar: false,
       body: Container(
-        decoration: BoxDecoration(gradient: myGradient),
-        padding: EdgeInsets.symmetric(horizontal: 8),
-        //padding: EdgeInsets.all(8),
-        child: ListView(
-          children: [
-            ListView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) => CartCard(),
-              itemCount: 5,
-              shrinkWrap: true,
-            ),
-          ],
+        height: screenHeight * 1,
+        decoration: BoxDecoration(
+          gradient: myGradient,
         ),
-      ),
-      floatingActionButton: Container(
-        //width: double.infinity,
-        margin: EdgeInsets.only(bottom: screenHeight * .056),
-        color: Colors.transparent,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF392F5A),
-            padding: EdgeInsets.symmetric(
-                vertical: 8, horizontal: screenWidth * 0.12),
-            //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-            shape: RoundedRectangleBorder(
-              side: const BorderSide(
-                width: 1.2,
-                color: Colors.black,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          onPressed: () {},
-          child: const Text(
-            "Proceed",
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.white,
-            ),
-          ),
+        child: ListView(
+          children: List.generate(3, (index) => VendorOrderCard()),
         ),
       ),
     );
