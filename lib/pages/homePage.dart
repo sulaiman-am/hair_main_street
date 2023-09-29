@@ -41,46 +41,48 @@ class _HomePageState extends State<HomePage> {
           ),
           margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
           padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: GNav(
-            style: GnavStyle.google,
-            //color: Colors.green,
-            tabBackgroundColor: Color(0xFFF4D06F),
-            tabBorderRadius: 16,
-            tabBorder: Border.all(color: Colors.black, width: 2),
-            //tabMargin: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            padding: EdgeInsets.all(6),
-            gap: 4,
-            selectedIndex: _selectedTab,
-            onTabChange: (value) {
-              setState(() {
-                _selectedTab = value;
-              });
-            },
-            textStyle: TextStyle(
-              fontSize: 20,
+          child: SafeArea(
+            child: GNav(
+              style: GnavStyle.google,
+              //color: Colors.green,
+              tabBackgroundColor: Color(0xFFF4D06F),
+              tabBorderRadius: 16,
+              tabBorder: Border.all(color: Colors.black, width: 2),
+              //tabMargin: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              padding: EdgeInsets.all(6),
+              gap: 4,
+              selectedIndex: _selectedTab,
+              onTabChange: (value) {
+                setState(() {
+                  _selectedTab = value;
+                });
+              },
+              textStyle: TextStyle(
+                fontSize: 20,
+              ),
+              tabs: [
+                /// Home
+                GButton(
+                  icon: Icons.home_outlined,
+                  iconSize: 28,
+                  text: "Home",
+                ),
+
+                /// Likes
+                GButton(
+                  icon: Icons.shopping_cart_outlined,
+                  iconSize: 28,
+                  text: "Cart",
+                ),
+
+                /// Profile
+                GButton(
+                  icon: Icons.menu,
+                  iconSize: 28,
+                  text: "Menu",
+                ),
+              ],
             ),
-            tabs: [
-              /// Home
-              GButton(
-                icon: Icons.home_outlined,
-                iconSize: 28,
-                text: "Home",
-              ),
-
-              /// Likes
-              GButton(
-                icon: Icons.shopping_cart_outlined,
-                iconSize: 28,
-                text: "Cart",
-              ),
-
-              /// Profile
-              GButton(
-                icon: Icons.menu,
-                iconSize: 28,
-                text: "Menu",
-              ),
-            ],
           ),
         ),
       ),

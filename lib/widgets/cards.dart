@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/extras/colors.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/order_details.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -79,6 +80,7 @@ class ProductCard extends StatelessWidget {
                   onPressed: () {},
                   icon: Icon(
                     Symbols.favorite_rounded,
+                    color: primaryAccent,
                   ),
                 ),
               ],
