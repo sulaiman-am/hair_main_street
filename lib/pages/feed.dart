@@ -61,8 +61,9 @@ class FeedPage extends StatelessWidget {
         //backgroundColor: Colors.transparent,
       ),
       extendBodyBehindAppBar: true,
+      //extendBody: false,
       body: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8),
+        padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
         decoration: BoxDecoration(gradient: myGradient),
         child: ListView(
           //shrinkWrap: true,

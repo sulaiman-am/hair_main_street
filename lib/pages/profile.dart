@@ -178,6 +178,7 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: Container(
+        margin: EdgeInsets.only(bottom: screenHeight * 0.02),
         decoration: BoxDecoration(gradient: myGradient),
         child: TextButton(
           style: TextButton.styleFrom(
