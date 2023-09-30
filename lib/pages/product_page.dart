@@ -328,198 +328,203 @@ class _ProductPageState extends State<ProductPage> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        //constraints: BoxConstraints.tightFor(height: screenHeight * 0.14),
-        height: isVisible == true ? screenHeight * 0.136 : screenHeight * 0.076,
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: myGradient,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(12),
-            topRight: Radius.circular(16),
-          ),
-        ),
-        child: Column(
-          children: [
-            Visibility(
-              visible: isVisible!,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    flex: 1,
-                    child: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          isVisible = false;
-                        });
-                      },
-                      icon: Icon(
-                        Icons.cancel_outlined,
-                        color: Colors.red[400],
-                        size: 32,
-                      ),
-                    ),
-                  ),
-                  Flexible(
-                    flex: 1,
-                    child: SizedBox(),
-                  ),
-                  Flexible(
-                    flex: 9,
-                    child: Row(
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 127, 116, 166),
-                            // padding: EdgeInsets.symmetric(
-                            //     vertical: 8, horizontal: screenWidth * 0.26),
-                            //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                            shape: RoundedRectangleBorder(
-                              side: const BorderSide(
-                                width: 1,
-                                color: Colors.black,
-                              ),
-                              borderRadius: BorderRadius.only(
-                                // topRight: Radius.circular(16),
-                                topLeft: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                              ),
-                            ),
-                          ),
-                          onPressed: () {
-                            Get.to(
-                              () => const CheckOutPage2(
-                                method: "installment",
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            "Pay Installmentally",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 127, 116, 166),
-                            // padding: EdgeInsets.symmetric(
-                            //     vertical: 8, horizontal: screenWidth * 0.26),
-                            //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                            shape: RoundedRectangleBorder(
-                              side: const BorderSide(
-                                width: 1,
-                                color: Colors.black,
-                              ),
-                              borderRadius: BorderRadius.only(
-                                  //topLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                  topRight: Radius.circular(16)),
-                            ),
-                          ),
-                          onPressed: () {
-                            Get.to(() => const CheckOutPage2(
-                                  method: "once",
-                                ));
-                          },
-                          child: const Text(
-                            "Pay Once",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          //constraints: BoxConstraints.tightFor(height: screenHeight * 0.14),
+          height:
+              isVisible == true ? screenHeight * 0.136 : screenHeight * 0.076,
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: myGradient,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(16),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "Price",
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                // SizedBox(
-                //   width: screenWidth * .12,
-                // ),
-                Row(
+          ),
+          child: Column(
+            children: [
+              Visibility(
+                visible: isVisible!,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF392F5A),
-                        // padding: EdgeInsets.symmetric(
-                        //     vertical: 8, horizontal: screenWidth * 0.26),
-                        //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                        shape: RoundedRectangleBorder(
-                          side: const BorderSide(
-                            width: 1,
-                            color: Colors.black,
-                          ),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            bottomLeft: Radius.circular(16),
-                          ),
-                        ),
-                      ),
-                      onPressed: () {},
-                      child: const Text(
-                        "Add to Cart",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
+                    Flexible(
+                      flex: 1,
+                      child: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            isVisible = false;
+                          });
+                        },
+                        icon: Icon(
+                          Icons.cancel_outlined,
+                          color: Colors.red[400],
+                          size: 32,
                         ),
                       ),
                     ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 127, 116, 166),
-                        // padding: EdgeInsets.symmetric(
-                        //   vertical: 8,
-                        //   horizontal: screenWidth * 0.26,
-                        // ),
-                        //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                        shape: const RoundedRectangleBorder(
-                          side: const BorderSide(
-                            width: 1,
-                            color: Colors.black,
+                    Flexible(
+                      flex: 1,
+                      child: SizedBox(),
+                    ),
+                    Flexible(
+                      flex: 9,
+                      child: Row(
+                        children: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Color.fromARGB(255, 127, 116, 166),
+                              // padding: EdgeInsets.symmetric(
+                              //     vertical: 8, horizontal: screenWidth * 0.26),
+                              //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(
+                                  width: 1,
+                                  color: Colors.black,
+                                ),
+                                borderRadius: BorderRadius.only(
+                                  // topRight: Radius.circular(16),
+                                  topLeft: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Get.to(
+                                () => const CheckOutPage2(
+                                  method: "installment",
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Pay Installmentally",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                          borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(16),
-                            bottomRight: Radius.circular(16),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Color.fromARGB(255, 127, 116, 166),
+                              // padding: EdgeInsets.symmetric(
+                              //     vertical: 8, horizontal: screenWidth * 0.26),
+                              //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(
+                                  width: 1,
+                                  color: Colors.black,
+                                ),
+                                borderRadius: BorderRadius.only(
+                                    //topLeft: Radius.circular(16),
+                                    bottomRight: Radius.circular(16),
+                                    topRight: Radius.circular(16)),
+                              ),
+                            ),
+                            onPressed: () {
+                              Get.to(() => const CheckOutPage2(
+                                    method: "once",
+                                  ));
+                            },
+                            child: const Text(
+                              "Pay Once",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          isVisible = true;
-                        });
-                        // Get.to(() => CheckOutPage());
-                      },
-                      child: const Text(
-                        "Buy",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Price",
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  // SizedBox(
+                  //   width: screenWidth * .12,
+                  // ),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF392F5A),
+                          // padding: EdgeInsets.symmetric(
+                          //     vertical: 8, horizontal: screenWidth * 0.26),
+                          //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
+                          shape: RoundedRectangleBorder(
+                            side: const BorderSide(
+                              width: 1,
+                              color: Colors.black,
+                            ),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              bottomLeft: Radius.circular(16),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {},
+                        child: const Text(
+                          "Add to Cart",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(255, 127, 116, 166),
+                          // padding: EdgeInsets.symmetric(
+                          //   vertical: 8,
+                          //   horizontal: screenWidth * 0.26,
+                          // ),
+                          //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
+                          shape: const RoundedRectangleBorder(
+                            side: const BorderSide(
+                              width: 1,
+                              color: Colors.black,
+                            ),
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isVisible = true;
+                          });
+                          // Get.to(() => CheckOutPage());
+                        },
+                        child: const Text(
+                          "Buy",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       extendBody: true,

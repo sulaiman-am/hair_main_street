@@ -78,7 +78,7 @@ class CartPage extends StatelessWidget {
       ),
       floatingActionButton: Container(
         //width: double.infinity,
-        margin: EdgeInsets.only(bottom: screenHeight * .056),
+        margin: EdgeInsets.only(bottom: screenHeight * .080),
         color: Colors.transparent,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(

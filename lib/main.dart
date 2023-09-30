@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Hair Main Street',
       theme: ThemeData(
-        fontFamily: 'Irish Grover',
+        fontFamily: 'Sen',
         primarySwatch: primary,
         useMaterial3: true,
       ),
