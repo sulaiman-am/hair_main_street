@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/authentication/authentication.dart';
+import 'package:hair_main_street/Shop_page.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/orders.dart';
 import 'package:hair_main_street/pages/profile.dart';
@@ -139,6 +140,14 @@ class MenuPage extends StatelessWidget {
                       text: "Vendors",
                       iconData: Symbols.store,
                       onPressed: () => Get.to(() => VendorPage()),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    MenuButton(
+                      text: "My Shop",
+                      iconData: Symbols.store,
+                      onPressed: () => Get.to(() => ShopPage()),
                     ),
                     const SizedBox(
                       height: 12,
