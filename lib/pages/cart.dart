@@ -40,8 +40,14 @@ class CartPage extends StatelessWidget {
       //transform: GradientRotation(math.pi / 4),
     );
     return GetX<UserController>(builder: (controller) {
-      return userController.userState.value
-          ? BlankPage()
+      return userController.userState.value == null
+          ? BlankPage(
+              text: "You have no items in your Cart",
+              pageIcon: Icon(
+                Icons.remove_shopping_cart_outlined,
+                size: 48,
+              ),
+            )
           : Scaffold(
               appBar: AppBar(
                 leading: IconButton(

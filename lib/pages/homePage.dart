@@ -17,7 +17,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List _tabs = [FeedPage(), CartPage(), MenuPage()];
+  List tabs = [FeedPage(), CartPage(), MenuPage()];
   var _selectedTab = 0;
 
   @override
@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         extendBodyBehindAppBar: true,
         extendBody: true,
-        body: _tabs.elementAt(_selectedTab),
+        body: tabs.elementAt(_selectedTab),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: Color(0xFF9DD9D2),

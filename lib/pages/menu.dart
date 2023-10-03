@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/blankPage.dart';
+import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/pages/authentication/authentication.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/orders.dart';
 import 'package:hair_main_street/pages/profile.dart';
@@ -15,6 +18,7 @@ class MenuPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    UserController userController = Get.find<UserController>();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -43,75 +47,106 @@ class MenuPage extends StatelessWidget {
       begin: Alignment.bottomCenter,
       //transform: GradientRotation(math.pi / 4),
     );
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Menu',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w900,
-            color: Color(
-              0xFFFF8811,
+    return Obx(
+      () => userController.userState.value == null
+          ? BlankPage(
+              textStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+              ),
+              buttonStyle: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF392F5A),
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(
+                    width: 1.2,
+                    color: Colors.black,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              pageIcon: Icon(
+                Icons.person_off_outlined,
+                size: 48,
+              ),
+              text: "Your are not Logged In",
+              interactionText: "Register or Sign In",
+              interactionIcon: Icon(
+                Icons.person_2_outlined,
+                size: 24,
+                color: Colors.white,
+              ),
+              interactionFunction: () => Get.to(() => SignInUpPage()),
+            )
+          : Scaffold(
+              appBar: AppBar(
+                title: const Text(
+                  'Menu',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: Color(
+                      0xFFFF8811,
+                    ),
+                  ),
+                ),
+                centerTitle: true,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(gradient: appBarGradient),
+                ),
+                //backgroundColor: Colors.transparent,
+              ),
+              extendBodyBehindAppBar: false,
+              body: Container(
+                decoration: BoxDecoration(gradient: myGradient),
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(8, screenHeight * 0.08, 8, 0),
+                  children: [
+                    MenuButton(
+                      text: "Profile",
+                      iconData: Symbols.person_2_rounded,
+                      onPressed: () => Get.to(() => ProfilePage()),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    MenuButton(
+                      text: "Wish List",
+                      iconData: Symbols.favorite_rounded,
+                      onPressed: () => Get.to(() => WishListPage(),
+                          transition: Transition.fadeIn),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    MenuButton(
+                      text: "Orders",
+                      iconData: Symbols.local_shipping_rounded,
+                      onPressed: () => Get.to(() => OrdersPage(),
+                          transition: Transition.fadeIn),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    MenuButton(
+                        text: "Referral",
+                        iconData: Symbols.redeem_rounded,
+                        onPressed: () => Get.to(() => ReferralPage(),
+                            transition: Transition.fadeIn)),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    MenuButton(
+                      text: "Vendors",
+                      iconData: Symbols.store,
+                      onPressed: () => Get.to(() => VendorPage()),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
-        //backgroundColor: Colors.transparent,
-      ),
-      extendBodyBehindAppBar: false,
-      body: Container(
-        decoration: BoxDecoration(gradient: myGradient),
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(8, screenHeight * 0.08, 8, 0),
-          children: [
-            MenuButton(
-              text: "Profile",
-              iconData: Symbols.person_2_rounded,
-              onPressed: () => Get.to(() => ProfilePage()),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            MenuButton(
-              text: "Wish List",
-              iconData: Symbols.favorite_rounded,
-              onPressed: () =>
-                  Get.to(() => WishListPage(), transition: Transition.fadeIn),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            MenuButton(
-              text: "Orders",
-              iconData: Symbols.local_shipping_rounded,
-              onPressed: () =>
-                  Get.to(() => OrdersPage(), transition: Transition.fadeIn),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            MenuButton(
-                text: "Referral",
-                iconData: Symbols.redeem_rounded,
-                onPressed: () => Get.to(() => ReferralPage(),
-                    transition: Transition.fadeIn)),
-            const SizedBox(
-              height: 12,
-            ),
-            MenuButton(
-              text: "Vendors",
-              iconData: Symbols.store,
-              onPressed: () => Get.to(() => VendorPage()),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

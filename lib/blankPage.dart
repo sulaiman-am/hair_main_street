@@ -8,8 +8,12 @@ class BlankPage extends StatelessWidget {
   final String? interactionText;
   final Function? interactionFunction;
   final Icon? interactionIcon;
+  final ButtonStyle? buttonStyle;
+  final TextStyle? textStyle;
   const BlankPage({
     super.key,
+    this.buttonStyle,
+    this.textStyle,
     this.pageIcon,
     this.text,
     this.appBarText,
@@ -73,21 +77,25 @@ class BlankPage extends StatelessWidget {
                   //overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
+                    //fontFamily: 'Manrope',
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white38,
+                    color: Colors.black,
                   ),
                 ),
                 const SizedBox(
                   height: 20,
                 ),
                 interactionIcon == null
-                    ? const SizedBox()
+                    ? const SizedBox.shrink()
                     : ElevatedButton.icon(
-                        onPressed: () => interactionFunction,
+                        style: buttonStyle ?? ElevatedButton.styleFrom(),
+                        onPressed: () => interactionFunction!(),
                         icon: interactionIcon!,
-                        label: Text(interactionText!),
+                        label: Text(
+                          interactionText!,
+                          style: textStyle ?? TextStyle(),
+                        ),
                       )
               ],
             ),
