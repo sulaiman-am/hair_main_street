@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/pages/forgotten_password.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:string_validator/string_validator.dart' as validator;
@@ -280,7 +281,7 @@ class _SignInPageState extends State<SignInUpPage>
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () => Get.to(() => ForgottenPassword()),
                             child: Text(
                               "Forgotten Password?",
                               style: TextStyle(
