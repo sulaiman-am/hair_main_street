@@ -38,7 +38,7 @@ class ReviewPage extends StatelessWidget {
     );
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'User Reviews',
           style: TextStyle(
             fontSize: 32,
@@ -67,7 +67,8 @@ class ReviewPage extends StatelessWidget {
                   Row(
                     children: List.generate(
                       reviews[index].stars,
-                      (index) => Icon(Icons.star, color: Colors.yellow),
+                      (index) => Icon(Icons.star,
+                          color: const Color.fromARGB(255, 213, 201, 90)),
                     ),
                   ),
                 ],
