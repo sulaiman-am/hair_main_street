@@ -1,3 +1,4 @@
+import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/extras/colors.dart';
@@ -8,13 +9,57 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../pages/order_detail.dart';
 
-class ProductCard extends StatelessWidget {
-  const ProductCard({super.key});
+bool isRed = false;
+
+class ShareCard extends StatelessWidget {
+  const ShareCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return Center(
+        child: PopupMenuButton<String>(
+      icon: Icon(EvaIcons.share),
+      onSelected: (String choice) {
+        // Implement sharing logic for the selected option.
+      },
+      itemBuilder: (BuildContext context) {
+        return <PopupMenuItem<String>>[
+          const PopupMenuItem<String>(
+            value: 'Facebook',
+            child: ListTile(
+              leading: Icon(Icons.facebook),
+              title: Text('Share on Facebook'),
+            ),
+          ),
+          const PopupMenuItem<String>(
+            value: 'Twitter',
+            child: ListTile(
+              leading: Icon(EvaIcons.twitter),
+              title: Text('Share on Twitter'),
+            ),
+          ),
+          // Add more social media options as needed
+        ];
+      },
+    ));
+  }
+}
+
+class ProductCard extends StatefulWidget {
+  const ProductCard({super.key});
+
+  @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  @override
+  Widget build(BuildContext context) {
+    Color buttonColor = isRed ? Colors.red : primaryAccent;
+    bool showSocialMediaIcons = false;
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
+
     return InkWell(
       onTap: () {
         Get.to(() => ProductPage(), transition: Transition.fadeIn);
@@ -71,17 +116,16 @@ class ProductCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                ShareCard(),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      isRed = !isRed;
+                    });
+                  },
                   icon: Icon(
-                    Symbols.share_rounded,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Symbols.favorite_rounded,
-                    color: primaryAccent,
+                    EvaIcons.heart,
+                    color: buttonColor,
                   ),
                 ),
               ],
@@ -667,7 +711,7 @@ class ReviewCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   "Reviever Name",
                   style: TextStyle(
                     fontSize: 20,
@@ -795,7 +839,7 @@ class ShopDetailsCard extends StatelessWidget {
               SizedBox(
                 height: 40,
               ),
-              Card(
+              const Card(
                 child: Column(children: [
                   Text(
                     "Address",
@@ -810,10 +854,10 @@ class ShopDetailsCard extends StatelessWidget {
                   ),
                 ]),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 40,
               ),
-              Card(
+              const Card(
                 child: Column(children: [
                   Text(
                     "Phone number",
@@ -828,10 +872,10 @@ class ShopDetailsCard extends StatelessWidget {
                   ),
                 ]),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              SizedBox(
+              const SizedBox(
                 height: 40,
               ),
               Form(
@@ -879,12 +923,13 @@ class ShopDetailsCard extends StatelessWidget {
                                 // padding: EdgeInsets.symmetric(
                                 //     horizontal: screenWidth * 0.24),
                                 backgroundColor: Color(0xFF392F5A),
-                                side: BorderSide(color: Colors.white, width: 2),
+                                side: const BorderSide(
+                                    color: Colors.white, width: 2),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: Text(
+                              child: const Text(
                                 "Save",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
@@ -900,6 +945,93 @@ class ShopDetailsCard extends StatelessWidget {
           ),
         ),
       ]),
+    );
+  }
+}
+
+class InventoryCard extends StatelessWidget {
+  final String imageUrl;
+  final String productName;
+  final int stock;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  InventoryCard({
+    required this.imageUrl,
+    required this.productName,
+    required this.stock,
+    this.onEdit,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      margin: EdgeInsets.all(8),
+      child: Padding(
+        padding: const EdgeInsets.all(8), // Add padding around the entire card
+        child: Row(
+          children: <Widget>[
+            // Child 1: Product Image
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(imageUrl),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+
+            // Add spacing between the image and other content
+            const SizedBox(width: 12),
+
+            // Child 2: Product Name and Stock
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    productName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  SizedBox(height: 8), // Add vertical spacing
+
+                  Text(
+                    'In Stock: $stock',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Child 3: Edit and Delete Buttons
+            Column(
+              children: <Widget>[
+                if (onEdit != null)
+                  IconButton(
+                    icon: const Icon(EvaIcons.edit2),
+                    onPressed: onEdit,
+                  ),
+                if (onDelete != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: onDelete,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -90,16 +90,24 @@ class _AddproductPageState extends State<AddproductPage> {
                 onTap: () {},
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                  margin: EdgeInsets.fromLTRB(2, 2, 2, 0),
                   decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
                     color: Colors.grey[200],
                     //shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Color(0xFF000000),
                         blurStyle: BlurStyle.normal,
-                        offset: Offset.fromDirection(-16.0),
+                        //offset: Offset.fromDirection(16.0),
                         blurRadius: 2,
                       ),
+                      // BoxShadow(
+                      //   color: Color(0xFF000000),
+                      //   blurStyle: BlurStyle.normal,
+                      //   //offset: Offset.fromDirection(10),
+                      //   blurRadius: 10,
+                      // ),
                     ],
                   ),
                   child: Column(
