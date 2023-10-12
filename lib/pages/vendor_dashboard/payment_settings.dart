@@ -78,6 +78,7 @@ class PaymentSettingsPage extends StatelessWidget {
                   onSubmit: (val) {
                     installment = val;
                     debugPrint(installment);
+                    return null;
                   },
                   validator: (val) {
                     if (val!.isEmpty) {

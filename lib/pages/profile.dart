@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -8,6 +10,7 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    UserController userController = Get.find<UserController>();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -110,32 +113,32 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(
               height: 24,
             ),
-            const ProfileLabel(
-              hintText: "Murtala Abdullahi",
+            ProfileLabel(
+              hintText: "${userController.myUser.value.fullname}",
               isVisible: true,
               labelText: "Full Name",
             ),
             const SizedBox(
               height: 8,
             ),
-            const ProfileLabel(
-              hintText: "Your address",
+            ProfileLabel(
+              hintText: "${userController.myUser.value.address}",
               isVisible: true,
               labelText: "Address",
             ),
             const SizedBox(
               height: 8,
             ),
-            const ProfileLabel(
-              hintText: "test@gmail.com",
+            ProfileLabel(
+              hintText: "${userController.myUser.value.email}",
               isVisible: true,
               labelText: "Email",
             ),
             const SizedBox(
               height: 8,
             ),
-            const ProfileLabel(
-              hintText: "8939493869836",
+            ProfileLabel(
+              hintText: "${userController.myUser.value.phoneNumber}",
               isVisible: true,
               labelText: "Phone Number",
             ),
@@ -178,26 +181,31 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: Container(
-        margin: EdgeInsets.only(bottom: screenHeight * 0.02),
-        decoration: BoxDecoration(gradient: myGradient),
-        child: TextButton(
-          style: TextButton.styleFrom(
-            //alignment: Alignment.centerLeft,
-            backgroundColor: Colors.red[400],
-            shape: const RoundedRectangleBorder(
-              side: BorderSide(color: Colors.white, width: 2),
-              borderRadius: BorderRadius.all(
-                Radius.circular(20),
+        //margin: EdgeInsets.only(bottom: screenHeight * 0.02),
+        decoration: BoxDecoration(color: Color(0xFF9DD9D2)),
+        child: SafeArea(
+          child: TextButton(
+            style: TextButton.styleFrom(
+              //alignment: Alignment.centerLeft,
+              backgroundColor: Colors.red[400],
+              shape: const RoundedRectangleBorder(
+                side: BorderSide(color: Colors.white, width: 2),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(12),
+                ),
               ),
             ),
-          ),
-          onPressed: () {},
-          child: const Text(
-            "Sign Out",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w400,
+            onPressed: () {
+              userController.signOut();
+              Get.offAll(() => HomePage());
+            },
+            child: const Text(
+              "Sign Out",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
         ),

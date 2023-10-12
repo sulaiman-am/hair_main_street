@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/splash_screen.dart';
 
@@ -15,6 +16,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  Get.put(UserController());
   runApp(const MyApp());
 }
 

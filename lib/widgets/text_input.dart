@@ -17,9 +17,11 @@ class TextInputWidget extends StatelessWidget {
   final String? labelText, hintText;
   final String? Function(String?)? onSubmit, onChanged, validator;
   final TextEditingController? controller;
+  final IconButton? visibilityIcon;
   const TextInputWidget(
       {this.controller,
       this.maxLines,
+      this.visibilityIcon,
       this.hintText,
       this.labelText,
       this.onChanged,
@@ -52,6 +54,7 @@ class TextInputWidget extends StatelessWidget {
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.grey[100],
+            suffixIcon: visibilityIcon ?? const SizedBox.shrink(),
             hintText: hintText ?? "",
             hintStyle: TextStyle(
               color: Colors.black45,
