@@ -12,7 +12,6 @@ class AuthController extends GetxController {
 
   @override
   void onInit() {
-    // TODO: implement onInit
     user.bindStream(_auth.authStateChanges().map(convertToMyUserType));
     super.onInit();
   }

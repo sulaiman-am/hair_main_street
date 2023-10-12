@@ -1,13 +1,20 @@
+import 'dart:async';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:infinite_carousel/infinite_carousel.dart';
+import 'package:shimmer/shimmer.dart';
 
 class FeedPage extends StatelessWidget {
   const FeedPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    ProductController productController = Get.find<ProductController>();
     GlobalKey<FormState> formKey = GlobalKey();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
@@ -131,18 +138,31 @@ class FeedPage extends StatelessWidget {
             SizedBox(
               height: 4,
             ),
-            GridView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisExtent: screenHeight * 0.295,
-                mainAxisSpacing: 24,
-                crossAxisSpacing: 24,
-              ),
-              itemBuilder: (_, index) => ProductCard(),
-              itemCount: 6,
+            Center(
+              child: GetX<ProductController>(builder: (controller) {
+                return controller.products.value.isEmpty
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          backgroundColor: Color(0xFF392F5A),
+                          strokeWidth: 4,
+                        ),
+                      )
+                    : GridView.builder(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisExtent: screenHeight * 0.295,
+                          mainAxisSpacing: 24,
+                          crossAxisSpacing: 24,
+                        ),
+                        itemBuilder: (_, index) => ProductCard(
+                          index: index,
+                        ),
+                        itemCount: controller.products.value.length,
+                      );
+              }),
             ),
           ],
         ),

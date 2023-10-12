@@ -166,4 +166,8 @@ class UserController extends GetxController {
     );
     Get.offAll(() => HomePage());
   }
+
+  //add to cart
+
+  //remove from cart
 }

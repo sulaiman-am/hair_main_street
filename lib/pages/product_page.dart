@@ -4,6 +4,7 @@ import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout%20copy.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout.dart';
 import 'package:hair_main_street/pages/orders_stuff/confirm_order.dart';
+import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -468,7 +469,9 @@ class _ProductPageState extends State<ProductPage> {
                               ),
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            // DataBaseService().addProduct();
+                          },
                           child: const Text(
                             "Add to Cart",
                             style: TextStyle(

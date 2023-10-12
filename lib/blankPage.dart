@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class BlankPage extends StatelessWidget {
+  bool isVisible;
   final String? appBarText;
   final Icon? pageIcon;
   final String? text;
   final String? interactionText;
   final Function? interactionFunction;
-  final Icon? interactionIcon;
+  final Widget? interactionIcon;
   final ButtonStyle? buttonStyle;
   final TextStyle? textStyle;
-  const BlankPage({
+  BlankPage({
     super.key,
     this.buttonStyle,
     this.textStyle,
+    this.isVisible = true,
     this.pageIcon,
     this.text,
     this.appBarText,
@@ -88,13 +90,16 @@ class BlankPage extends StatelessWidget {
                 ),
                 interactionIcon == null
                     ? const SizedBox.shrink()
-                    : ElevatedButton.icon(
-                        style: buttonStyle ?? ElevatedButton.styleFrom(),
-                        onPressed: () => interactionFunction!(),
-                        icon: interactionIcon!,
-                        label: Text(
-                          interactionText!,
-                          style: textStyle ?? TextStyle(),
+                    : Visibility(
+                        visible: isVisible,
+                        child: ElevatedButton.icon(
+                          style: buttonStyle ?? ElevatedButton.styleFrom(),
+                          onPressed: () => interactionFunction!(),
+                          icon: interactionIcon!,
+                          label: Text(
+                            interactionText!,
+                            style: textStyle ?? TextStyle(),
+                          ),
                         ),
                       )
               ],

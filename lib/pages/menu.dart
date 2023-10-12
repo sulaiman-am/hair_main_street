@@ -146,7 +146,7 @@ class MenuPage extends StatelessWidget {
                     ),
                     MenuButton(
                       text: "My Shop",
-                      iconData: Symbols.store,
+                      iconData: Symbols.storefront_rounded,
                       onPressed: () => Get.to(() => ShopPage()),
                     ),
                     const SizedBox(

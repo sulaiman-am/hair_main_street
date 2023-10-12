@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/extras/colors.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/order_details.dart';
@@ -8,10 +9,12 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../pages/order_detail.dart';
 
 class ProductCard extends StatelessWidget {
-  const ProductCard({super.key});
+  final int index;
+  const ProductCard({required this.index, super.key});
 
   @override
   Widget build(BuildContext context) {
+    ProductController productController = Get.find<ProductController>();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     return InkWell(
@@ -48,15 +51,19 @@ class ProductCard extends StatelessWidget {
                 ),
                 width: 120,
                 height: 106,
+                child: Image.network(
+                  "${productController.products.value[index]!.image![0]}",
+                  fit: BoxFit.fill,
+                ),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             Padding(
               padding: const EdgeInsets.only(left: 12.0),
               child: Text(
-                "Product Name",
+                "${productController.products.value[index]!.name}",
                 style: TextStyle(
                   fontSize: 20,
                 ),
@@ -65,7 +72,8 @@ class ProductCard extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.only(left: 12.0),
-              child: Text("Product Price"),
+              child:
+                  Text("NGN ${productController.products.value[index]!.price}"),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
