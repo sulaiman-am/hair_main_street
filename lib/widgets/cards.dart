@@ -13,7 +13,6 @@ bool isRed = false;
 
 class WhatsAppButton extends StatelessWidget {
   final VoidCallback onPressed;
-
   WhatsAppButton({required this.onPressed});
 
   @override
