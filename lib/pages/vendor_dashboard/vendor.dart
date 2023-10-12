@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/pages/Shop_page.dart';
 import 'package:hair_main_street/pages/authentication/authentication.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/product_page.dart';
@@ -25,6 +26,7 @@ class _VendorPageState extends State<VendorPage> {
   @override
   Widget build(BuildContext context) {
     List<String> vendorButtonsText = [
+      "Shop Page",
       "My Orders",
       "Payment Settings",
       "Wallet",
@@ -33,6 +35,7 @@ class _VendorPageState extends State<VendorPage> {
     ];
 
     List? vl = [
+      ShopPage(),
       VendorOrdersPage(),
       SignInUpPage(),
       WalletPage(),
@@ -41,6 +44,7 @@ class _VendorPageState extends State<VendorPage> {
     ];
 
     List<IconData> vendorButtonsIcons = [
+      Symbols.storefront_rounded,
       Symbols.list_alt_rounded,
       Symbols.payment_rounded,
       Symbols.wallet_rounded,
@@ -108,7 +112,7 @@ class _VendorPageState extends State<VendorPage> {
             mainAxisSpacing: 24,
           ),
           children: List.generate(
-            5,
+            vendorButtonsText.length,
             (index) => DashboardButton(
               icon: vendorButtonsIcons[index],
               page: vl[index],
