@@ -6,10 +6,34 @@ import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/order_details.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
-
 import '../pages/order_detail.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 bool isRed = false;
+
+class WhatsAppButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  WhatsAppButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: SvgPicture.asset(
+            'assets/whatsapp_icon.svg', // Replace with the path to your WhatsApp icon SVG file
+            width: 24, // Set the icon width
+            height: 24, // Set the icon height
+            color: Colors.green, // Set the icon color
+          ),
+          onPressed: onPressed,
+        ),
+        const Text("Whatsapp"),
+      ],
+    );
+  }
+}
 
 class ShareCard extends StatelessWidget {
   const ShareCard({super.key});
@@ -24,20 +48,27 @@ class ShareCard extends StatelessWidget {
       },
       itemBuilder: (BuildContext context) {
         return <PopupMenuItem<String>>[
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'Facebook',
             child: ListTile(
-              leading: Icon(Icons.facebook),
-              title: Text('Share on Facebook'),
+              leading: Icon(Icons.facebook, color: Colors.blue),
+              title: Text('Facebook'),
             ),
           ),
-          const PopupMenuItem<String>(
+          PopupMenuItem<String>(
             value: 'Twitter',
             child: ListTile(
-              leading: Icon(EvaIcons.twitter),
-              title: Text('Share on Twitter'),
+              leading: Icon(EvaIcons.twitter, color: Colors.blue),
+              title: Text('Twitter'),
             ),
           ),
+          PopupMenuItem<String>(
+              value: 'Whatsapp',
+              child: WhatsAppButton(
+                onPressed: () {
+                  // Handle WhatsApp button press, e.g., open a WhatsApp chat or perform an action
+                },
+              )),
           // Add more social media options as needed
         ];
       },
