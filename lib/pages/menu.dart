@@ -142,14 +142,11 @@ class MenuPage extends StatelessWidget {
                       iconData: Symbols.store,
                       onPressed: () => Get.to(() => VendorPage()),
                     ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    MenuButton(
-                      text: "My Shop",
-                      iconData: Symbols.storefront_rounded,
-                      onPressed: () => Get.to(() => ShopPage()),
-                    ),
+                    //  MenuButton(
+                    //  text: "Share Trial",
+                    //iconData: Symbols.store,
+                    //onPressed: () => Get.to(() => ShareEvery()),
+                    // ),
                     const SizedBox(
                       height: 12,
                     ),

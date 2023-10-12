@@ -8,6 +8,7 @@ import 'package:hair_main_street/pages/authentication/authentication.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/referral.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/Inventory.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/add_product.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/payment_settings.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/vendor_orders.dart';
@@ -28,7 +29,7 @@ class _VendorPageState extends State<VendorPage> {
     List<String> vendorButtonsText = [
       "Shop Page",
       "My Orders",
-      "Payment Settings",
+      "Inventory",
       "Wallet",
       "Deliveries",
       "Add Product"
@@ -37,7 +38,7 @@ class _VendorPageState extends State<VendorPage> {
     List? vl = [
       ShopPage(),
       VendorOrdersPage(),
-      SignInUpPage(),
+      InventoryPage(),
       WalletPage(),
       PaymentSettingsPage(),
       AddproductPage(),
@@ -46,7 +47,7 @@ class _VendorPageState extends State<VendorPage> {
     List<IconData> vendorButtonsIcons = [
       Symbols.storefront_rounded,
       Symbols.list_alt_rounded,
-      Symbols.payment_rounded,
+      Symbols.inventory_2_rounded,
       Symbols.wallet_rounded,
       Symbols.local_shipping_rounded,
       Symbols.add,
