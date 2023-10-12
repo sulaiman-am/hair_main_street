@@ -19,7 +19,11 @@ class ProductCard extends StatelessWidget {
     num screenWidth = MediaQuery.of(context).size.width;
     return InkWell(
       onTap: () {
-        Get.to(() => ProductPage(), transition: Transition.fadeIn);
+        Get.to(
+            () => ProductPage(
+                  index: index,
+                ),
+            transition: Transition.fadeIn);
       },
       splashColor: Theme.of(context).primaryColorDark,
       child: Container(

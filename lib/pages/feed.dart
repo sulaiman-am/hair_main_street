@@ -141,7 +141,7 @@ class FeedPage extends StatelessWidget {
             Center(
               child: GetX<ProductController>(builder: (controller) {
                 return controller.products.value.isEmpty
-                    ? Center(
+                    ? const Center(
                         child: CircularProgressIndicator(
                           backgroundColor: Color(0xFF392F5A),
                           strokeWidth: 4,
