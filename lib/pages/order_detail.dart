@@ -148,10 +148,10 @@ class OrderDetailsPage extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      Get.to(
-                        () => ProductPage(),
-                        transition: Transition.fadeIn,
-                      );
+                      // Get.to(
+                      //   () => ProductPage(),
+                      //   transition: Transition.fadeIn,
+                      // );
                       //debugPrint("Clicked");
                     },
                     child: Row(

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/blankPage.dart';
+import 'package:hair_main_street/controllers/cartController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/pages/homePage.dart';
+import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -11,6 +14,7 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     UserController userController = Get.find<UserController>();
+    CartController cartController = Get.put(CartController());
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -40,13 +44,23 @@ class CartPage extends StatelessWidget {
       //transform: GradientRotation(math.pi / 4),
     );
     return GetX<UserController>(builder: (controller) {
-      return userController.userState.value == null
+      return userController.userState.value == null ||
+              cartController.cartItems.isEmpty
           ? BlankPage(
-              text: "You have no items in your Cart",
-              pageIcon: Icon(
-                Icons.remove_shopping_cart_outlined,
-                size: 48,
-              ),
+              text: userController.userState.value != null &&
+                      cartController.cartItems.isEmpty
+                  ? "You have no items in your Cart"
+                  : "Your are not logged In",
+              pageIcon: userController.userState.value != null &&
+                      cartController.cartItems.isEmpty
+                  ? const Icon(
+                      Icons.remove_shopping_cart_outlined,
+                      size: 48,
+                    )
+                  : const Icon(
+                      Icons.person_off_outlined,
+                      size: 48,
+                    ),
             )
           : Scaffold(
               appBar: AppBar(
@@ -106,7 +120,9 @@ class CartPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    DataBaseService().addProduct();
+                  },
                   child: const Text(
                     "Proceed",
                     style: TextStyle(

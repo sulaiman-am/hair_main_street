@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/models/review.dart';
+import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout%20copy.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout.dart';
 import 'package:hair_main_street/pages/orders_stuff/confirm_order.dart';
 import 'package:hair_main_street/pages/review_page.dart';
+import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class ProductPage extends StatefulWidget {
-  const ProductPage({super.key});
+  final int index;
+  const ProductPage({required this.index, super.key});
 
   @override
   State<ProductPage> createState() => _ProductPageState();
 }
 
 class _ProductPageState extends State<ProductPage> {
+  ProductController productController = Get.find<ProductController>();
   List<bool> toggleSelection = [true, false, false];
   bool? isVisible = false;
   @override
@@ -106,9 +110,9 @@ class _ProductPageState extends State<ProductPage> {
             const SizedBox(
               height: 8,
             ),
-            const Text(
-              "Product Name",
-              style: TextStyle(
+            Text(
+              "${productController.products.value[widget.index]!.name}",
+              style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
                   color: Colors.black),
@@ -117,14 +121,19 @@ class _ProductPageState extends State<ProductPage> {
             const SizedBox(
               height: 8,
             ),
-            const Text(
-              "Product Description JHgshgdg jksiuudh jkshdhsuio rekgjoieij akhsckakah akfhwyfnjkwj",
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
+            Visibility(
+              visible: productController
+                      .products.value[widget.index]!.description!.isEmpty !=
+                  true,
+              child: Text(
+                "${productController.products.value[widget.index]!.description}",
+                style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             const SizedBox(
               height: 8,
@@ -476,7 +485,9 @@ class _ProductPageState extends State<ProductPage> {
                               ),
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            // DataBaseService().addProduct();
+                          },
                           child: const Text(
                             "Add to Cart",
                             style: TextStyle(

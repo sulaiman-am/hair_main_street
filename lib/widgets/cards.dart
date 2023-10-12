@@ -1,6 +1,7 @@
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/extras/colors.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/order_details.dart';
@@ -36,7 +37,6 @@ class WhatsAppButton extends StatelessWidget {
 
 class ShareCard extends StatelessWidget {
   const ShareCard({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -77,6 +77,9 @@ class ShareCard extends StatelessWidget {
 
 class ProductCard extends StatefulWidget {
   const ProductCard({super.key});
+class ProductCard extends StatelessWidget {
+  final int index;
+  const ProductCard({required this.index, super.key});
 
   @override
   State<ProductCard> createState() => _ProductCardState();
@@ -87,12 +90,17 @@ class _ProductCardState extends State<ProductCard> {
   Widget build(BuildContext context) {
     Color buttonColor = isRed ? Colors.red : primaryAccent;
     bool showSocialMediaIcons = false;
+    ProductController productController = Get.find<ProductController>();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
 
     return InkWell(
       onTap: () {
-        Get.to(() => ProductPage(), transition: Transition.fadeIn);
+        Get.to(
+            () => ProductPage(
+                  index: index,
+                ),
+            transition: Transition.fadeIn);
       },
       splashColor: Theme.of(context).primaryColorDark,
       child: Container(
@@ -124,15 +132,19 @@ class _ProductCardState extends State<ProductCard> {
                 ),
                 width: 120,
                 height: 106,
+                child: Image.network(
+                  "${productController.products.value[index]!.image![0]}",
+                  fit: BoxFit.fill,
+                ),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             Padding(
               padding: const EdgeInsets.only(left: 12.0),
               child: Text(
-                "Product Name",
+                "${productController.products.value[index]!.name}",
                 style: TextStyle(
                   fontSize: 20,
                 ),
@@ -141,7 +153,8 @@ class _ProductCardState extends State<ProductCard> {
             ),
             Padding(
               padding: const EdgeInsets.only(left: 12.0),
-              child: Text("Product Price"),
+              child:
+                  Text("NGN ${productController.products.value[index]!.price}"),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -870,6 +883,7 @@ class ShopDetailsCard extends StatelessWidget {
                 height: 40,
               ),
               const Card(
+              Card(
                 child: Column(children: [
                   Text(
                     "Address",
@@ -888,6 +902,10 @@ class ShopDetailsCard extends StatelessWidget {
                 height: 40,
               ),
               const Card(
+              SizedBox(
+                height: 40,
+              ),
+              Card(
                 child: Column(children: [
                   Text(
                     "Phone number",
@@ -906,6 +924,10 @@ class ShopDetailsCard extends StatelessWidget {
                 height: 20,
               ),
               const SizedBox(
+              SizedBox(
+                height: 20,
+              ),
+              SizedBox(
                 height: 40,
               ),
               Form(
@@ -955,11 +977,13 @@ class ShopDetailsCard extends StatelessWidget {
                                 backgroundColor: Color(0xFF392F5A),
                                 side: const BorderSide(
                                     color: Colors.white, width: 2),
+                                side: BorderSide(color: Colors.white, width: 2),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               child: const Text(
+                              child: Text(
                                 "Save",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
@@ -978,6 +1002,7 @@ class ShopDetailsCard extends StatelessWidget {
     );
   }
 }
+
 
 class InventoryCard extends StatelessWidget {
   final String imageUrl;

@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/pages/forgotten_password.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/pages/homePage.dart';
@@ -238,6 +239,64 @@ class _SignInPageState extends State<SignInUpPage>
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      TextInputWidget(
+                        controller: emailController,
+                        labelText: "Email",
+                        hintText: "hello@gmail.com",
+                        validator: (val) {
+                          if (!validator.isEmail(val!)) {
+                            return "Enter a valid Email";
+                          }
+                          return null;
+                        },
+                        onSubmit: (value) {
+                          email = value!;
+                          return null;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      TextInputWidget(
+                        controller: passwordController,
+                        labelText: "Password",
+                        hintText: "Password must be at least 6 characters long",
+                        validator: (val) {
+                          if (val!.isEmpty) {
+                            return "Enter Password";
+                          } else if (val.length < 6) {
+                            return "Password must be at least 6 characters long";
+                          }
+                          return null;
+                        },
+                        onSubmit: (value) {
+                          password = value!;
+                          return null;
+                        },
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Get.to(() => ForgottenPassword()),
+                            child: Text(
+                              "Forgotten Password?",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontSize: 20,
+                              ),
                           ),
                           child: const Text(
                             "Sign Up",

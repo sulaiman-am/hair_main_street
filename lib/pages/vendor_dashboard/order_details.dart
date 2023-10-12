@@ -299,10 +299,10 @@ class VendorOrderDetailsPage extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Get.to(
-                        () => ProductPage(),
-                        transition: Transition.fadeIn,
-                      );
+                      // Get.to(
+                      //   () => ProductPage(),
+                      //   transition: Transition.fadeIn,
+                      // );
                       //debugPrint("Clicked");
                     },
                     child: Padding(
