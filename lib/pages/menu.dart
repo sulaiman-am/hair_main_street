@@ -6,8 +6,6 @@ import 'package:hair_main_street/pages/Shop_page.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/authentication/authentication.dart';
-import 'package:hair_main_street/Shop_page.dart';
-import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/orders.dart';
 import 'package:hair_main_street/pages/profile.dart';
 import 'package:hair_main_street/pages/referral.dart';
@@ -142,16 +140,14 @@ class MenuPage extends StatelessWidget {
                       iconData: Symbols.store,
                       onPressed: () => Get.to(() => VendorPage()),
                     ),
+                    //  MenuButton(
+                    //  text: "Share Trial",
+                    //iconData: Symbols.store,
+                    //onPressed: () => Get.to(() => ShareEvery()),
+                    // ),
                     const SizedBox(
                       height: 12,
                     ),
-                    MenuButton(
-                      text: "My Shop",
-                      iconData: Symbols.storefront_rounded,
-                      onPressed: () => Get.to(() => ShopPage()),
-                    ),
-                    const SizedBox(
-                      height: 12,
                     ),
                   ],
                 ),

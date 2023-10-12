@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/models/review.dart';
 import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout%20copy.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout.dart';
 import 'package:hair_main_street/pages/orders_stuff/confirm_order.dart';
+import 'package:hair_main_street/pages/review_page.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -282,7 +284,13 @@ class _ProductPageState extends State<ProductPage> {
                     //   width: 8,
                     // ),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ReviewPage(reviews)),
+                        );
+                      },
                       icon: const Icon(
                         Icons.arrow_forward_rounded,
                         size: 20,

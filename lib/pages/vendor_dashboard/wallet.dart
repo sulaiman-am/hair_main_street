@@ -2,13 +2,50 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class WalletPage extends StatelessWidget {
+class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
 
+  @override
+  State<WalletPage> createState() => _WalletPageState();
+}
+
+class _WalletPageState extends State<WalletPage> {
   @override
   Widget build(BuildContext context) {
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
+    void _showBottomSheet(BuildContext context) {
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return Container(
+            height: screenHeight * 0.75,
+            // Add your bottom sheet content here
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ListTile(
+                    title: Text('Option 1'),
+                    onTap: () {
+                      // Implement functionality for Option 1
+                    },
+                  ),
+                  ListTile(
+                    title: Text('Option 2'),
+                    onTap: () {
+                      // Implement functionality for Option 2
+                    },
+                  ),
+                  // Add more items as needed
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     Gradient myGradient = const LinearGradient(
       colors: [
         Color.fromARGB(255, 255, 224, 139),
@@ -71,12 +108,12 @@ class WalletPage extends StatelessWidget {
               children: [
                 Container(
                   height: screenHeight * 0.27,
-                  padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(
                       Radius.circular(0),
                     ),
-                    color: const Color(0xFFF4D06F),
+                    color: Color(0xFFF4D06F),
                     // boxShadow: [
                     //   BoxShadow(
                     //     color: Color(0xFF000000),
@@ -175,7 +212,9 @@ class WalletPage extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                                _showBottomSheet(context);
+                              },
                               child: const Text(
                                 "See all",
                                 style: TextStyle(
@@ -206,7 +245,7 @@ class WalletPage extends StatelessWidget {
                               fontSize: 18,
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
