@@ -4,6 +4,7 @@ import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/extras/colors.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/order_details.dart';
+import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../pages/order_detail.dart';
@@ -766,6 +767,151 @@ class ReferralCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class ShopDetailsCard extends StatelessWidget {
+  const ShopDetailsCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    num screenHeight = MediaQuery.of(context).size.height;
+    num screenWidth = MediaQuery.of(context).size.width;
+    GlobalKey<FormState>? formKey = GlobalKey();
+    TextEditingController? installmentController = TextEditingController();
+    String? installment;
+    return Container(
+      child: Column(children: [
+        Expanded(
+          flex: 3,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Card(
+                child: Column(children: [
+                  Text(
+                    "Name",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    "Sulaiman Abubakar",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ]),
+              ),
+              SizedBox(
+                height: 40,
+              ),
+              Card(
+                child: Column(children: [
+                  Text(
+                    "Address",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    "C45 Janbulo",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ]),
+              ),
+              SizedBox(
+                height: 40,
+              ),
+              Card(
+                child: Column(children: [
+                  Text(
+                    "Phone number",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    "08093368178",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ]),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              SizedBox(
+                height: 40,
+              ),
+              Form(
+                  key: formKey,
+                  child: Column(
+                    //mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      TextInputWidget(
+                        textInputType: TextInputType.number,
+                        controller: installmentController,
+                        labelText: "No of Installments:",
+                        hintText: "Enter a number between 1 to 10",
+                        onSubmit: (val) {
+                          installment = val;
+                          debugPrint(installment);
+                        },
+                        validator: (val) {
+                          if (val!.isEmpty) {
+                            return "Please enter a number";
+                          }
+                          num newVal = int.parse(val);
+                          if (newVal > 10) {
+                            return "Must be less than or equal to 10";
+                          } else if (newVal <= 0) {
+                            return "Must be greater than 0";
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(
+                        height: screenHeight * .02,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () {
+                                bool? validate =
+                                    formKey?.currentState!.validate();
+                                if (validate!) {
+                                  formKey?.currentState!.save();
+                                }
+                              },
+                              style: TextButton.styleFrom(
+                                // padding: EdgeInsets.symmetric(
+                                //     horizontal: screenWidth * 0.24),
+                                backgroundColor: Color(0xFF392F5A),
+                                side: BorderSide(color: Colors.white, width: 2),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                "Save",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 20),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )),
+            ],
+          ),
+        ),
+      ]),
     );
   }
 }
