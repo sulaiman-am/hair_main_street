@@ -62,15 +62,22 @@ class ForgottenPassword extends StatelessWidget {
         ),
         child: Column(
           children: [
-            SizedBox(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey[200],
+              ),
               child: Text.rich(
                 TextSpan(
                   text:
                       "You can request a password reset below. We will send a security code to the email address, make sure it is correct",
                   style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      leadingDistribution: TextLeadingDistribution.proportional,
-                      letterSpacing: 3),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    leadingDistribution: TextLeadingDistribution.proportional,
+                    letterSpacing: 3,
+                  ),
                 ),
               ),
             ),
