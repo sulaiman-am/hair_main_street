@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/productController.dart';
+import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/services/database.dart';
 
@@ -14,8 +16,8 @@ class CartController extends GetxController {
     print("${cartItems}");
   }
 
-  addToCart(Product product) async {
-    var result = await DataBaseService().addToCart(product);
+  addToCart(CartItem cartItem) async {
+    var result = await DataBaseService().addToCart(cartItem);
     if (result != "Success") {
       Get.snackbar(
         "Error",
@@ -28,7 +30,7 @@ class CartController extends GetxController {
         margin: EdgeInsets.only(
           left: 12,
           right: 12,
-          bottom: screenHeight * 0.16,
+          bottom: screenHeight * 0.08,
         ),
       );
     } else {
@@ -43,7 +45,7 @@ class CartController extends GetxController {
         margin: EdgeInsets.only(
           left: 12,
           right: 12,
-          bottom: screenHeight * 0.16,
+          bottom: screenHeight * 0.08,
         ),
       );
     }
@@ -55,6 +57,89 @@ class CartController extends GetxController {
       Get.snackbar(
         "Error",
         "Failed to Fetch Cart",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.16,
+        ),
+      );
+    } else {}
+    return result;
+  }
+}
+
+class WishListController extends GetxController {
+  var wishListItems = [].obs;
+  num screenHeight = Get.height;
+
+  @override
+  onInit() async {
+    super.onInit();
+    wishListItems.bindStream(fetchWishList());
+    print("${wishListItems}");
+  }
+
+  addToWishlist(WishlistItem wishlistItem) async {
+    var result = await DataBaseService().addToWishList(wishlistItem);
+    if (result == 'not authorized') {
+      Get.snackbar(
+        "Error",
+        "Problem adding to wishlist",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    } else if (result == 'new') {
+      Get.snackbar(
+        "Success",
+        "Added to wishList",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    } else if (result == 'exists') {
+      Get.snackbar(
+        "Already in your wishlists",
+        "",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    }
+  }
+
+  Stream<List<dynamic>> fetchWishList() {
+    var result = DataBaseService().fetchWishListItems();
+    if (result.runtimeType == Object) {
+      Get.snackbar(
+        "Error",
+        "Failed to Fetch WishList",
         snackPosition: SnackPosition.BOTTOM,
         duration: Duration(seconds: 1, milliseconds: 800),
         forwardAnimationCurve: Curves.decelerate,

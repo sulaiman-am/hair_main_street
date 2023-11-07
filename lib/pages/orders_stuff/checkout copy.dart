@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/checkOutController.dart';
+import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -19,6 +21,8 @@ class _CheckOutPage2State extends State<CheckOutPage2>
   String? dropdownValue;
   GlobalKey<FormState>? formKey = GlobalKey();
   TextEditingController amountController = TextEditingController();
+  CheckOutController checkOutController = Get.find<CheckOutController>();
+  ProductController productController = Get.find<ProductController>();
   bool checkValue = true;
   @override
   void initState() {
@@ -34,6 +38,13 @@ class _CheckOutPage2State extends State<CheckOutPage2>
 
   @override
   Widget build(BuildContext context) {
+    var checkOutItem = checkOutController.checkOutItem.value;
+    var product;
+    productController.products.value.forEach((element) {
+      if (element!.productID == checkOutItem.productId) {
+        product = element;
+      }
+    });
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -74,50 +85,54 @@ class _CheckOutPage2State extends State<CheckOutPage2>
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: Color(
-              0xFFFF8811,
-            ),
+            color: Color(0xFF0E4D92),
           ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
         bottom: PreferredSize(
-          preferredSize: Size(double.infinity, screenHeight * 0.08),
+          preferredSize: Size(double.infinity, screenHeight * 0.06),
           child: AbsorbPointer(
             child: TabBar(
               controller: tabController,
-              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-              indicator: BoxDecoration(
-                color: Color(0xFF392F5A),
-                borderRadius: BorderRadius.circular(12),
+              indicatorWeight: 8,
+              //padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+              // indicator: BoxDecoration(
+              //   color: Colors.grey[100],
+              //   // border: Border(
+              //   //   bottom: BorderSide(
+              //   //     color: Colors.black,
+              //   //     width: 2,
+              //   //   ),
+              //   // ),
+              //   borderRadius: BorderRadius.circular(10),
+              // ),
+              labelColor: Colors.black,
+
+              labelStyle: const TextStyle(
+                decoration: TextDecoration.none,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                //color: Colors.black,
               ),
               tabs: const [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Text(
                     "Confirm Order",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
                   ),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 28, vertical: 4),
                   child: Text(
                     "Payment",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
                   ),
                 ),
               ],
-              indicatorColor: Colors.white,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Colors.black,
             ),
           ),
         ),
@@ -126,9 +141,9 @@ class _CheckOutPage2State extends State<CheckOutPage2>
       body: Container(
         padding: const EdgeInsets.fromLTRB(12, 20, 12, 0),
         height: screenHeight * 1,
-        decoration: BoxDecoration(
-          gradient: myGradient,
-        ),
+        // decoration: BoxDecoration(
+        //   gradient: myGradient,
+        // ),
         child: TabBarView(
             physics: NeverScrollableScrollPhysics(),
             controller: tabController,
@@ -160,7 +175,7 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                       children: [
                         Row(
                           children: [
-                            Expanded(
+                            const Expanded(
                               child: Text(
                                 "Shipping To:",
                                 style: TextStyle(
@@ -170,8 +185,8 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                             ),
                             Expanded(
                               child: Text(
-                                "No 224 Darmanawa Gabas Kano",
-                                style: TextStyle(
+                                "${checkOutItem.address}",
+                                style: const TextStyle(
                                   fontSize: 16,
                                 ),
                               ),
@@ -180,7 +195,7 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                         ),
                         Row(
                           children: [
-                            Expanded(
+                            const Expanded(
                               child: Text(
                                 "Full name: ",
                                 style: TextStyle(
@@ -190,7 +205,28 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                             ),
                             Expanded(
                               child: Text(
-                                "Muhammad Murtala Abdullahi",
+                                "${checkOutItem.fullName}",
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                "Phone Number:",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                "${checkOutItem.phoneNumber}",
                                 style: TextStyle(
                                   fontSize: 16,
                                 ),
@@ -227,7 +263,7 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
+                            const Expanded(
                                 child: Text(
                               "Product Name:",
                               style: TextStyle(
@@ -236,60 +272,60 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                             )),
                             Expanded(
                                 child: Text(
-                              "Price",
+                              "${product.name}",
                               style: TextStyle(
                                 fontSize: 16,
                               ),
                             )),
                           ],
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                                child: Text(
-                              "Delivery Fee:",
-                              style: TextStyle(
-                                fontSize: 20,
-                              ),
-                            )),
-                            Expanded(
-                                child: Text(
-                              "Price",
-                              style: TextStyle(
-                                fontSize: 16,
-                              ),
-                            )),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Tax:",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                "Price",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //   children: [
+                        //     Expanded(
+                        //         child: Text(
+                        //       "Delivery Fee:",
+                        //       style: TextStyle(
+                        //         fontSize: 20,
+                        //       ),
+                        //     )),
+                        //     Expanded(
+                        //         child: Text(
+                        //       "Price",
+                        //       style: TextStyle(
+                        //         fontSize: 16,
+                        //       ),
+                        //     )),
+                        //   ],
+                        // ),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //   children: [
+                        //     Expanded(
+                        //       child: Text(
+                        //         "Tax:",
+                        //         style: TextStyle(
+                        //           fontSize: 20,
+                        //         ),
+                        //       ),
+                        //     ),
+                        //     Expanded(
+                        //       child: Text(
+                        //         "Price",
+                        //         style: TextStyle(
+                        //           fontSize: 16,
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
                         SizedBox(
                           height: 12,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
+                            const Expanded(
                                 child: Text(
                               "Order Total:",
                               style: TextStyle(
@@ -298,7 +334,7 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                             )),
                             Expanded(
                                 child: Text(
-                              "Price",
+                              "₦${checkOutItem.price}",
                               style: TextStyle(
                                 fontSize: 20,
                               ),
@@ -425,7 +461,7 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                                     fontWeight: FontWeight.w700),
                               ),
                               Text(
-                                "Price",
+                                "₦${checkOutItem.price}",
                                 style: TextStyle(
                                   fontSize: 20,
                                   color: Colors.black,
@@ -608,7 +644,7 @@ class _CheckOutPage2State extends State<CheckOutPage2>
                                 fontWeight: FontWeight.w700),
                           ),
                           Text(
-                            "Price",
+                            "₦${checkOutItem.price}",
                             style: TextStyle(
                               fontSize: 20,
                               color: Colors.black,

@@ -12,9 +12,9 @@ class AuthService {
         ? MyUser(
             uid: user.uid,
             email: user.email,
-            isBuyer: true,
-            isAdmin: false,
-            isVendor: false,
+            // isBuyer: true,
+            // isAdmin: false,
+            // isVendor: false,
           )
         : null;
   }
@@ -59,6 +59,48 @@ class AuthService {
     } catch (e) {
       //print(e.toString());
       return null;
+    }
+  }
+
+  //change password
+  Future changePassword(String oldPassword, String newPassword) async {
+    try {
+      final user = auth.currentUser;
+      if (user == null) {
+        throw Exception('No User Signed In');
+      }
+      final credential = EmailAuthProvider.credential(
+          email: user.email!, password: oldPassword);
+
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+      return 'changed Password';
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password') {
+        return 'wrong password';
+      }
+      print(e);
+      return 'an error occurred';
+    }
+  }
+
+  //handle forgotten password
+  Future resetPasswordEmail(String email) async {
+    try {
+      return await auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      print(e.message);
+      return e;
+    }
+  }
+
+  Future restPasswordProper(String newPassword, code) async {
+    try {
+      return await auth.confirmPasswordReset(
+          code: code, newPassword: newPassword);
+    } on FirebaseAuthException catch (e) {
+      print(e.message);
+      return e;
     }
   }
 }

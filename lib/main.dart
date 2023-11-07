@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/cartController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/splash_screen.dart';
@@ -17,6 +18,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   Get.put(UserController());
+
   runApp(const MyApp());
 }
 
@@ -31,6 +33,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Hair Main Street',
       theme: ThemeData(
+        bottomNavigationBarTheme:
+            BottomNavigationBarThemeData(backgroundColor: Colors.grey[100]),
+        appBarTheme: const AppBarTheme(
+            titleTextStyle: TextStyle(
+              color: Color(0xFF0E4D92),
+            ),
+            backgroundColor: Colors.white,
+            actionsIconTheme: IconThemeData(color: Colors.white)),
+        scaffoldBackgroundColor: Colors.grey[100],
         fontFamily: 'Sen',
         primarySwatch: primary,
         useMaterial3: true,

@@ -62,12 +62,12 @@ class InventoryPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: myGradient),
+        //decoration: BoxDecoration(gradient: myGradient),
         child: ListView.builder(
           itemCount: products.length,
           itemBuilder: (BuildContext context, int index) {

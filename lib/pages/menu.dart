@@ -2,17 +2,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hair_main_street/pages/Shop_page.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/Shop_page.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/authentication/authentication.dart';
 //import 'package:hair_main_street/Shop_page.dart';
 import 'package:hair_main_street/pages/cart.dart';
-import 'package:hair_main_street/pages/orders.dart';
-import 'package:hair_main_street/pages/profile.dart';
-import 'package:hair_main_street/pages/referral.dart';
+import 'package:hair_main_street/pages/menu/orders.dart';
+import 'package:hair_main_street/pages/menu/profile.dart';
+import 'package:hair_main_street/pages/menu/referral.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/become_vendor.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/vendor.dart';
-import 'package:hair_main_street/pages/wishlist.dart';
+import 'package:hair_main_street/pages/menu/wishlist.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class MenuPage extends StatelessWidget {
@@ -86,20 +87,20 @@ class MenuPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    color: Color(
-                      0xFFFF8811,
-                    ),
+                    color: Color(0xFF0E4D92),
                   ),
                 ),
                 centerTitle: true,
-                flexibleSpace: Container(
-                  decoration: BoxDecoration(gradient: appBarGradient),
-                ),
+                //backgroundColor: Color(0xFF0E4D92),
+                // flexibleSpace: Container(
+                //   decoration: BoxDecoration(gradient: appBarGradient),
+                // ),
                 //backgroundColor: Colors.transparent,
               ),
+              backgroundColor: Colors.grey[100],
               extendBodyBehindAppBar: false,
               body: Container(
-                decoration: BoxDecoration(gradient: myGradient),
+                //decoration: BoxDecoration(gradient: myGradient),
                 child: ListView(
                   padding: EdgeInsets.fromLTRB(8, screenHeight * 0.08, 8, 0),
                   children: [
@@ -137,11 +138,21 @@ class MenuPage extends StatelessWidget {
                     const SizedBox(
                       height: 12,
                     ),
-                    MenuButton(
-                      text: "Vendors",
-                      iconData: Symbols.store,
-                      onPressed: () => Get.to(() => VendorPage()),
-                    ),
+                    userController.userState.value!.isVendor == true
+                        ? MenuButton(
+                            text: "Vendor Dashboard",
+                            iconData: Symbols.store,
+                            onPressed: () => Get.to(() => VendorPage()),
+                          )
+                        : MenuButton(
+                            text: "Become a Vendor",
+                            iconData: Icons.shopping_bag_outlined,
+                            onPressed: () {
+                              Get.to(() => BecomeAVendorPage());
+                              print(userController.userState.value!.isVendor);
+                              print(userController.userState.value!.email);
+                            },
+                          ),
                     //  MenuButton(
                     //  text: "Share Trial",
                     //iconData: Symbols.store,
@@ -234,13 +245,12 @@ class MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          shadowColor: Theme.of(context).primaryColorDark
-          //side: BorderSide(width: 0.5),
-          ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        shadowColor: const Color(0xFF0E4D92),
+        //side: BorderSide(width: 0.5),
+      ),
       onPressed: onPressed == null ? () {} : () => onPressed!(),
       child: Row(
         //mainAxisAlignment: MainAxisAlignment.spaceBetween,

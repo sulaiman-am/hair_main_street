@@ -49,12 +49,12 @@ class ReviewPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: myGradient),
+        //decoration: BoxDecoration(gradient: myGradient),
         child: ListView.builder(
           itemCount: reviews.length,
           itemBuilder: (context, index) {
@@ -66,7 +66,7 @@ class ReviewPage extends StatelessWidget {
                   Text('Comment: ${reviews[index].comment}'),
                   Row(
                     children: List.generate(
-                      reviews[index].stars,
+                      reviews[index].stars!.round(),
                       (index) => Icon(Icons.star,
                           color: const Color.fromARGB(255, 213, 201, 90)),
                     ),

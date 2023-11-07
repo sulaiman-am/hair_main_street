@@ -33,6 +33,7 @@ class Product {
   });
 
   factory Product.fromdata(Map<String, dynamic> data) => Product(
+        productID: data["productID"],
         allowInstallment: data["allowInstallment"],
         createdAt: data["createdAt"],
         description: data["description"],

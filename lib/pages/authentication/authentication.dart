@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hair_main_street/pages/forgotten_password.dart';
+import 'package:hair_main_street/pages/authentication/forgotten_password.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/pages/homePage.dart';
@@ -89,28 +89,26 @@ class _SignInPageState extends State<SignInUpPage>
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: Color(
-                0xFFFF8811,
-              ),
+              color: Color(0xFF0E4D92),
             ),
           ),
           centerTitle: true,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(gradient: appBarGradient),
-          ),
+          // flexibleSpace: Container(
+          //   decoration: BoxDecoration(gradient: appBarGradient),
+          // ),
           bottom: TabBar(
             controller: tabController,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            indicator: BoxDecoration(
-              color: Color(0xFF392F5A),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            labelColor: Colors.white,
+            //padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            // indicator: BoxDecoration(
+            //   color: Color(0xFF392F5A),
+            //   borderRadius: BorderRadius.circular(12),
+            // ),
+            labelColor: Colors.black,
             labelStyle: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
-            unselectedLabelColor: Colors.black,
+            unselectedLabelColor: Colors.grey,
             tabs: const [
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -130,7 +128,8 @@ class _SignInPageState extends State<SignInUpPage>
                 ),
               ),
             ],
-            //indicatorColor: Colors.white,
+            indicatorColor: Colors.black,
+            indicatorWeight: 8,
           ),
           //backgroundColor: Colors.transparent,
         ),
@@ -141,7 +140,7 @@ class _SignInPageState extends State<SignInUpPage>
               child: Container(
                 padding: EdgeInsets.only(top: 20, left: 12, right: 12),
                 height: screenHeight * 1,
-                decoration: BoxDecoration(gradient: myGradient),
+                //decoration: BoxDecoration(gradient: myGradient),
                 child: TabBarView(
                   controller: tabController,
                   children: [
@@ -208,20 +207,34 @@ class _SignInPageState extends State<SignInUpPage>
                         const SizedBox(
                           height: 20,
                         ),
-                        TextInputWidget(
-                          controller: confirmpasswordController,
-                          obscureText: true,
-                          labelText: "Confirm Password",
-                          //hintText: "Password must be at least 6 characters long",
-                          validator: (value) {
-                            debugPrint(password);
-                            debugPrint(email);
-                            if (value != password) {
-                              return "Password does not match";
-                            }
-                            return null;
-                          },
-                        ),
+                        GetX<UserController>(builder: (controller) {
+                          return TextInputWidget(
+                            controller: confirmpasswordController,
+                            obscureText: true,
+                            labelText: "Confirm Password",
+                            visibilityIcon: IconButton(
+                              onPressed: () => controller.toggle(),
+                              icon: controller.isObscure.value
+                                  ? Icon(
+                                      Icons.visibility_off_rounded,
+                                      size: 20,
+                                    )
+                                  : Icon(
+                                      Icons.visibility_rounded,
+                                      size: 20,
+                                    ),
+                            ),
+                            //hintText: "Password must be at least 6 characters long",
+                            validator: (value) {
+                              debugPrint(password);
+                              debugPrint(email);
+                              if (value != password) {
+                                return "Password does not match";
+                              }
+                              return null;
+                            },
+                          );
+                        }),
                         const SizedBox(
                           height: 20,
                         ),

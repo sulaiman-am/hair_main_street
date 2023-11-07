@@ -3,17 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
-import 'package:hair_main_street/pages/Shop_page.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/Shop_page.dart';
 import 'package:hair_main_street/pages/authentication/authentication.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/product_page.dart';
-import 'package:hair_main_street/pages/referral.dart';
+import 'package:hair_main_street/pages/menu/referral.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/Inventory.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/add_product.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/payment_settings.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/vendor_orders.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/wallet.dart';
-import 'package:hair_main_street/pages/wishlist.dart';
+import 'package:hair_main_street/pages/menu/wishlist.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class VendorPage extends StatefulWidget {
@@ -85,7 +85,7 @@ class _VendorPageState extends State<VendorPage> {
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.black),
+              size: 24, color: Colors.white),
         ),
         title: const Text(
           'Vendor Dashboard',
@@ -98,14 +98,14 @@ class _VendorPageState extends State<VendorPage> {
           ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
         //backgroundColor: Colors.transparent,
       ),
       body: Container(
         padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
-        decoration: BoxDecoration(gradient: myGradient),
+        //decoration: BoxDecoration(gradient: myGradient),
         child: GridView(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,

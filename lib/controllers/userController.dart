@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/services/auth.dart';
+import 'package:hair_main_street/services/database.dart';
 
 class UserController extends GetxController {
   Rx<MyUser?> userState = Rx<MyUser?>(null);
@@ -14,10 +16,29 @@ class UserController extends GetxController {
 
   @override
   void onInit() {
-    userState.bindStream(determineAuthState());
-    //print(userState.value);
+    // print(userState.value!.email);
     super.onInit();
+    userState.bindStream(determineAuthState());
+
+    ever(userState, (MyUser? newUser) {
+      if (newUser != null) {
+        getRoleDynamically;
+      }
+    });
   }
+
+  // @override
+  // void onReady() {
+  //   super.onReady();
+  //   if (userState.value != null) {
+  //     getRoleDynamically().listen((doc) {
+  //       if (doc.exists) {
+  //         userState.value!.isVendor = doc.get('isVendor');
+  //         print(userState.value!.isVendor);
+  //       }
+  //     });
+  //   }
+  // }
 
   toggle() {
     if (isObscure.value) {
@@ -25,6 +46,15 @@ class UserController extends GetxController {
     } else {
       isObscure.value = true;
     }
+  }
+
+  get getRoleDynamically {
+    DataBaseService().getRoleDynamically.listen((doc) {
+      if (doc.exists) {
+        userState.value!.isVendor = doc.get('isVendor');
+        userState.value!.fullname = doc.get('fullname');
+      }
+    });
   }
 
   isLoadingState() {
@@ -41,7 +71,7 @@ class UserController extends GetxController {
         margin: EdgeInsets.only(
           left: 12,
           right: 12,
-          bottom: screenHeight * 0.16,
+          bottom: screenHeight * 0.08,
         ),
       );
     });
@@ -72,7 +102,7 @@ class UserController extends GetxController {
           margin: EdgeInsets.only(
             left: 12,
             right: 12,
-            bottom: screenHeight * 0.16,
+            bottom: screenHeight * 0.08,
           ),
         );
         Get.offAll(() => HomePage());
@@ -89,7 +119,7 @@ class UserController extends GetxController {
           margin: EdgeInsets.only(
             left: 12,
             right: 12,
-            bottom: screenHeight * 0.16,
+            bottom: screenHeight * 0.08,
           ),
         );
       }
@@ -118,7 +148,7 @@ class UserController extends GetxController {
           margin: EdgeInsets.only(
             left: 12,
             right: 12,
-            bottom: screenHeight * 0.16,
+            bottom: screenHeight * 0.08,
           ),
         );
         Get.offAll(() => HomePage());
@@ -136,7 +166,7 @@ class UserController extends GetxController {
           margin: EdgeInsets.only(
             left: 12,
             right: 12,
-            bottom: screenHeight * 0.16,
+            bottom: screenHeight * 0.08,
           ),
         );
         return null;
@@ -161,13 +191,69 @@ class UserController extends GetxController {
       margin: EdgeInsets.only(
         left: 12,
         right: 12,
-        bottom: screenHeight * 0.16,
+        bottom: screenHeight * 0.08,
       ),
     );
     Get.offAll(() => HomePage());
   }
 
-  //add to cart
+  //edit user profile
+  editUserProfile(String fieldName, value) async {
+    var user = await DataBaseService().updateUserProfile(fieldName, value);
+    userState.value!.fullname = user['fullname'];
+    userState.value!.address = user['address'];
+    userState.value!.phoneNumber = user['phoneNumber'];
+  }
 
-  //remove from cart
+  changePassword(String oldPassword, String newPassword) async {
+    var result = await AuthService().changePassword(oldPassword, newPassword);
+    if (result == 'changed Password') {
+      Get.snackbar(
+        "Success",
+        "User Signed Out",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    } else if (result == 'wrong password') {
+      Get.snackbar(
+        "Error",
+        'Wrong Old Password',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        colorText: Colors.white,
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[700],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    } else if (result == 'an error occurred') {
+      Get.snackbar(
+        "Error",
+        'An error occurred while changing password',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        colorText: Colors.white,
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[700],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    }
+  }
 }

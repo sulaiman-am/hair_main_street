@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/pages/messages.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/refund.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -44,7 +45,7 @@ class OrderDetailsPage extends StatelessWidget {
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.black),
+              size: 24, color: Colors.white),
         ),
         title: const Text(
           'Order Details',
@@ -57,13 +58,13 @@ class OrderDetailsPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
         //backgroundColor: Colors.transparent,
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: myGradient),
+        //decoration: BoxDecoration(gradient: myGradient),
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: ListView(
           padding: const EdgeInsets.only(top: 12),
@@ -81,7 +82,7 @@ class OrderDetailsPage extends StatelessWidget {
                   BoxShadow(
                     color: Color(0xFF000000),
                     blurStyle: BlurStyle.normal,
-                    offset: Offset.fromDirection(-4.0),
+                    offset: Offset.zero,
                     blurRadius: 2,
                   ),
                 ],
@@ -334,7 +335,9 @@ class OrderDetailsPage extends StatelessWidget {
                   ),
                   Center(
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Get.to(() => MessagesPage());
+                      },
                       style: TextButton.styleFrom(
                         backgroundColor: Color(0xFF392F5A),
                         padding: EdgeInsets.all(4),

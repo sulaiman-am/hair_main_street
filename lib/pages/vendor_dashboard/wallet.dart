@@ -77,9 +77,9 @@ class _WalletPageState extends State<WalletPage> {
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.black),
+              size: 24, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFFF4D06F),
+        backgroundColor: const Color(0xFF0E4D92),
         // title: const Text(
         //   'Wallet',
         //   style: TextStyle(
@@ -102,7 +102,7 @@ class _WalletPageState extends State<WalletPage> {
           Container(
             height: screenHeight * 1,
             //padding: EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(gradient: myGradient),
+            //decoration: BoxDecoration(gradient: myGradient),
             child: Stack(
               //padding: EdgeInsets.only(top: 8),
               children: [
@@ -113,7 +113,7 @@ class _WalletPageState extends State<WalletPage> {
                     borderRadius: BorderRadius.all(
                       Radius.circular(0),
                     ),
-                    color: Color(0xFFF4D06F),
+                    color: Color(0xFF0E4D92),
                     // boxShadow: [
                     //   BoxShadow(
                     //     color: Color(0xFF000000),
@@ -135,6 +135,7 @@ class _WalletPageState extends State<WalletPage> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
+                              color: Colors.white,
                             ),
                           ),
                           SizedBox(
@@ -145,6 +146,7 @@ class _WalletPageState extends State<WalletPage> {
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w600,
+                              color: Colors.white,
                             ),
                           ),
                           Text(
@@ -152,6 +154,7 @@ class _WalletPageState extends State<WalletPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
+                              color: Colors.white,
                             ),
                           ),
                         ],

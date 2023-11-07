@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/models/productModel.dart';
@@ -161,7 +162,7 @@ class _AddproductPageState extends State<AddproductPage> {
           leading: IconButton(
             onPressed: () => showCancelDialog(),
             icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-                size: 24, color: Colors.black),
+                size: 24, color: Colors.white),
           ),
           title: const Text(
             'Add a Product',
@@ -174,14 +175,14 @@ class _AddproductPageState extends State<AddproductPage> {
             ),
           ),
           centerTitle: true,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(gradient: appBarGradient),
-          ),
+          // flexibleSpace: Container(
+          //   decoration: BoxDecoration(gradient: appBarGradient),
+          // ),
           //backgroundColor: Colors.transparent,
         ),
         body: Container(
           padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
-          decoration: BoxDecoration(gradient: myGradient),
+          //decoration: BoxDecoration(gradient: myGradient),
           child: Form(
             key: formKey,
             child: ListView(
@@ -242,45 +243,62 @@ class _AddproductPageState extends State<AddproductPage> {
                   height: 8,
                 ),
                 GetX<ProductController>(builder: (controller) {
-                  return Visibility(
-                    visible: controller.downloadUrls.isNotEmpty,
-                    child: SingleChildScrollView(
-                      child: Row(
-                        //mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: List.generate(controller.downloadUrls.length,
-                            (index) {
-                          return Container(
-                            margin: EdgeInsets.symmetric(
-                              horizontal: 4,
-                            ),
-                            color: Colors.black,
-                            width: screenWidth * 0.25,
-                            height: screenHeight * .16,
-                            child: Image.network(
-                              "${controller.downloadUrls[index]}",
-                              fit: BoxFit.fill,
-                              // loadingBuilder:
-                              //     (context, child, loadingProgress) =>
-                              //         const Text(
-                              //   "Loading...",
-                              //   style: TextStyle(
-                              //     color: Colors.white,
-                              //   ),
-                              // ),
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Text(
-                                  "Error \nLoading \nImage...",
-                                  style: TextStyle(
-                                    color: Colors.red,
+                  return controller.downloadUrls.isNotEmpty
+                      ? SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: List.generate(
+                                controller.downloadUrls.length,
+                                (index) => Container(
+                                      margin: EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      color: Colors.black,
+                                      width: screenWidth * 0.16,
+                                      height: screenHeight * .08,
+                                      child: Image.network(
+                                        "${controller.downloadUrls[index]}",
+                                        fit: BoxFit.fill,
+                                        // loadingBuilder:
+                                        //     (context, child, loadingProgress) =>
+                                        //         const Text(
+                                        //   "Loading...",
+                                        //   style: TextStyle(
+                                        //     color: Colors.white,
+                                        //   ),
+                                        // ),
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return const Text(
+                                            "Error \nLoading \nImage...",
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )),
+                          ))
+                      : SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: List.generate(4, (index) {
+                              return Center(
+                                widthFactor: 1,
+                                child: Container(
+                                  margin: EdgeInsets.symmetric(
+                                    horizontal: 14,
                                   ),
-                                );
-                              },
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  );
+                                  alignment: Alignment.center,
+                                  color: Colors.black,
+                                  width: screenWidth * 0.16,
+                                  height: screenHeight * .08,
+                                ),
+                              );
+                            }),
+                          ),
+                        );
                 }),
                 const SizedBox(
                   height: 8,
@@ -472,6 +490,16 @@ class _AddproductPageState extends State<AddproductPage> {
                         onPressed: () {
                           bool? validate = formKey.currentState!.validate();
                           if (validate) {
+                            if (productController.isProductadded.value ==
+                                false) {
+                              Get.dialog(
+                                const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            }
                             if (productController.downloadUrls.isNotEmpty) {
                               for (String? url
                                   in productController.downloadUrls) {
@@ -480,10 +508,6 @@ class _AddproductPageState extends State<AddproductPage> {
                             }
                             formKey.currentState!.save();
                             productController.addAProduct(product!);
-                            debugPrint(product!.name);
-                            debugPrint(product!.quantity.toString());
-                            debugPrint(product!.price.toString());
-                            debugPrint(product!.image.toString());
                             //debugPrint(hello);
                           }
                         },

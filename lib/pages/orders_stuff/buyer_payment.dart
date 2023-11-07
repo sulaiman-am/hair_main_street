@@ -55,7 +55,7 @@ class _BuyerPaymentPageState extends State<BuyerPaymentPage> {
           leading: IconButton(
             onPressed: () => Get.back(),
             icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-                size: 24, color: Colors.black),
+                size: 24, color: Colors.white),
           ),
           title: const Text(
             'Payment',
@@ -68,9 +68,9 @@ class _BuyerPaymentPageState extends State<BuyerPaymentPage> {
             ),
           ),
           centerTitle: true,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(gradient: appBarGradient),
-          ),
+          // flexibleSpace: Container(
+          //   decoration: BoxDecoration(gradient: appBarGradient),
+          // ),
           //backgroundColor: Colors.transparent,
         ),
         body: SafeArea(
@@ -80,7 +80,7 @@ class _BuyerPaymentPageState extends State<BuyerPaymentPage> {
               Container(
                 padding: EdgeInsets.fromLTRB(12, 48, 12, 0),
                 height: screenHeight * 1,
-                decoration: BoxDecoration(gradient: myGradient),
+                //decoration: BoxDecoration(gradient: myGradient),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [

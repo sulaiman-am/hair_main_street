@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/productController.dart';
+import 'package:hair_main_street/extras/delegate.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:infinite_carousel/infinite_carousel.dart';
 import 'package:shimmer/shimmer.dart';
@@ -55,23 +56,33 @@ class FeedPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: Color(
-              0xFFFF8811,
-            ),
+            color: Color(0xFF0E4D92),
           ),
         ),
+
+        actions: [
+          IconButton(
+            onPressed: () {
+              showSearch(context: context, delegate: MySearchDelegate());
+            },
+            icon: const Icon(
+              Icons.search,
+              color: Colors.black,
+              size: 28,
+            ),
+          ),
+        ],
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        //backgroundColor: const Color(0xFF0E4D92),
 
         //backgroundColor: Colors.transparent,
       ),
       extendBodyBehindAppBar: true,
+      backgroundColor: Colors.grey[100],
       //extendBody: false,
       body: Container(
         padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
-        decoration: BoxDecoration(gradient: myGradient),
+        //decoration: BoxDecoration(gradient: myGradient),
         child: ListView(
           //shrinkWrap: true,
           children: [
@@ -158,6 +169,7 @@ class FeedPage extends StatelessWidget {
                           crossAxisSpacing: 24,
                         ),
                         itemBuilder: (_, index) => ProductCard(
+                          id: controller.products.value[index]!.productID,
                           index: index,
                         ),
                         itemCount: controller.products.value.length,

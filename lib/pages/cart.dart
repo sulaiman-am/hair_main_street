@@ -13,8 +13,8 @@ class CartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    CartController cartController = Get.find<CartController>();
     UserController userController = Get.find<UserController>();
-    CartController cartController = Get.put(CartController());
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -74,29 +74,29 @@ class CartPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    color: Color(
-                      0xFFFF8811,
-                    ),
+                    color: Color(0xFF0E4D92),
                   ),
                 ),
                 centerTitle: true,
-                flexibleSpace: Container(
-                  decoration: BoxDecoration(gradient: appBarGradient),
-                ),
-                //backgroundColor: Colors.transparent,
+                // flexibleSpace: Container(
+                //   decoration: BoxDecoration(gradient: appBarGradient),
+                // ),
+                //backgroundColor: Color(0xFF0E4D92),
               ),
               extendBody: false,
               extendBodyBehindAppBar: false,
               body: Container(
-                decoration: BoxDecoration(gradient: myGradient),
+                //decoration: BoxDecoration(gradient: myGradient),
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 //padding: EdgeInsets.all(8),
                 child: ListView(
                   children: [
                     ListView.builder(
                       physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) => CartCard(),
-                      itemCount: 5,
+                      itemBuilder: (context, index) => CartCard(
+                        id: cartController.cartItems.value[index].productID,
+                      ),
+                      itemCount: cartController.cartItems.length,
                       shrinkWrap: true,
                     ),
                   ],

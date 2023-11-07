@@ -54,16 +54,16 @@ class VendorOrdersPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
         //backgroundColor: Colors.transparent,
       ),
       body: Container(
         height: screenHeight * 1,
-        decoration: BoxDecoration(
-          gradient: myGradient,
-        ),
+        // decoration: BoxDecoration(
+        //   gradient: myGradient,
+        // ),
         child: ListView(
           children: List.generate(3, (index) => VendorOrderCard()),
         ),

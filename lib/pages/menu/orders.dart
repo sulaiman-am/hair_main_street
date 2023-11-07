@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hair_main_street/pages/order_detail.dart';
+import 'package:hair_main_street/pages/menu/order_detail.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -42,7 +42,7 @@ class OrdersPage extends StatelessWidget {
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.black),
+              size: 24, color: Colors.white),
         ),
         title: const Text(
           'Orders',
@@ -55,15 +55,15 @@ class OrdersPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
         //backgroundColor: Colors.transparent,
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: myGradient),
-        padding: EdgeInsets.symmetric(horizontal: 12),
-        child: ListView(padding: EdgeInsets.only(top: 12), children: [
+        //decoration: BoxDecoration(gradient: myGradient),
+        padding: EdgeInsets.symmetric(horizontal: 4),
+        child: ListView(padding: EdgeInsets.only(top: 8), children: [
           ListView.builder(
             shrinkWrap: true,
             itemBuilder: (context, index) => OrderCard(),

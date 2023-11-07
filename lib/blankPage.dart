@@ -60,9 +60,9 @@ class BlankPage extends StatelessWidget {
       //     ),
       //   ),
       // ),
-      //backgroundColor: Color(0xFF52796F),
+      backgroundColor: Colors.grey[100],
       body: Container(
-        decoration: BoxDecoration(gradient: myGradient),
+        //decoration: BoxDecoration(gradient: myGradient),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(8.0),

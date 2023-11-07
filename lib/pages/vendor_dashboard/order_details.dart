@@ -41,7 +41,7 @@ class VendorOrderDetailsPage extends StatelessWidget {
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.black),
+              size: 24, color: Colors.white),
         ),
         title: const Text(
           'Order Details',
@@ -54,14 +54,14 @@ class VendorOrderDetailsPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
         //backgroundColor: Colors.transparent,
       ),
       body: Container(
         padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
-        decoration: BoxDecoration(gradient: myGradient),
+        //decoration: BoxDecoration(gradient: myGradient),
         child: ListView(
           padding: EdgeInsets.only(bottom: 12),
           children: [

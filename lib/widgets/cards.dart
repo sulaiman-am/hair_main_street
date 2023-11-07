@@ -1,13 +1,18 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/cartController.dart';
 import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/extras/colors.dart';
+import 'package:hair_main_street/models/cartItemModel.dart';
+import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/pages/product_page.dart';
+import 'package:hair_main_street/pages/searchProductPage.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/order_details.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import '../pages/order_detail.dart';
+import '../pages/menu/order_detail.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class WhatsAppButton extends StatelessWidget {
@@ -74,22 +79,24 @@ class ShareCard extends StatelessWidget {
 }
 
 class ProductCard extends StatelessWidget {
+  final String? id;
   final int index;
-  const ProductCard({required this.index, super.key});
+  const ProductCard({required this.index, this.id, super.key});
   @override
   Widget build(BuildContext context) {
     ProductController productController = Get.find<ProductController>();
+    WishListController wishListController = Get.put(WishListController());
     bool showSocialMediaIcons = false;
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
 
     return GetX<ProductController>(builder: (controller) {
-      Color buttonColor =
-          productController.isRed.value ? Colors.red : primaryAccent;
+      var buttonColor = primaryAccent.obs;
       return InkWell(
         onTap: () {
           Get.to(
               () => ProductPage(
+                    id: id,
                     index: index,
                   ),
               transition: Transition.fadeIn);
@@ -100,10 +107,239 @@ class ProductCard extends StatelessWidget {
           height: screenHeight * 0.50,
           width: screenWidth * 0.15,
           decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(
+              Radius.circular(16),
+            ),
+            color: Colors.grey[100],
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF000000),
+                blurStyle: BlurStyle.normal,
+                offset: Offset.fromDirection(10.0),
+                blurRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  width: 120,
+                  height: 106,
+                  child: CachedNetworkImage(
+                    fit: BoxFit.fill,
+                    imageUrl:
+                        "${productController.products.value[index]!.image![0]}",
+                    errorWidget: ((context, url, error) =>
+                        Text("Failed to Load Image")),
+                    placeholder: ((context, url) => const Center(
+                          child: CircularProgressIndicator(),
+                        )),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: Text(
+                  "${productController.products.value[index]!.name}",
+                  style: const TextStyle(
+                    fontSize: 20,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: Text(
+                    "NGN ${productController.products.value[index]!.price}"),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ShareCard(),
+                  GetX<ProductController>(
+                    builder: (_) {
+                      return IconButton(
+                        onPressed: () {
+                          if (buttonColor.value != Colors.red) {
+                            buttonColor.value = Colors.red;
+                            wishListController.addToWishlist(WishlistItem(
+                                productID: productController
+                                    .products.value[index]!.productID));
+                            //print(buttonColor);
+                          } else {
+                            buttonColor.value = primaryAccent;
+                          }
+                        },
+                        icon: Icon(
+                          EvaIcons.heart,
+                          color: buttonColor.value,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class SearchCard extends StatelessWidget {
+  final int index;
+  const SearchCard({required this.index, super.key});
+  @override
+  Widget build(BuildContext context) {
+    ProductController productController = Get.find<ProductController>();
+    bool showSocialMediaIcons = false;
+    num screenHeight = MediaQuery.of(context).size.height;
+    num screenWidth = MediaQuery.of(context).size.width;
+
+    return GetX<ProductController>(builder: (controller) {
+      var buttonColor = primaryAccent.obs;
+      return InkWell(
+        onTap: () {
+          Get.to(
+              () => ProductPage(
+                    id: productController
+                        .filteredProducts.value[index]!.productID,
+                  ),
+              transition: Transition.fadeIn);
+        },
+        splashColor: Theme.of(context).primaryColorDark,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
+          height: screenHeight * 0.50,
+          width: screenWidth * 0.15,
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(
+              Radius.circular(16),
+            ),
+            color: Colors.grey[100],
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF000000),
+                blurStyle: BlurStyle.normal,
+                offset: Offset.fromDirection(10.0),
+                blurRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  width: 120,
+                  height: 106,
+                  child: CachedNetworkImage(
+                    fit: BoxFit.fill,
+                    imageUrl:
+                        "${productController.filteredProducts.value[index]!.image![0]}",
+                    errorWidget: ((context, url, error) =>
+                        Text("Failed to Load Image")),
+                    placeholder: ((context, url) => const Center(
+                          child: CircularProgressIndicator(),
+                        )),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: Text(
+                  "${productController.filteredProducts.value[index]!.name}",
+                  style: const TextStyle(
+                    fontSize: 20,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: Text(
+                    "NGN ${productController.filteredProducts.value[index]!.price}"),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ShareCard(),
+                  GetX<ProductController>(
+                    builder: (_) {
+                      return IconButton(
+                        onPressed: () {
+                          if (buttonColor.value != Colors.red) {
+                            buttonColor.value = Colors.red;
+                            //print(buttonColor);
+                          } else {
+                            buttonColor.value = primaryAccent;
+                          }
+                        },
+                        icon: Icon(
+                          EvaIcons.heart,
+                          color: buttonColor.value,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class ClientShopCard extends StatelessWidget {
+  final int? index;
+  const ClientShopCard({this.index, super.key});
+  @override
+  Widget build(BuildContext context) {
+    ProductController productController = Get.find<ProductController>();
+    //bool showSocialMediaIcons = false;
+    num screenHeight = MediaQuery.of(context).size.height;
+    num screenWidth = MediaQuery.of(context).size.width;
+
+    return GetX<ProductController>(builder: (controller) {
+      // Color buttonColor =
+      //     productController.isRed.value ? Colors.red : primaryAccent;
+      return InkWell(
+        onTap: () {
+          Get.to(
+              () => ProductPage(
+                    id: productController.products.value[index!]!.productID,
+                  ),
+              transition: Transition.fadeIn);
+        },
+        splashColor: Theme.of(context).primaryColorDark,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
+          height: screenHeight * 0.46,
+          width: screenWidth * 0.15,
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.all(
               Radius.circular(16),
             ),
-            color: Color(0xFFF4D06F),
+            color: Colors.white,
             boxShadow: [
               BoxShadow(
                 color: Color(0xFF000000),
@@ -124,9 +360,15 @@ class ProductCard extends StatelessWidget {
                   ),
                   width: 120,
                   height: 106,
-                  child: Image.network(
-                    "${productController.products.value[index]!.image![0]}",
+                  child: CachedNetworkImage(
                     fit: BoxFit.fill,
+                    imageUrl:
+                        "${productController.products.value[index!]!.image![0]}",
+                    errorWidget: ((context, url, error) =>
+                        Text("Failed to Load Image")),
+                    placeholder: ((context, url) => const Center(
+                          child: CircularProgressIndicator(),
+                        )),
                   ),
                 ),
               ),
@@ -136,8 +378,8 @@ class ProductCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 12.0),
                 child: Text(
-                  "${productController.products.value[index]!.name}",
-                  style: TextStyle(
+                  "${productController.products.value[index!]!.name}",
+                  style: const TextStyle(
                     fontSize: 20,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -146,24 +388,24 @@ class ProductCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 12.0),
                 child: Text(
-                    "NGN ${productController.products.value[index]!.price}"),
+                    "NGN ${productController.products.value[index!]!.price}"),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ShareCard(),
-                  IconButton(
-                    onPressed: () {
-                      productController.isRed.value =
-                          !productController.isRed.value;
-                    },
-                    icon: Icon(
-                      EvaIcons.heart,
-                      color: buttonColor,
-                    ),
-                  ),
-                ],
-              ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.end,
+              //   children: [
+              //     ShareCard(),
+              //     IconButton(
+              //       onPressed: () {
+              //         productController.isRed.value =
+              //             !productController.isRed.value;
+              //       },
+              //       icon: Icon(
+              //         EvaIcons.heart,
+              //         color: buttonColor,
+              //       ),
+              //     ),
+              //   ],
+              // ),
             ],
           ),
         ),
@@ -201,10 +443,25 @@ class CarouselCard extends StatelessWidget {
 }
 
 class CartCard extends StatelessWidget {
-  const CartCard({super.key});
+  final String? id;
+  const CartCard({this.id, super.key});
 
   @override
   Widget build(BuildContext context) {
+    CartController cartController = Get.find<CartController>();
+    ProductController productController = Get.find<ProductController>();
+    Product? product;
+    var cartItem;
+    cartController.cartItems.value.forEach((element) {
+      if (element!.productID == id) {
+        cartItem = element;
+      }
+    });
+    productController.products.value.forEach((element) {
+      if (element!.productID == id) {
+        product = element;
+      }
+    });
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     return Container(
@@ -237,6 +494,15 @@ class CartCard extends StatelessWidget {
             ),
             width: screenWidth * 0.32,
             height: screenHeight * 0.16,
+            child: CachedNetworkImage(
+              fit: BoxFit.fill,
+              imageUrl: "${product!.image![0]}",
+              errorWidget: ((context, url, error) =>
+                  Text("Failed to Load Image")),
+              placeholder: ((context, url) => const Center(
+                    child: CircularProgressIndicator(),
+                  )),
+            ),
           ),
           const SizedBox(
             width: 12,
@@ -246,7 +512,7 @@ class CartCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Product Name",
+                "${product!.name}",
                 style: TextStyle(
                   fontSize: 20,
                 ),
@@ -255,7 +521,7 @@ class CartCard extends StatelessWidget {
               SizedBox(
                 height: 8,
               ),
-              Text("Product Price"),
+              Text("${cartItem.price}"),
               SizedBox(
                 height: 8,
               ),
@@ -271,14 +537,15 @@ class CartCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    width: 28,
-                    height: 28,
-                    color: const Color(0xFF392F5A),
+                    padding: EdgeInsets.symmetric(vertical: 1, horizontal: 2),
+                    //width: 28,
+                    //height: 28,
+                    color: const Color.fromARGB(255, 200, 242, 237),
                     child: Center(
                       child: Text(
-                        "1",
+                        "${cartItem.quantity}",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontSize: 24,
                           //backgroundColor: Colors.blue,
                         ),
@@ -304,10 +571,19 @@ class CartCard extends StatelessWidget {
 }
 
 class WishListCard extends StatelessWidget {
-  const WishListCard({super.key});
+  final String? id;
+  const WishListCard({this.id, super.key});
 
   @override
   Widget build(BuildContext context) {
+    ProductController productController = Get.find<ProductController>();
+    CartController cartController = Get.find<CartController>();
+    Product? product;
+    productController.products.value.forEach((element) {
+      if (element!.productID == id) {
+        product = element;
+      }
+    });
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     return Container(
@@ -340,6 +616,15 @@ class WishListCard extends StatelessWidget {
             ),
             width: screenWidth * 0.36,
             height: screenHeight * 0.20,
+            child: CachedNetworkImage(
+              fit: BoxFit.fill,
+              imageUrl: "${product!.image![0]}",
+              errorWidget: ((context, url, error) =>
+                  Text("Failed to Load Image")),
+              placeholder: ((context, url) => const Center(
+                    child: CircularProgressIndicator(),
+                  )),
+            ),
           ),
           const SizedBox(
             width: 12,
@@ -349,7 +634,7 @@ class WishListCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Product Name",
+                "${product!.name}",
                 style: TextStyle(
                   fontSize: 20,
                 ),
@@ -358,48 +643,51 @@ class WishListCard extends StatelessWidget {
               SizedBox(
                 height: 8,
               ),
-              Text("Product Price"),
+              Text("${product!.price}"),
               SizedBox(
                 height: 8,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Symbols.remove,
-                      size: 24,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Container(
-                    width: 28,
-                    height: 28,
-                    color: const Color(0xFF392F5A),
-                    child: Center(
-                      child: Text(
-                        "1",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          //backgroundColor: Colors.blue,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Symbols.add,
-                      size: 24,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     IconButton(
+              //       onPressed: () {},
+              //       icon: Icon(
+              //         Symbols.remove,
+              //         size: 24,
+              //         color: Colors.black,
+              //       ),
+              //     ),
+              //     Container(
+              //       width: 28,
+              //       height: 28,
+              //       color: const Color(0xFF392F5A),
+              //       child: Center(
+              //         child: Text(
+              //           "1",
+              //           style: TextStyle(
+              //             color: Colors.white,
+              //             fontSize: 24,
+              //             //backgroundColor: Colors.blue,
+              //           ),
+              //         ),
+              //       ),
+              //     ),
+              //     IconButton(
+              //       onPressed: () {},
+              //       icon: Icon(
+              //         Symbols.add,
+              //         size: 24,
+              //         color: Colors.black,
+              //       ),
+              //     ),
+              //   ],
+              // ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  cartController.addToCart(CartItem(
+                      quantity: 1, productID: id, price: product!.price));
+                },
                 style: TextButton.styleFrom(
                   backgroundColor: Color(0xFF392F5A),
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -749,14 +1037,14 @@ class ReviewCard extends StatelessWidget {
                 const Text(
                   "Reviever Name",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   "30th jun 2023",
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 12,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -765,7 +1053,7 @@ class ReviewCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -847,7 +1135,135 @@ class ShopDetailsCard extends StatelessWidget {
     num screenWidth = MediaQuery.of(context).size.width;
     GlobalKey<FormState>? formKey = GlobalKey();
     TextEditingController? installmentController = TextEditingController();
+    TextEditingController? textController = TextEditingController();
+    TextEditingController? stateController = TextEditingController();
     String? installment;
+    showCancelDialog(String text, {String? label}) {
+      return Get.dialog(
+        Form(
+          key: formKey,
+          child: Center(
+            child: Container(
+              height:
+                  label == "Address" ? screenHeight * .36 : screenHeight * .24,
+              width: screenWidth * .64,
+              padding: EdgeInsets.all(12),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "Edit $text",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      color: Colors.black,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                  label == "Address"
+                      ? Column(
+                          children: [
+                            TextInputWidgetWithoutLabelForDialog(
+                              controller: textController,
+                              hintText: "Street Name",
+                              validator: (val) {
+                                if (val!.isEmpty) {
+                                  return "Cannot be Empty";
+                                }
+                                return null;
+                              },
+                              onChanged: (val) {
+                                textController.text = val!;
+                                return null;
+                              },
+                            ),
+                            TextInputWidgetWithoutLabelForDialog(
+                              controller: stateController,
+                              hintText: "State",
+                              validator: (val) {
+                                if (val!.isEmpty) {
+                                  return "Cannot be Empty";
+                                }
+                                return null;
+                              },
+                              onChanged: (val) {
+                                stateController.text = val!;
+                                return null;
+                              },
+                            ),
+                          ],
+                        )
+                      : TextInputWidgetWithoutLabelForDialog(
+                          controller: textController,
+                          hintText: text,
+                          validator: (val) {
+                            if (val!.isEmpty) {
+                              return "Cannot be Empty";
+                            }
+                            return null;
+                          },
+                          textInputType: label == "Phone Number"
+                              ? TextInputType.phone
+                              : TextInputType.text,
+                          onChanged: (val) {
+                            textController.text = val!;
+                            return null;
+                          },
+                        ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.red.shade300,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          12,
+                        ),
+                        side: const BorderSide(
+                          width: 2,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      var validated = formKey.currentState!.validate();
+                      if (validated) {
+                        String? string;
+                        formKey.currentState!.save();
+                        if (label == "Address") {
+                          string =
+                              "${textController.text} ${stateController.text}";
+                        } else {
+                          string = textController.text;
+                        }
+                        //print(text.split(" ").join("").toLowerCase());
+                        // userController.editUserProfile(
+                        //     text.split(" ").join("").toLowerCase(),
+                        //     string.capitalizeFirst);
+                        // print(stateController.text);
+                        // print("text:${textController.text}");
+                        Get.back();
+                      }
+                    },
+                    child: const Text(
+                      "Confirm Edit",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       child: Column(children: [
         Expanded(
@@ -857,6 +1273,7 @@ class ShopDetailsCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Card(
+                color: Colors.grey[300],
                 child: Column(children: [
                   Text(
                     "Name",
@@ -874,7 +1291,8 @@ class ShopDetailsCard extends StatelessWidget {
               SizedBox(
                 height: 40,
               ),
-              const Card(
+              Card(
+                color: Colors.grey[300],
                 child: Column(children: [
                   Text(
                     "Address",
@@ -892,7 +1310,8 @@ class ShopDetailsCard extends StatelessWidget {
               const SizedBox(
                 height: 40,
               ),
-              const Card(
+              Card(
+                color: Colors.grey[300],
                 child: Column(children: [
                   Text(
                     "Phone number",
@@ -1003,6 +1422,7 @@ class InventoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.grey[200],
       elevation: 4,
       margin: EdgeInsets.all(8),
       child: Padding(
