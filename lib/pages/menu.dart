@@ -6,6 +6,8 @@ import 'package:hair_main_street/pages/Shop_page.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/authentication/authentication.dart';
+//import 'package:hair_main_street/Shop_page.dart';
+import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/orders.dart';
 import 'package:hair_main_street/pages/profile.dart';
 import 'package:hair_main_street/pages/referral.dart';
@@ -148,75 +150,72 @@ class MenuPage extends StatelessWidget {
                     const SizedBox(
                       height: 12,
                     ),
-                    ),
                   ],
                 ),
               ),
             ),
-
-          ),
-        ),
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: appBarGradient),
-        ),
-        //backgroundColor: Colors.transparent,
-      ),
-      extendBodyBehindAppBar: false,
-      body: Container(
-        decoration: BoxDecoration(gradient: myGradient),
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(8, screenHeight * 0.08, 8, 0),
-          children: [
-            MenuButton(
-              text: "Profile",
-              iconData: Symbols.person_2_rounded,
-              onPressed: () => Get.to(() => ProfilePage()),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            MenuButton(
-              text: "Wish List",
-              iconData: Symbols.favorite_rounded,
-              onPressed: () =>
-                  Get.to(() => WishListPage(), transition: Transition.fadeIn),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            MenuButton(
-              text: "Orders",
-              iconData: Symbols.local_shipping_rounded,
-              onPressed: () =>
-                  Get.to(() => OrdersPage(), transition: Transition.fadeIn),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            MenuButton(
-                text: "Referral",
-                iconData: Symbols.redeem_rounded,
-                onPressed: () => Get.to(() => ReferralPage(),
-                    transition: Transition.fadeIn)),
-            const SizedBox(
-              height: 12,
-            ),
-            MenuButton(
-              text: "Vendors",
-              iconData: Symbols.store,
-              onPressed: () => Get.to(() => VendorPage()),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-          ],
-        ),
-      ),
     );
+
+    //   centerTitle: true,
+    //   flexibleSpace: Container(
+    //     decoration: BoxDecoration(gradient: appBarGradient),
+    //   ),
+    //   //backgroundColor: Colors.transparent,
+    // ),
+    // extendBodyBehindAppBar: false,
+    // body: Container(
+    //   decoration: BoxDecoration(gradient: myGradient),
+    //   child: ListView(
+    //     padding: EdgeInsets.fromLTRB(8, screenHeight * 0.08, 8, 0),
+    //     children: [
+    //       MenuButton(
+    //         text: "Profile",
+    //         iconData: Symbols.person_2_rounded,
+    //         onPressed: () => Get.to(() => ProfilePage()),
+    //       ),
+    //       const SizedBox(
+    //         height: 12,
+    //       ),
+    //       MenuButton(
+    //         text: "Wish List",
+    //         iconData: Symbols.favorite_rounded,
+    //         onPressed: () =>
+    //             Get.to(() => WishListPage(), transition: Transition.fadeIn),
+    //       ),
+    //       const SizedBox(
+    //         height: 12,
+    //       ),
+    //       MenuButton(
+    //         text: "Orders",
+    //         iconData: Symbols.local_shipping_rounded,
+    //         onPressed: () =>
+    //             Get.to(() => OrdersPage(), transition: Transition.fadeIn),
+    //       ),
+    //       const SizedBox(
+    //         height: 12,
+    //       ),
+    //       MenuButton(
+    //           text: "Referral",
+    //           iconData: Symbols.redeem_rounded,
+    //           onPressed: () => Get.to(() => ReferralPage(),
+    //               transition: Transition.fadeIn)),
+    //       const SizedBox(
+    //         height: 12,
+    //       ),
+    //       MenuButton(
+    //         text: "Vendors",
+    //         iconData: Symbols.store,
+    //         onPressed: () => Get.to(() => VendorPage()),
+    //       ),
+    //       const SizedBox(
+    //         height: 12,
+    //       ),
+    //       const SizedBox(
+    //         height: 12,
+    //       ),
+    //     ],
+    //   ),
+    // ),
   }
 }
 

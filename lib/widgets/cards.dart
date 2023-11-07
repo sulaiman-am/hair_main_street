@@ -10,8 +10,6 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../pages/order_detail.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-bool isRed = false;
-
 class WhatsAppButton extends StatelessWidget {
   final VoidCallback onPressed;
   WhatsAppButton({required this.onPressed});
@@ -75,108 +73,102 @@ class ShareCard extends StatelessWidget {
   }
 }
 
-class ProductCard extends StatefulWidget {
-  const ProductCard({super.key});
 class ProductCard extends StatelessWidget {
   final int index;
   const ProductCard({required this.index, super.key});
-
-  @override
-  State<ProductCard> createState() => _ProductCardState();
-}
-
-class _ProductCardState extends State<ProductCard> {
   @override
   Widget build(BuildContext context) {
-    Color buttonColor = isRed ? Colors.red : primaryAccent;
-    bool showSocialMediaIcons = false;
     ProductController productController = Get.find<ProductController>();
+    bool showSocialMediaIcons = false;
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
 
-    return InkWell(
-      onTap: () {
-        Get.to(
-            () => ProductPage(
-                  index: index,
-                ),
-            transition: Transition.fadeIn);
-      },
-      splashColor: Theme.of(context).primaryColorDark,
-      child: Container(
-        padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
-        height: screenHeight * 0.50,
-        width: screenWidth * 0.15,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(
-            Radius.circular(16),
+    return GetX<ProductController>(builder: (controller) {
+      Color buttonColor =
+          productController.isRed.value ? Colors.red : primaryAccent;
+      return InkWell(
+        onTap: () {
+          Get.to(
+              () => ProductPage(
+                    index: index,
+                  ),
+              transition: Transition.fadeIn);
+        },
+        splashColor: Theme.of(context).primaryColorDark,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
+          height: screenHeight * 0.50,
+          width: screenWidth * 0.15,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(
+              Radius.circular(16),
+            ),
+            color: Color(0xFFF4D06F),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF000000),
+                blurStyle: BlurStyle.normal,
+                offset: Offset.fromDirection(-4.0),
+                blurRadius: 4,
+              ),
+            ],
           ),
-          color: Color(0xFFF4D06F),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0xFF000000),
-              blurStyle: BlurStyle.normal,
-              offset: Offset.fromDirection(-4.0),
-              blurRadius: 4,
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black45,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                width: 120,
-                height: 106,
-                child: Image.network(
-                  "${productController.products.value[index]!.image![0]}",
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: Text(
-                "${productController.products.value[index]!.name}",
-                style: TextStyle(
-                  fontSize: 20,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child:
-                  Text("NGN ${productController.products.value[index]!.price}"),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ShareCard(),
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      isRed = !isRed;
-                    });
-                  },
-                  icon: Icon(
-                    EvaIcons.heart,
-                    color: buttonColor,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  width: 120,
+                  height: 106,
+                  child: Image.network(
+                    "${productController.products.value[index]!.image![0]}",
+                    fit: BoxFit.fill,
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: Text(
+                  "${productController.products.value[index]!.name}",
+                  style: TextStyle(
+                    fontSize: 20,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: Text(
+                    "NGN ${productController.products.value[index]!.price}"),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ShareCard(),
+                  IconButton(
+                    onPressed: () {
+                      productController.isRed.value =
+                          !productController.isRed.value;
+                    },
+                    icon: Icon(
+                      EvaIcons.heart,
+                      color: buttonColor,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
@@ -883,7 +875,6 @@ class ShopDetailsCard extends StatelessWidget {
                 height: 40,
               ),
               const Card(
-              Card(
                 child: Column(children: [
                   Text(
                     "Address",
@@ -902,10 +893,6 @@ class ShopDetailsCard extends StatelessWidget {
                 height: 40,
               ),
               const Card(
-              SizedBox(
-                height: 40,
-              ),
-              Card(
                 child: Column(children: [
                   Text(
                     "Phone number",
@@ -924,10 +911,6 @@ class ShopDetailsCard extends StatelessWidget {
                 height: 20,
               ),
               const SizedBox(
-              SizedBox(
-                height: 20,
-              ),
-              SizedBox(
                 height: 40,
               ),
               Form(
@@ -977,13 +960,12 @@ class ShopDetailsCard extends StatelessWidget {
                                 backgroundColor: Color(0xFF392F5A),
                                 side: const BorderSide(
                                     color: Colors.white, width: 2),
-                                side: BorderSide(color: Colors.white, width: 2),
+
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               child: const Text(
-                              child: Text(
                                 "Save",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
@@ -1002,7 +984,6 @@ class ShopDetailsCard extends StatelessWidget {
     );
   }
 }
-
 
 class InventoryCard extends StatelessWidget {
   final String imageUrl;

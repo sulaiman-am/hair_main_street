@@ -14,6 +14,7 @@ class ProductController extends GetxController {
   var screenHeight = Get.height;
   var screenWidth = Get.width;
   var dismissible = true;
+  var isRed = false.obs;
 
   @override
   void onInit() {
