@@ -14,12 +14,13 @@ class TextInputWidget extends StatelessWidget {
   final int? maxLines;
   final bool? obscureText;
   final TextInputType? textInputType;
-  final String? labelText, hintText;
+  final String? labelText, hintText, initialValue;
   final String? Function(String?)? onSubmit, onChanged, validator;
   final TextEditingController? controller;
   final IconButton? visibilityIcon;
   const TextInputWidget(
       {this.controller,
+      this.initialValue,
       this.maxLines,
       this.visibilityIcon,
       this.hintText,
@@ -48,12 +49,16 @@ class TextInputWidget extends StatelessWidget {
           height: 4,
         ),
         TextFormField(
+          initialValue: initialValue ?? "",
           keyboardType: textInputType ?? TextInputType.text,
           obscureText: obscureText ?? false,
           maxLines: maxLines ?? 1,
+          minLines: 1,
           decoration: InputDecoration(
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
             filled: true,
-            fillColor: Colors.grey[100],
+            fillColor: Colors.grey.shade200,
             suffixIcon: visibilityIcon ?? const SizedBox.shrink(),
             hintText: hintText ?? "",
             hintStyle: TextStyle(
@@ -124,7 +129,7 @@ class TextInputWidgetWithoutLabel extends StatelessWidget {
           color: Colors.black45,
         ),
         border: OutlineInputBorder(
-          gapPadding: 2,
+          gapPadding: 4,
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
             color: Colors.black,
@@ -132,8 +137,8 @@ class TextInputWidgetWithoutLabel extends StatelessWidget {
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          gapPadding: 2,
-          borderRadius: BorderRadius.circular(16),
+          gapPadding: 4,
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
             color: Colors.orange,
             width: 2,

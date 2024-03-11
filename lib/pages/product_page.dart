@@ -3,13 +3,16 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/cartController.dart';
-import 'package:hair_main_street/controllers/checkOutController.dart';
+import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/controllers/vendorController.dart';
+import 'package:hair_main_street/models/auxModels.dart';
 import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/review.dart';
 import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/client_shop_page.dart';
+import 'package:hair_main_street/pages/messages.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout%20copy.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout.dart';
 import 'package:hair_main_street/pages/orders_stuff/confirm_order.dart';
@@ -29,6 +32,7 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> {
   ProductController productController = Get.find<ProductController>();
+  //VendorController vendorController = Get.find<VendorController>();
   UserController userController = Get.find<UserController>();
   CartController cartController = Get.find<CartController>();
   CheckOutController checkOutController = Get.put(CheckOutController());
@@ -54,7 +58,7 @@ class _ProductPageState extends State<ProductPage> {
         sum += review!.stars ?? 0;
       });
       double average = sum / productController.reviews.value.length;
-      print(average);
+      //print(average);
       return average;
     }
 
@@ -121,7 +125,14 @@ class _ProductPageState extends State<ProductPage> {
             ),
             IconButton(
               tooltip: "Chat with Vendor",
-              onPressed: () {},
+              onPressed: () {
+                Get.to(
+                  () => MessagesPage(
+                    senderID: userController.userState.value!.uid,
+                    receiverID: product!.vendorId,
+                  ),
+                );
+              },
               icon: const Icon(Symbols.message_rounded,
                   size: 28, color: Colors.black),
             ),
@@ -426,13 +437,17 @@ class _ProductPageState extends State<ProductPage> {
                   ),
                 ),
                 onPressed: () {
-                  Get.to(() => ClientShopPage(
-                        vendorName: product.vendorId,
-                      ));
+                  Get.to(
+                    () => ClientShopPage(
+                      vendorName: productController
+                          .clientGetVendorName(product.vendorId)
+                          .shopName,
+                    ),
+                  );
                 },
-                child: const Text(
-                  "Vendor name",
-                  style: TextStyle(
+                child: Text(
+                  "${productController.clientGetVendorName(product.vendorId).shopName}",
+                  style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.black),
@@ -602,8 +617,8 @@ class _ProductPageState extends State<ProductPage> {
                               // padding: EdgeInsets.symmetric(
                               //     vertical: 8, horizontal: screenWidth * 0.26),
                               //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                              shape: RoundedRectangleBorder(
-                                side: const BorderSide(
+                              shape: const RoundedRectangleBorder(
+                                side: BorderSide(
                                   width: 1,
                                   color: Colors.black,
                                 ),
@@ -621,6 +636,14 @@ class _ProductPageState extends State<ProductPage> {
                                   quantity: productController.quantity.value,
                                   productID: product.productID,
                                 ),
+                              );
+                              checkOutController.checkoutList.add(
+                                CheckOutTickBoxModel(
+                                    productID: product.productID,
+                                    price: product.price! *
+                                        (productController.quantity.value),
+                                    quantity: productController.quantity.value,
+                                    user: userController.userState.value),
                               );
                             },
                             child: const Text(
@@ -673,6 +696,24 @@ class _ProductPageState extends State<ProductPage> {
               ),
             ),
           ]),
+        ),
+        floatingActionButton: IconButton(
+          style: IconButton.styleFrom(
+            backgroundColor: Color(0xFF392F5A),
+            shape: CircleBorder(
+              side: BorderSide(width: 2, color: Colors.white),
+            ),
+          ),
+          onPressed: () => Get.bottomSheet(
+            Container(
+              color: Colors.white,
+              height: screenHeight * .5,
+            ),
+          ),
+          icon: const Icon(
+            Icons.filter_alt_rounded,
+            color: Colors.white,
+          ),
         ),
         extendBody: true,
       ),

@@ -2,10 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hair_main_street/models/userModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hair_main_street/services/database.dart';
+import 'package:hair_main_street/services/notification.dart';
 
 class AuthService {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
+  CollectionReference userProfileCollection =
+      FirebaseFirestore.instance.collection("userProfile");
 
   MyUser? convertToMyUserType(User? user) {
     return user != null
@@ -32,6 +35,8 @@ class AuthService {
           email: email!, password: password!);
       dynamic user = result.user;
       await DataBaseService(uid: user.uid).createUserProfile();
+      String? token = await NotificationService().getDeviceToken();
+      userProfileCollection.doc(user.uid).update({"token": token});
       return convertToMyUserType(user);
     } catch (e) {
       //print(e.toString());
@@ -45,6 +50,8 @@ class AuthService {
       UserCredential result = await auth.signInWithEmailAndPassword(
           email: email!, password: password!);
       dynamic user = result.user;
+      String? token = await NotificationService().getDeviceToken();
+      userProfileCollection.doc(user.uid).update({"token": token});
       return convertToMyUserType(user);
     } catch (e) {
       //print(e.toString());
@@ -55,7 +62,9 @@ class AuthService {
   //sign out
   Future signOut() async {
     try {
-      return await auth.signOut();
+      var userID = auth.currentUser!.uid;
+      await auth.signOut();
+      userProfileCollection.doc(userID).update({"token": null});
     } catch (e) {
       //print(e.toString());
       return null;

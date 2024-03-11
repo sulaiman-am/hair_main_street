@@ -4,6 +4,7 @@ import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:string_validator/string_validator.dart' as validator;
 
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
@@ -170,6 +171,7 @@ class ProfilePage extends StatelessWidget {
                       Form(
                         key: formKey,
                         child: Container(
+                          color: Colors.white,
                           height: Get.height * .40,
                           padding:
                               EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -219,6 +221,9 @@ class ProfilePage extends StatelessWidget {
                                 validator: (val) {
                                   if (val!.isEmpty) {
                                     return 'Cannot be Empty';
+                                  } else if (val.length < 6 &&
+                                      !validator.isAlphanumeric(val)) {
+                                    return "Must be greater than 6 characters &\nmust have letters and numbers";
                                   }
                                   return null;
                                 },
@@ -548,8 +553,9 @@ class ProfileLabel extends StatelessWidget {
           ),
           child: GetX<UserController>(
             builder: (_) {
+              var newHint = hintText.obs;
               return Text(
-                hintText == null ? "hint" : hintText!,
+                hintText == null ? "hint" : newHint.value!,
                 style: const TextStyle(
                   color: Colors.black26,
                   fontSize: 20,

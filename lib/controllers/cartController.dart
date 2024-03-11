@@ -9,12 +9,12 @@ class CartController extends GetxController {
   var cartItems = [].obs;
   num screenHeight = Get.height;
 
-  @override
-  onInit() async {
-    super.onInit();
-    cartItems.bindStream(fetchCart());
-    print("${cartItems}");
-  }
+  // @override
+  // onInit() async {
+  //   super.onInit();
+  //   cartItems.bindStream(fetchCart());
+  //   print("${cartItems}");
+  // }
 
   addToCart(CartItem cartItem) async {
     var result = await DataBaseService().addToCart(cartItem);
@@ -51,7 +51,7 @@ class CartController extends GetxController {
     }
   }
 
-  Stream<List<dynamic>> fetchCart() {
+  void fetchCart() {
     var result = DataBaseService().fetchCartItems();
     if (result.runtimeType == Object) {
       Get.snackbar(
@@ -69,7 +69,7 @@ class CartController extends GetxController {
         ),
       );
     } else {}
-    return result;
+    cartItems.bindStream(result);
   }
 }
 
@@ -77,12 +77,12 @@ class WishListController extends GetxController {
   var wishListItems = [].obs;
   num screenHeight = Get.height;
 
-  @override
-  onInit() async {
-    super.onInit();
-    wishListItems.bindStream(fetchWishList());
-    print("${wishListItems}");
-  }
+  // @override
+  // onInit() async {
+  //   super.onInit();
+  //   wishListItems.bindStream(fetchWishList());
+  //   print("${wishListItems}");
+  // }
 
   addToWishlist(WishlistItem wishlistItem) async {
     var result = await DataBaseService().addToWishList(wishlistItem);
@@ -134,7 +134,7 @@ class WishListController extends GetxController {
     }
   }
 
-  Stream<List<dynamic>> fetchWishList() {
+  void fetchWishList() {
     var result = DataBaseService().fetchWishListItems();
     if (result.runtimeType == Object) {
       Get.snackbar(
@@ -144,14 +144,14 @@ class WishListController extends GetxController {
         duration: Duration(seconds: 1, milliseconds: 800),
         forwardAnimationCurve: Curves.decelerate,
         reverseAnimationCurve: Curves.easeOut,
-        backgroundColor: Colors.green[200],
+        backgroundColor: Colors.red[200],
         margin: EdgeInsets.only(
           left: 12,
           right: 12,
           bottom: screenHeight * 0.16,
         ),
       );
-    } else {}
-    return result;
+    }
+    wishListItems.bindStream(result);
   }
 }

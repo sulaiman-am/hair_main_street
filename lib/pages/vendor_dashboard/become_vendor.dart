@@ -27,7 +27,7 @@ class BecomeAVendorPage extends StatelessWidget {
         title: const Text(
           'Become A Vendor',
           style: TextStyle(
-            color: Color(0xFFFF8811),
+            color: Color(0xFF0E4D92),
             fontSize: 28,
             fontWeight: FontWeight.w800,
           ),
@@ -36,7 +36,7 @@ class BecomeAVendorPage extends StatelessWidget {
           onPressed: () => Get.back(),
           icon: const Icon(
             Icons.arrow_back_ios_rounded,
-            color: Colors.white,
+            color: Colors.black,
             size: 24,
           ),
         ),
@@ -50,7 +50,7 @@ class BecomeAVendorPage extends StatelessWidget {
               controller: shopNameController,
               labelText: "Shop Name",
               hintText: "",
-              maxLines: 2,
+              maxLines: 3,
               textInputType: TextInputType.text,
               validator: (value) {
                 if (value!.isEmpty) {
@@ -66,47 +66,39 @@ class BecomeAVendorPage extends StatelessWidget {
             const SizedBox(
               height: 20,
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: TextInputWidget(
-                    controller: streetAddressController,
-                    labelText: "Street Address",
-                    hintText: "",
-                    maxLines: 2,
-                    textInputType: TextInputType.text,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Enter the address of your shop";
-                      }
-                      return null;
-                    },
-                    onChanged: (val) {
-                      vendor.contactInfo!['street address'] = val!;
-                      return null;
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: TextInputWidget(
-                    controller: stateController,
-                    labelText: "State",
-                    hintText: "Lagos",
-                    maxLines: 1,
-                    textInputType: TextInputType.text,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Enter the state of your shop";
-                      }
-                      return null;
-                    },
-                    onChanged: (val) {
-                      vendor.contactInfo!['state'] = val;
-                      return null;
-                    },
-                  ),
-                ),
-              ],
+            TextInputWidget(
+              controller: streetAddressController,
+              labelText: "Street Address",
+              hintText: "",
+              maxLines: 2,
+              textInputType: TextInputType.text,
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return "Enter the address of your shop";
+                }
+                return null;
+              },
+              onChanged: (val) {
+                vendor.contactInfo!['street address'] = val!;
+                return null;
+              },
+            ),
+            TextInputWidget(
+              controller: stateController,
+              labelText: "State",
+              hintText: "Lagos",
+              maxLines: 1,
+              textInputType: TextInputType.text,
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return "Enter the state of your shop";
+                }
+                return null;
+              },
+              onChanged: (val) {
+                vendor.contactInfo!['state'] = val;
+                return null;
+              },
             ),
             const SizedBox(
               height: 20,
@@ -135,51 +127,43 @@ class BecomeAVendorPage extends StatelessWidget {
             const SizedBox(
               height: 20,
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: TextInputWidget(
-                    controller: bankNameController,
-                    labelText: "Bank Name",
-                    hintText: "First Bank",
-                    maxLines: 1,
-                    textInputType: TextInputType.text,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Enter your bank name";
-                      }
-                      return null;
-                    },
-                    onChanged: (val) {
-                      vendor.accountInfo!['bank name'] = val;
-                      return null;
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: TextInputWidget(
-                    controller: accountNumberController,
-                    labelText: "Account Number",
-                    hintText: "",
-                    maxLines: 1,
-                    textInputType: TextInputType.number,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Enter your account number";
-                      } else if (!validator.isNumeric(value)) {
-                        return "Account Number must be numbers only";
-                      } else if (value.length < 10) {
-                        return 'Account Number must be > 10 numbers';
-                      }
-                      return null;
-                    },
-                    onChanged: (val) {
-                      vendor.accountInfo!['account number'] = val;
-                      return null;
-                    },
-                  ),
-                ),
-              ],
+            TextInputWidget(
+              controller: bankNameController,
+              labelText: "Bank Name",
+              hintText: "First Bank",
+              maxLines: 1,
+              textInputType: TextInputType.text,
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return "Enter your bank name";
+                }
+                return null;
+              },
+              onChanged: (val) {
+                vendor.accountInfo!['bank name'] = val;
+                return null;
+              },
+            ),
+            TextInputWidget(
+              controller: accountNumberController,
+              labelText: "Account Number",
+              hintText: "",
+              maxLines: 1,
+              textInputType: TextInputType.number,
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return "Enter your account number";
+                } else if (!validator.isNumeric(value)) {
+                  return "Account Number must be numbers only";
+                } else if (value.length < 10) {
+                  return 'Account Number must be > 10 numbers';
+                }
+                return null;
+              },
+              onChanged: (val) {
+                vendor.accountInfo!['account number'] = val;
+                return null;
+              },
             ),
             const SizedBox(
               height: 20,
@@ -202,7 +186,7 @@ class BecomeAVendorPage extends StatelessWidget {
               },
             ),
             const SizedBox(
-              height: 40,
+              height: 20,
             ),
             TextButton(
               onPressed: () {

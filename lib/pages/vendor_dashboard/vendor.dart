@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/blankPage.dart';
+import 'package:hair_main_street/controllers/order_checkoutController.dart';
+import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/Shop_page.dart';
 import 'package:hair_main_street/pages/authentication/authentication.dart';
 import 'package:hair_main_street/pages/cart.dart';
@@ -16,22 +20,23 @@ import 'package:hair_main_street/pages/vendor_dashboard/wallet.dart';
 import 'package:hair_main_street/pages/menu/wishlist.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class VendorPage extends StatefulWidget {
-  const VendorPage({super.key});
+class VendorPage extends StatelessWidget {
+  VendorPage({super.key});
 
-  @override
-  State<VendorPage> createState() => _VendorPageState();
-}
+  UserController userController = Get.find<UserController>();
+  VendorController vendorController = Get.put(VendorController());
+  CheckOutController checkOutController = Get.find<CheckOutController>();
 
-class _VendorPageState extends State<VendorPage> {
   @override
   Widget build(BuildContext context) {
+    vendorController.vendorUID.value = userController.userState.value!.uid!;
+    checkOutController.userUID.value = userController.userState.value!.uid!;
+    //print(vendorController.vendorUID.value);
     List<String> vendorButtonsText = [
       "Shop Page",
       "My Orders",
       "Inventory",
       "Wallet",
-      "Deliveries",
       "Add Product"
     ];
 
@@ -40,7 +45,6 @@ class _VendorPageState extends State<VendorPage> {
       VendorOrdersPage(),
       InventoryPage(),
       WalletPage(),
-      PaymentSettingsPage(),
       AddproductPage(),
     ];
 
@@ -49,7 +53,6 @@ class _VendorPageState extends State<VendorPage> {
       Symbols.list_alt_rounded,
       Symbols.inventory_2_rounded,
       Symbols.wallet_rounded,
-      Symbols.local_shipping_rounded,
       Symbols.add,
     ];
     num screenHeight = MediaQuery.of(context).size.height;
@@ -80,48 +83,77 @@ class _VendorPageState extends State<VendorPage> {
       begin: Alignment.bottomCenter,
       //transform: GradientRotation(math.pi / 4),
     );
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => Get.back(),
-          icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.white),
-        ),
-        title: const Text(
-          'Vendor Dashboard',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
-            color: Color(
-              0xFFFF8811,
+    return StreamBuilder(
+      stream: vendorController.getVendorDetails(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Obx(
+            () => !vendorController.vendor.value!.firstVerification!
+                ? BlankPage(
+                    textStyle: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 40,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    interactionText:
+                        "You Have not been Verified Yet \nKindly Wait...",
+                  )
+                : Scaffold(
+                    appBar: AppBar(
+                      leading: IconButton(
+                        onPressed: () => Get.back(),
+                        icon: const Icon(Symbols.arrow_back_ios_new_rounded,
+                            size: 24, color: Colors.black),
+                      ),
+                      title: const Text(
+                        'Vendor Dashboard',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0E4D92),
+                        ),
+                      ),
+                      centerTitle: true,
+                      // flexibleSpace: Container(
+                      //   decoration: BoxDecoration(gradient: appBarGradient),
+                      // ),
+                      //backgroundColor: Colors.transparent,
+                    ),
+                    body: Container(
+                      padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
+                      //decoration: BoxDecoration(gradient: myGradient),
+                      child: GridView(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 24,
+                          mainAxisSpacing: 24,
+                        ),
+                        children: List.generate(
+                          vendorButtonsText.length,
+                          (index) => DashboardButton(
+                            icon: vendorButtonsIcons[index],
+                            page: vl[index],
+                            text: vendorButtonsText[index],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+          );
+        } else {
+          return Container(
+            color: Colors.white,
+            child: const Center(
+              child: CircularProgressIndicator(
+                //backgroundColor: Colors.white,
+                color: Color(0xFF392F5A),
+                strokeWidth: 4,
+              ),
             ),
-          ),
-        ),
-        centerTitle: true,
-        // flexibleSpace: Container(
-        //   decoration: BoxDecoration(gradient: appBarGradient),
-        // ),
-        //backgroundColor: Colors.transparent,
-      ),
-      body: Container(
-        padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
-        //decoration: BoxDecoration(gradient: myGradient),
-        child: GridView(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 24,
-            mainAxisSpacing: 24,
-          ),
-          children: List.generate(
-            vendorButtonsText.length,
-            (index) => DashboardButton(
-              icon: vendorButtonsIcons[index],
-              page: vl[index],
-              text: vendorButtonsText[index],
-            ),
-          ),
-        ),
-      ),
+          );
+        }
+      },
     );
   }
 }

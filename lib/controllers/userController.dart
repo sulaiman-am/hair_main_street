@@ -11,6 +11,7 @@ class UserController extends GetxController {
   var isLoading = false.obs;
   var myUser = MyUser().obs;
   var isObscure = true.obs;
+  Rx<MyUser?> buyerDetails = Rx<MyUser?>(null);
 
   get screenHeight => Get.height;
 
@@ -255,5 +256,13 @@ class UserController extends GetxController {
         ),
       );
     }
+  }
+
+  void getBuyerDetails(String userID) async {
+    buyerDetails.value = await DataBaseService().getBuyerDetails(userID);
+  }
+
+  Future<MyUser?> getUserDetails(String userID) async {
+    return await DataBaseService().getBuyerDetails(userID);
   }
 }

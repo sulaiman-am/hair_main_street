@@ -1,7 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_paystack/flutter_paystack.dart';
 
 class CheckOutPage extends StatefulWidget {
   const CheckOutPage({super.key});
@@ -13,15 +17,19 @@ class CheckOutPage extends StatefulWidget {
 class _CheckOutPageState extends State<CheckOutPage>
     with SingleTickerProviderStateMixin {
   late TabController tabController;
+  String? publicKey = dotenv.env["PAYSTACK_PUBLIC_KEY"];
+  final plugin = PaystackPlugin();
   bool? isVisible = true;
   List<bool>? isSelected = [true, false];
   String? dropdownValue;
   GlobalKey<FormState>? formKey = GlobalKey();
   TextEditingController amountController = TextEditingController();
   bool checkValue = true;
+
   @override
   void initState() {
     super.initState();
+    plugin.initialize(publicKey: publicKey!);
     tabController = TabController(length: 2, vsync: this);
   }
 
@@ -33,6 +41,21 @@ class _CheckOutPageState extends State<CheckOutPage>
 
   @override
   Widget build(BuildContext context) {
+    Future<void> _initiatePayment(num amount, String email) async {
+      Charge charge = Charge()
+        ..amount = 10000
+        ..reference = _getReference()
+        ..email = 'customer@email.com';
+
+      CheckoutResponse response = await plugin.checkout(
+        context,
+        method: CheckoutMethod.card,
+        charge: charge,
+      );
+
+      // Handle the response
+    }
+
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -626,5 +649,14 @@ class _CheckOutPageState extends State<CheckOutPage>
         ],
       ),
     );
+  }
+
+  String? _getReference() {
+    const characters =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*()-_=+[]{}|;:,.<>?/';
+    final random = Random();
+    final length = random.nextInt(6) + 25; // Random length between 25 and 30
+    return Iterable.generate(
+        length, (_) => characters[random.nextInt(characters.length)]).join();
   }
 }

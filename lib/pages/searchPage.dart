@@ -33,26 +33,86 @@ class SearchPage extends StatelessWidget {
       ),
       body: GetX<ProductController>(
         builder: (controller) {
+          var vendors = controller.vendorsList.value;
           var product = controller.products.value;
+          var filteredVendors = vendors
+              .where((vendor) => vendor!.shopName!
+                  .toLowerCase()
+                  .contains(query!.toLowerCase()))
+              .toList();
           var filteredProducts = product
               .where((product) =>
                   product!.name!.toLowerCase().contains(query!.toLowerCase()))
               .toList();
+          controller.filteredVendorsList.value = filteredVendors;
           controller.filteredProducts.value = filteredProducts;
-          return GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-            shrinkWrap: true,
-            //physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisExtent: screenHeight * 0.295,
-              mainAxisSpacing: 24,
-              crossAxisSpacing: 24,
-            ),
-            itemBuilder: (_, index) => SearchCard(
-              index: index,
-            ),
-            itemCount: filteredProducts.length,
+          return ListView(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            children: [
+              Visibility(
+                visible: filteredVendors.isNotEmpty,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Shops",
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
+                    ),
+                    const SizedBox(
+                      height: 4,
+                    ),
+                    GridView.builder(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 12),
+                      shrinkWrap: true,
+                      //physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisExtent: screenHeight * 0.08,
+                        mainAxisSpacing: 24,
+                        crossAxisSpacing: 24,
+                      ),
+                      itemBuilder: (_, index) => ShopSearchCard(
+                        index: index,
+                      ),
+                      itemCount: filteredVendors.length,
+                    ),
+                    const SizedBox(
+                      height: 4,
+                    ),
+                  ],
+                ),
+              ),
+              const Text(
+                "Products",
+                style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
+              ),
+              const SizedBox(
+                height: 4,
+              ),
+              GridView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                shrinkWrap: true,
+                //physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisExtent: screenHeight * 0.295,
+                  mainAxisSpacing: 24,
+                  crossAxisSpacing: 24,
+                ),
+                itemBuilder: (_, index) => SearchCard(
+                  index: index,
+                ),
+                itemCount: filteredProducts.length,
+              ),
+            ],
           );
         },
       ),

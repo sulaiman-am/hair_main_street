@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/productController.dart';
+import 'package:hair_main_street/controllers/vendorController.dart';
+import 'package:hair_main_street/models/productModel.dart';
+import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/pages/searchPage.dart';
 
 class MySearchDelegate extends SearchDelegate<String> {
@@ -36,12 +39,20 @@ class MySearchDelegate extends SearchDelegate<String> {
   Widget buildSuggestions(BuildContext context) {
     ProductController productController = Get.find<ProductController>();
     var products = productController.products.value;
+    var vendors = productController.vendorsList.value;
 
-    // Filter products based on the query and create a list of suggestions
-    var suggestions = products
+    // Filter products and vendors based on the query and create a list of suggestions
+    List<Product?> productSuggestions = products
         .where((product) =>
             product!.name!.toLowerCase().contains(query.toLowerCase()))
         .toList();
+    List<Vendors?> vendorSuggestions = vendors
+        .where((vendor) =>
+            vendor!.shopName!.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
+    // Flatten the list of lists into a single list of suggestions
+    List<dynamic> suggestions = [...productSuggestions, ...vendorSuggestions];
 
     if (suggestions.isEmpty) {
       return const SizedBox.shrink();
@@ -50,11 +61,19 @@ class MySearchDelegate extends SearchDelegate<String> {
     return ListView.builder(
       itemCount: suggestions.length,
       itemBuilder: (context, index) {
+        String suggestionReturn() {
+          if (suggestions[index] is Product) {
+            return (suggestions[index] as Product).name!;
+          } else {
+            return (suggestions[index] as Vendors).shopName!;
+          }
+        }
+
         return ListTile(
-          title: Text(suggestions[index]!.name!),
+          title: Text(suggestionReturn()),
           onTap: () {
             // When a suggestion is tapped, update the query and display the results.
-            query = suggestions[index]!.name!;
+            query = suggestionReturn();
             showResults(context);
           },
         );

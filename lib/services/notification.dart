@@ -1,0 +1,154 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
+import 'package:hair_main_street/pages/notifcation.dart';
+
+FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+var androidChannel = const AndroidNotificationChannel(
+  "hair_main_street",
+  "hair_main_street",
+  importance: Importance.high,
+);
+
+Future handleBackgroundNotification(RemoteMessage message) async {
+  print(message.notification?.title);
+  print(message.notification?.body);
+  print(message.data);
+  // final notification = message.notification;
+  // if (notification == null) {
+  //   return;
+  // } else {
+  //   flutterLocalNotificationsPlugin.show(
+  //       notification.hashCode,
+  //       notification.title,
+  //       notification.body,
+  //       NotificationDetails(
+  //         android: AndroidNotificationDetails(
+  //             androidChannel.id, androidChannel.name,
+  //             icon: "@drawable/std_icon"),
+  //       ),
+  //       payload: jsonEncode(message.toMap()));
+  // }
+}
+
+class NotificationService {
+  final FirebaseMessaging fCM = FirebaseMessaging.instance;
+
+  final db = FirebaseFirestore.instance;
+
+  final auth = FirebaseAuth.instance;
+
+  CollectionReference userProfileCollection =
+      FirebaseFirestore.instance.collection("userProfile");
+
+  CollectionReference ordersCollection =
+      FirebaseFirestore.instance.collection('orders');
+
+  CollectionReference chatCollection =
+      FirebaseFirestore.instance.collection('chat');
+
+  Future<String?> getDeviceToken() async {
+    var token = await fCM.getToken();
+    print(token);
+    return token;
+  }
+
+  void subscribeToTopics(String userType, String userID) async {
+    await fCM.subscribeToTopic("${userType}_$userID");
+  }
+
+  Future<void> init() async {
+    // Request permission for notifications (iOS only)
+    await fCM.requestPermission();
+
+    //making the settings
+    var androidInitialize =
+        const AndroidInitializationSettings('@drawable/std_icon');
+    var iosInitialize = const DarwinInitializationSettings();
+    var initializationSettings =
+        InitializationSettings(android: androidInitialize, iOS: iosInitialize);
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (details) => Get.to(
+        () => NotificationsPage(
+          data: details.payload,
+        ),
+      ),
+    );
+
+    // Set up notification handlers
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // Handle foreground notification
+      final notification = message.notification;
+      if (notification == null) {
+        return;
+      } else {
+        BigTextStyleInformation bigTextStyleInformation =
+            BigTextStyleInformation(notification.body!,
+                htmlFormatBigText: true,
+                contentTitle: notification.title!,
+                htmlFormatContentTitle: true);
+        flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                androidChannel.id,
+                androidChannel.name,
+                icon: "@drawable/std_icon",
+                styleInformation: bigTextStyleInformation,
+              ),
+            ),
+            payload: jsonEncode(message.toMap()));
+      }
+      print("Foreground Notification: ${message.notification!.title}");
+    });
+
+    //handles background notifications
+    FirebaseMessaging.onBackgroundMessage(handleBackgroundNotification);
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      Get.to(
+        arguments: message,
+        () => NotificationsPage(
+          data: message,
+        ),
+      );
+      // Handle notification when the app is in the background
+      print("Background Notification: $message");
+    });
+
+    // Retrieve an initial notification when the app is in the terminated state
+    RemoteMessage? initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      final notification = initialMessage.notification;
+      if (notification == null) {
+        return;
+      } else {
+        Get.to(
+          () => NotificationsPage(
+            data: initialMessage,
+          ),
+        );
+      }
+      print("Terminated Notification: $initialMessage");
+    }
+  }
+
+  void unsubscribeFromTopics(List<String> topics) {
+    for (String topic in topics) {
+      fCM.unsubscribeFromTopic(topic);
+    }
+  }
+  // Additional methods for subscribing, unsubscribing, etc.
+}

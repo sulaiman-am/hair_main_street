@@ -51,16 +51,14 @@ class ReferralPage extends StatelessWidget {
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.white),
+              size: 24, color: Colors.black),
         ),
         title: const Text(
           'Referral',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: Color(
-              0xFFFF8811,
-            ),
+            color: Color(0xFF0E4D92),
           ),
         ),
         centerTitle: true,

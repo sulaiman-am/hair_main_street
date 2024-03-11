@@ -26,10 +26,10 @@ class ChatMessages {
   });
 
   factory ChatMessages.fromJson(Map<String, dynamic> json) => ChatMessages(
-        idTo: json["idTo"],
-        idFrom: json["idFrom"],
+        idTo: json["id To"],
+        idFrom: json["id From"],
         content: json["content"],
-        timestamp: json["timestamp"],
+        timestamp: json["timestamp"].toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -42,7 +42,8 @@ class ChatMessages {
 
 class Chat {
   String? chatID;
-  List<String>? members;
+  String? member1;
+  String? member2;
   String? recentMessageText;
   String? recentMessageSentBy;
   String? recentMessageSentAt;
@@ -50,9 +51,30 @@ class Chat {
 
   Chat(
       {this.chatID,
-      this.members,
+      this.member1,
+      this.member2,
       this.readBy,
       this.recentMessageSentAt,
       this.recentMessageSentBy,
       this.recentMessageText});
+
+  factory Chat.fromJson(Map<String, dynamic> json) => Chat(
+        chatID: json["chatID"],
+        member1: json["member1"],
+        readBy: json["read by"],
+        recentMessageSentAt: json["recent message sent at"],
+        recentMessageSentBy: json['recent message sent by'],
+        recentMessageText: json['recent message text'],
+        member2: json["member2"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "chatID": chatID,
+        "member1": member1,
+        "member2": member2,
+        "recent message sent at": recentMessageSentAt,
+        "recent message sent by": recentMessageSentBy,
+        "recent message text": recentMessageText,
+        "read by": readBy,
+      };
 }

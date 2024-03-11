@@ -10,6 +10,7 @@ class WishListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WishListController wishListController = Get.find<WishListController>();
+    wishListController.fetchWishList();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(

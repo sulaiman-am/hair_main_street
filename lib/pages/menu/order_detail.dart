@@ -1,19 +1,59 @@
 // ignore_for_file: prefer_const_constructors
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hair_main_street/controllers/order_checkoutController.dart';
+
+import 'dart:ffi';
+import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/models/orderModel.dart';
+import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/pages/messages.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/refund.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class OrderDetailsPage extends StatelessWidget {
-  const OrderDetailsPage({super.key});
+  DatabaseOrderResponse? orderDetails;
+  Product? product;
+  OrderDetailsPage({this.product, this.orderDetails, super.key});
 
   @override
   Widget build(BuildContext context) {
+    CheckOutController checkOutController = Get.find<CheckOutController>();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
+    var isVisible = (orderDetails!.orderStatus == "delivered").obs;
+
+    DateTime resolveTimestampWithoutAdding(Timestamp timestamp) {
+      DateTime dateTime = timestamp.toDate(); // Convert Timestamp to DateTime
+
+      // Add days to the DateTime
+      //DateTime newDateTime = dateTime.add(Duration(days: daysToAdd));
+
+      return dateTime;
+    }
+
+    String resolveTimestamp(Timestamp timestamp, int daysToAdd) {
+      DateTime dateTime = timestamp.toDate(); // Convert Timestamp to DateTime
+
+      // Add days to the DateTime
+      DateTime newDateTime = dateTime.add(Duration(days: daysToAdd));
+
+      // Format the DateTime without the time part
+      String formattedDate = DateFormat('yyyy-MM-dd').format(newDateTime);
+
+      return formattedDate;
+    }
+
+    Orders order = Orders(
+      orderId: orderDetails!.orderId,
+      paymentStatus: orderDetails!.paymentStatus,
+      paymentMethod: orderDetails!.paymentMethod,
+      shippingAddress: orderDetails!.shippingAddress,
+    );
+
     Gradient myGradient = const LinearGradient(
       colors: [
         Color.fromARGB(255, 255, 224, 139),
@@ -45,16 +85,14 @@ class OrderDetailsPage extends StatelessWidget {
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.white),
+              size: 24, color: Colors.black),
         ),
         title: const Text(
           'Order Details',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: Color(
-              0xFFFF8811,
-            ),
+            color: Color(0xFF0E4D92),
           ),
         ),
         centerTitle: true,
@@ -67,65 +105,65 @@ class OrderDetailsPage extends StatelessWidget {
         //decoration: BoxDecoration(gradient: myGradient),
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: ListView(
-          padding: const EdgeInsets.only(top: 12),
+          padding: const EdgeInsets.only(top: 12, bottom: 12),
           children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  width: 2,
-                  color: Color(0xFF392F5A),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0xFF000000),
-                    blurStyle: BlurStyle.normal,
-                    offset: Offset.zero,
-                    blurRadius: 2,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      HeaderText(
-                        text: "Delivery Status: ",
-                      ),
-                      Expanded(
-                        child: Text(
-                          "Awaiting Confirmation",
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                              overflow: TextOverflow.ellipsis,
-                              fontWeight: FontWeight.w600),
-                          //overflow: TextOverflow.ellipsis,
-                          maxLines: 2,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Text(
-                    "Complying with company policy, all deliveries are automatically confirmed 72hrs after order placement",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 16,
-            ),
+            // Container(
+            //   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            //   decoration: BoxDecoration(
+            //     color: Colors.grey[200],
+            //     borderRadius: BorderRadius.circular(12),
+            //     border: Border.all(
+            //       width: 2,
+            //       color: Color(0xFF392F5A),
+            //     ),
+            //     boxShadow: [
+            //       BoxShadow(
+            //         color: Color(0xFF000000),
+            //         blurStyle: BlurStyle.normal,
+            //         offset: Offset.zero,
+            //         blurRadius: 2,
+            //       ),
+            //     ],
+            //   ),
+            //   child: Column(
+            //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       Row(
+            //         mainAxisAlignment: MainAxisAlignment.start,
+            //         children: [
+            //           HeaderText(
+            //             text: "Delivery Status: ",
+            //           ),
+            //           Expanded(
+            //             child: Text(
+            //               "Awaiting Confirmation",
+            //               style: TextStyle(
+            //                   color: Colors.black,
+            //                   fontSize: 16,
+            //                   overflow: TextOverflow.ellipsis,
+            //                   fontWeight: FontWeight.w600),
+            //               //overflow: TextOverflow.ellipsis,
+            //               maxLines: 2,
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //       const Text(
+            //         "Complying with company policy, all deliveries are automatically confirmed 72hrs after order placement",
+            //         style: TextStyle(
+            //           color: Colors.black,
+            //           fontSize: 16,
+            //         ),
+            //         maxLines: 3,
+            //         overflow: TextOverflow.ellipsis,
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            // const SizedBox(
+            //   height: 16,
+            // ),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               decoration: BoxDecoration(
@@ -166,6 +204,7 @@ class OrderDetailsPage extends StatelessWidget {
                           ),
                           width: screenWidth * 0.32,
                           height: screenHeight * 0.16,
+                          child: Image.network(product!.image!.first),
                         ),
                         const SizedBox(
                           width: 12,
@@ -175,7 +214,7 @@ class OrderDetailsPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Product Name",
+                              "${product!.name}",
                               style: TextStyle(
                                 fontSize: 20,
                               ),
@@ -184,18 +223,36 @@ class OrderDetailsPage extends StatelessWidget {
                             SizedBox(
                               height: 8,
                             ),
-                            Text("Product Price"),
+                            Text(
+                              "₦${product!.price}",
+                              style: TextStyle(
+                                fontSize: 16,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             SizedBox(
                               height: 8,
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text("Quantity"),
+                                Text(
+                                  "Quantity",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 SizedBox(
                                   width: 30,
                                 ),
-                                Text("x 1")
+                                Text(
+                                  "x${orderDetails!.orderItem!.first.quantity}",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                )
                               ],
                             ),
                           ],
@@ -226,7 +283,7 @@ class OrderDetailsPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text("Estimated Delivery Date: "),
-                        Text("12/08/2023"),
+                        Text("${resolveTimestamp(orderDetails!.createdAt, 3)}"),
                       ],
                     ),
                   ),
@@ -301,29 +358,84 @@ class OrderDetailsPage extends StatelessWidget {
                     height: 8,
                   ),
                   Row(
-                    children: [Text("Order ID: "), Text("287637287673")],
-                  ),
-                  SizedBox(
-                    height: 8,
-                  ),
-                  Row(
-                    children: [Text("Placed at: "), Text("09/08/2023")],
-                  ),
-                  SizedBox(
-                    height: 8,
-                  ),
-                  Row(
-                    children: [Text("Payment Status: "), Text("Paid")],
+                    children: [
+                      Text(
+                        "Order ID: ",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      Text("${orderDetails!.orderId}")
+                    ],
                   ),
                   SizedBox(
                     height: 8,
                   ),
                   Row(
                     children: [
-                      Text("Delivery Address: "),
+                      Text(
+                        "Order Status: ",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      Text("${orderDetails!.orderStatus}")
+                    ],
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  Row(
+                    children: [
+                      Text("Placed at: ",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(
+                          "${resolveTimestampWithoutAdding(orderDetails!.createdAt)}")
+                    ],
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  Row(
+                    children: [
+                      Text("Payment Status: ",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text("${orderDetails!.paymentStatus}")
+                    ],
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  Row(
+                    children: [
+                      Text("Payment Method: ",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text("${orderDetails!.paymentMethod}")
+                    ],
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  Row(
+                    children: [
+                      Text("Payment Price: ",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text("₦${orderDetails!.paymentPrice}")
+                    ],
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  Row(
+                    children: [
+                      Text("Delivery Address: ",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600)),
                       Expanded(
                         child: Text(
-                          "No 224 Darmanawa Gabas Kano, Kano State, Nigeria",
+                          "${orderDetails!.shippingAddress}",
                           maxLines: 3,
                         ),
                       ),
@@ -336,7 +448,12 @@ class OrderDetailsPage extends StatelessWidget {
                   Center(
                     child: TextButton(
                       onPressed: () {
-                        Get.to(() => MessagesPage());
+                        Get.to(
+                          () => MessagesPage(
+                            senderID: orderDetails!.buyerId,
+                            receiverID: orderDetails!.vendorId,
+                          ),
+                        );
                       },
                       style: TextButton.styleFrom(
                         backgroundColor: Color(0xFF392F5A),
@@ -360,6 +477,146 @@ class OrderDetailsPage extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(
+              height: 16,
+            ),
+            Visibility(
+              visible: orderDetails!.paymentPrice != orderDetails!.totalPrice,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    width: 2,
+                    color: Color(0xFF392F5A),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF000000),
+                      blurStyle: BlurStyle.normal,
+                      offset: Offset.fromDirection(-4.0),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HeaderText(
+                      text: "Remaining Payment",
+                    ),
+                    SizedBox(
+                      height: 8,
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "Amount Remaining: ",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                            "₦${orderDetails!.totalPrice! - orderDetails!.paymentPrice!.toInt()}")
+                      ],
+                    ),
+                    Divider(
+                      height: 7,
+                      color: Colors.black,
+                    ),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          Get.to(() => MessagesPage());
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Color(0xFF392F5A),
+                          padding: EdgeInsets.all(4),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(
+                              width: 1.5,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          "Pay Amount",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Obx(
+              () {
+                return Visibility(
+                  visible: isVisible.value,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        width: 2,
+                        color: Color(0xFF392F5A),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF000000),
+                          blurStyle: BlurStyle.normal,
+                          offset: Offset.fromDirection(-4.0),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Your Order has been marked as delivered by the vendor",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Center(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF392F5A),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: Colors.white,
+                                  width: 1.2,
+                                ),
+                              ),
+                            ),
+                            onPressed: () async {
+                              order.orderStatus = "confirmed";
+                              await checkOutController.updateOrder(order);
+                              isVisible.value = false;
+                            },
+                            child: Text(
+                              "Confirm",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

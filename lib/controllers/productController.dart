@@ -3,17 +3,22 @@ import 'dart:async';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/models/review.dart';
+import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/add_product.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/vendor.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:http/http.dart' as http;
 
 class ProductController extends GetxController {
+  RxList<Vendors?> vendorsList = RxList<Vendors?>();
+  RxList<Vendors?> filteredVendorsList = RxList<Vendors?>();
   Rx<List<Product?>> products = Rx<List<Product?>>([]);
   Rx<List<Product?>> filteredProducts = Rx<List<Product?>>([]);
   Rx<List<Review?>> reviews = Rx<List<Review?>>([]);
+  // VendorController vendorController = Get.find<VendorController>();
   var imageList = [].obs;
   var downloadUrls = [].obs;
   var isLoading = false.obs;
@@ -27,6 +32,7 @@ class ProductController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    vendorsList.bindStream(getVendors());
     products.bindStream(fetchProducts());
     print(products.value);
     if (products.value.isEmpty) {
@@ -40,6 +46,10 @@ class ProductController extends GetxController {
   // void onReady(){
 
   // }
+
+  Stream<List<Vendors>> getVendors() {
+    return DataBaseService().getVendors();
+  }
 
   checkValidity(String url) async {
     try {
@@ -136,11 +146,92 @@ class ProductController extends GetxController {
   }
 
   //update a product
+  updateProduct(Product product) async {
+    var result = await DataBaseService().updateProduct(product: product);
+    if (result == "success") {
+      isProductadded.value = true;
+      Get.snackbar(
+        "Successful",
+        "Product Edited",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    } else {
+      Get.snackbar(
+        "Error",
+        "Product Edit Failed",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[400],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    }
+  }
 
   //delete a product
+  deleteProduct(Product product) async {
+    var result = await DataBaseService().deleteProduct(product);
+    if (result == "success") {
+      isProductadded.value = true;
+      Get.snackbar(
+        "Successful",
+        "Product Deleted",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    } else {
+      Get.snackbar(
+        "Error",
+        "Failed to Delete Product",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[400],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    }
+  }
 
   //get reviews of products
   dynamic getReviews(String? productID) {
     reviews.bindStream(DataBaseService().getReviews(productID!));
+  }
+
+  //get vendors list
+  Vendors clientGetVendorName(String vendorID) {
+    Vendors vendorDetails = Vendors();
+    vendorsList.forEach((vendor) {
+      if (vendor!.userID == vendorID) {
+        vendorDetails = vendor;
+      }
+    });
+    return vendorDetails;
   }
 }

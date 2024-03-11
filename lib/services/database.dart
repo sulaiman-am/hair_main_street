@@ -1,12 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/messageModel.dart';
+import 'package:hair_main_street/models/notificationsModel.dart';
 import 'package:hair_main_street/models/orderModel.dart';
 import 'package:hair_main_street/models/review.dart';
 import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
+import 'package:hair_main_street/models/wallet_transaction.dart';
 import 'package:hair_main_street/pages/messages.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,12 +20,17 @@ import 'package:hair_main_street/models/productModel.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:http/http.dart' as http;
 
 class DataBaseService {
   final String? uid;
   DataBaseService({this.uid});
 
   User? currentUser = FirebaseAuth.instance.currentUser;
+
+  var auth = FirebaseAuth.instance;
+
+  var fcm = FirebaseMessaging.instance;
 
   CollectionReference userProfileCollection =
       FirebaseFirestore.instance.collection("userProfile");
@@ -36,6 +46,12 @@ class DataBaseService {
 
   CollectionReference chatCollection =
       FirebaseFirestore.instance.collection('chat');
+
+  CollectionReference walletCollection =
+      FirebaseFirestore.instance.collection('wallet');
+
+  CollectionReference notificationsCollection =
+      FirebaseFirestore.instance.collection('notifications');
 
   //get the role dynamically
   Stream<DocumentSnapshot> get getRoleDynamically {
@@ -78,6 +94,8 @@ class DataBaseService {
 
       // make the user profile
       return await userProfileCollection.doc(uid).set({
+        "email": currentUser!.email,
+        "uid": uid,
         'fullname': "",
         'phonenumber': "",
         'address': "",
@@ -109,21 +127,74 @@ class DataBaseService {
     }
   }
 
+  Future<MyUser?> getBuyerDetails(String userID) async {
+    try {
+      var result = await userProfileCollection.doc(userID).get();
+      if (result.exists) {
+        var user = MyUser.fromJson(result.data() as Map<String, dynamic>);
+        return user;
+      } else {
+        print("Buyer does not exist");
+      }
+    } on FirebaseException catch (e) {
+      print(e);
+    } catch (e) {
+      print(e);
+    }
+    return null;
+  }
+
   //vendor stuff including vendor profile
   Future createVendor(Vendors vendor) async {
     try {
       var documentID = currentUser!.uid;
       await vendorsCollection.doc(documentID).set({
+        "docID": documentID,
         "userID": currentUser!.uid,
-        "shopName": vendor.shopName,
-        "accountInfo": vendor.accountInfo,
-        "contactInfo": vendor.contactInfo,
-        "isVerified": false,
+        "shop name": vendor.shopName,
+        "account info": vendor.accountInfo,
+        "contact info": vendor.contactInfo,
+        "first verification": vendor.firstVerification,
+        "second verification": vendor.secondVerification,
         "createdAt": FieldValue.serverTimestamp(),
       });
+      vendorsCollection.doc(documentID).collection("withdrawal requests");
       return "success";
     } on FirebaseException catch (e) {
       print("Error: ${e.code} and ${e.message}");
+    }
+  }
+
+  //getVendors
+  Stream<List<Vendors>> getVendors() {
+    var response = vendorsCollection.snapshots();
+    return response.map((event) => event.docs
+        .map((doc) => Vendors.fromdata(doc.data() as Map<String, dynamic>))
+        .toList());
+  }
+
+  //get vendor details
+  Stream<Vendors?> getVendorDetails() {
+    try {
+      if (currentUser == null) {
+        return Stream.error("Current user is null");
+      }
+
+      var response = vendorsCollection
+          .where('userID', isEqualTo: currentUser!.uid)
+          .snapshots();
+
+      return response.map((event) {
+        if (event.docs.isNotEmpty) {
+          var data = event.docs.first.data() as Map<String, dynamic>;
+          return Vendors.fromdata(data);
+        } else {
+          return null;
+        }
+      });
+    } catch (e) {
+      print("Error in getVendorDetails: $e");
+      return Stream.error(e);
     }
   }
 
@@ -171,6 +242,8 @@ class DataBaseService {
             }).toList();
           }
         }
+      } else {
+        print("stuff");
       }
     } catch (e) {
       print(e);
@@ -281,7 +354,64 @@ class DataBaseService {
     }
   }
 
-  //create order and update orders
+  //create order and update orders and get orders
+
+  //get buyers orders
+  Stream<List<DatabaseOrderResponse>> getBuyerOrders(String? userID) async* {
+    await for (var event in ordersCollection
+        .where('buyerID', isEqualTo: userID)
+        .orderBy('created at', descending: true)
+        .snapshots()) {
+      if (event.docs.isEmpty) {
+        yield [];
+      } else {
+        var futures = event.docs.map((doc) async {
+          var data = doc.data() as Map<String, dynamic>;
+          var orderItemSnapshot =
+              await doc.reference.collection('order items').get();
+          var orderItems = orderItemSnapshot.docs.map((orderItemDoc) {
+            var orderItemData = orderItemDoc.data();
+            return OrderItem.fromJson(orderItemData);
+          }).toList();
+          data["orderItems"] = orderItems;
+          //print(data['orderItems']);
+          return DatabaseOrderResponse.fromJson(data);
+        }).toList();
+
+        var results = await Future.wait(futures);
+        yield results;
+      }
+    }
+  }
+
+  //get vendors orders
+  Stream<List<DatabaseOrderResponse>> getVendorsOrders(String? userID) async* {
+    await for (var event in ordersCollection
+        .where('vendorID', isEqualTo: userID)
+        .orderBy('created at', descending: true)
+        .snapshots()) {
+      if (event.docs.isEmpty) {
+        yield [];
+      } else {
+        var futures = event.docs.map((doc) async {
+          var data = doc.data() as Map<String, dynamic>;
+          var orderItemSnapshot =
+              await doc.reference.collection('order items').get();
+          var orderItems = orderItemSnapshot.docs.map((orderItemDoc) {
+            var orderItemData = orderItemDoc.data();
+            return OrderItem.fromJson(orderItemData);
+          }).toList();
+          data["orderItems"] = orderItems;
+          // print(data['orderItems']);
+          return DatabaseOrderResponse.fromJson(data);
+        }).toList();
+
+        var results = await Future.wait(futures);
+        //print(results);
+        yield results;
+      }
+    }
+  }
 
   //create order
   Future createOrder(Orders order, OrderItem orderItem) async {
@@ -294,7 +424,15 @@ class DataBaseService {
         //create order item subcollection
         ordersCollection.doc(orderID).collection('order items');
 
-        var dbOrder = await ordersCollection.doc(orderID).set({
+        //get vendor id from product id provided
+        // var result = await productsCollection.doc(orderItem.productId).get();
+        // var product = Product.fromdata(result.data() as Map<String, dynamic>);
+        // var vendorID = product.vendorId;
+
+        await ordersCollection.doc(orderID).set({
+          "payment price": order.paymentPrice,
+          "installment number": order.installmentNumber,
+          "installment paid": order.installmentPaid,
           "orderID": orderID,
           "buyerID": order.buyerId,
           "vendorID": order.vendorId,
@@ -307,7 +445,7 @@ class DataBaseService {
           "payment status": order.paymentStatus,
         });
 
-        var dbOrderItem = await ordersCollection
+        await ordersCollection
             .doc(orderID)
             .collection('order items')
             .doc(orderID)
@@ -317,12 +455,27 @@ class DataBaseService {
           "price": orderItem.price,
         });
 
-        // return [
-        //   {"order": dbOrder},
-        //   {"orderItem": dbOrderItem}
-        // ];
+        return {'Order Created': orderID};
       }
     } on FirebaseException catch (e) {
+      print(e);
+    }
+  }
+
+//update orderStatus for vendors
+  Future updateOrderStatus(String orderID, String orderStatus) async {
+    try {
+      var role = await verifyRole();
+      if (role!.keys.contains("Vendor")) {
+        await ordersCollection.doc(orderID).update({
+          "order status": orderStatus,
+          "updated at": FieldValue.serverTimestamp(),
+        });
+        return "success";
+      }
+    } on FirebaseAuthException catch (e) {
+      print(e);
+    } catch (e) {
       print(e);
     }
   }
@@ -339,9 +492,31 @@ class DataBaseService {
           "payment method": order.paymentMethod,
           "payment status": order.paymentStatus,
         };
-        return await ordersCollection.doc(order.orderId).update(updatedFields);
+        await ordersCollection.doc(order.orderId).update(updatedFields);
+        return "success";
       }
     } on FirebaseException catch (e) {
+      print(e);
+    }
+  }
+
+  //get single order
+  Future getSingleOrder(String orderID) async {
+    try {
+      var orderResult = await ordersCollection.doc(orderID).get();
+      var orderItem = await ordersCollection
+          .doc(orderID)
+          .collection("order items")
+          .doc(orderID)
+          .get();
+      var orderResultData = orderResult.data() as Map<String, dynamic>;
+      var orderItemData =
+          OrderItem.fromJson(orderItem.data() as Map<String, dynamic>);
+      orderResultData["orderItems"] = [orderItemData];
+      // print("result: ${orderResultData}");
+      // print("orderItem: ${orderItemData.productId}");
+      return DatabaseOrderResponse.fromJson(orderResultData);
+    } catch (e) {
       print(e);
     }
   }
@@ -452,25 +627,44 @@ class DataBaseService {
       //get the current user role
       var role = await verifyRole();
       if (role!.keys.contains("Vendor")) {
-        var updatedFields = {
-          "productID": product!.productID,
-          "name": product.name,
-          "price": product.price,
-          "image": product.image,
-          "hasOption": product.hasOption,
-          "allowInstallment": product.allowInstallment,
-          "quantity": product.quantity,
-          "description": product.description,
-          "updatedAt": FieldValue.serverTimestamp(),
-        };
-        return await productsCollection
-            .doc(product.productID)
-            .update(updatedFields);
+        if (role["Vendor"] == product!.vendorId) {
+          var updatedFields = {
+            "productID": product!.productID,
+            "name": product.name,
+            "price": product.price,
+            "image": product.image,
+            "hasOption": product.hasOption,
+            "allowInstallment": product.allowInstallment,
+            "quantity": product.quantity,
+            "description": product.description,
+            "updatedAt": FieldValue.serverTimestamp(),
+          };
+          await productsCollection.doc(product.productID).update(updatedFields);
+          return 'success';
+        } else {
+          print('not your product');
+        }
       } else {
         print("Not Authorized");
       }
     } on FirebaseException catch (e) {
       print("Error: ${e.code} and ${e.message}");
+    }
+  }
+
+  //delete product
+  Future deleteProduct(Product product) async {
+    try {
+      var role = await verifyRole();
+      if (role!.keys.contains("Vendor") && role["Vendor"] == product.vendorId) {
+        await productsCollection.doc(product.productID).delete();
+        return 'success';
+      } else {
+        print('not authorized');
+        return 'not authorized';
+      }
+    } on FirebaseException catch (e) {
+      print("${e.message} ${e.code}");
     }
   }
 
@@ -499,6 +693,60 @@ class DataBaseService {
       var data = snapshot.data() as Map<String, dynamic>;
       Product product = Product.fromdata(data);
       return product;
+    }
+  }
+
+  // get a vendor's products
+  Stream<List<Product>> getVendorProducts(String vendorID) async* {
+    try {
+      var role = await verifyRole();
+      if (role!.keys.contains('Vendor')) {
+        // get products based on vendorID
+        var response = productsCollection
+            .where('vendorID', isEqualTo: vendorID)
+            .orderBy('createdAt')
+            .snapshots();
+
+        // get every product
+        await for (var event in response) {
+          if (event.docs.isEmpty) {
+            yield <Product>[]; // yield an empty list if there are no products
+          } else {
+            yield event.docs.map((data) {
+              var doc = data.data() as Map<String, dynamic>;
+              //print(Product.fromdata(doc));
+              return Product.fromdata(doc);
+            }).toList();
+          }
+        }
+      }
+    } on FirebaseException catch (e) {
+      print('FirebaseException: $e');
+      // Handle FirebaseException
+    } catch (e) {
+      print('Exception: $e');
+      // Handle other exceptions
+    }
+  }
+
+  //create or update a vendor
+  Future createOrUpdateVendor(Vendors vendor) async {
+    try {
+      var role = await verifyRole();
+      if (role!.keys.contains("Vendor")) {
+        if (vendor.docID == null) {
+          var docID = vendorsCollection.doc().id;
+          Map<String, dynamic> fields = vendor.todata(docID: docID);
+          await vendorsCollection.doc(docID).set(fields);
+        } else {
+          Map<String, dynamic> updateFields = vendor.todata();
+          await vendorsCollection.doc(vendor.docID).update(updateFields);
+        }
+        return 'success';
+      }
+      return 'not authorized';
+    } on FirebaseException catch (e) {
+      print(e);
     }
   }
 
@@ -581,36 +829,106 @@ class DataBaseService {
 
   //chats
   //start chat
-  Future startChat(ChatMessages chatMessage) async {
+  Future startChat(Chat chat, ChatMessages chatMessage) async {
     try {
-      var chatRef = chatCollection.doc();
-      var chatID = chatRef.id;
+      //first check if the chat record exists
+      Future<Map<String, bool>> chatExists() async {
+        var data = await chatCollection
+            .where(
+              Filter.or(
+                Filter("member1", isEqualTo: chat.member1),
+                Filter("member2", isEqualTo: chat.member2),
+                Filter("member1", isEqualTo: chat.member2),
+                Filter("member2", isEqualTo: chat.member1),
+              ),
+            )
+            .get();
+        if (data.docs.isNotEmpty) {
+          var result = data.docs.first.data() as Map<String, dynamic>;
+          var existingChatID = result["chatID"];
+          print(existingChatID);
+          return {existingChatID: true};
+        } else {
+          return {"": false};
+        }
+      }
+
+      var check = await chatExists();
       var fields = {
         "content": chatMessage.content,
         "id To": chatMessage.idTo,
         "id From": chatMessage.idFrom,
         "timestamp": FieldValue.serverTimestamp(),
       };
+      if (check.values.contains(false)) {
+        var chatID = chatCollection.doc().id;
 
-      //create message subcollection
-      return await chatCollection
-          .doc(chatID)
-          .collection('messages')
-          .doc(DateTime.now().millisecondsSinceEpoch.toString())
-          .set(fields);
+        //create chat record first
+        var chatFields = {
+          "chatID": chatID,
+          "member1": chat.member1,
+          "member2": chat.member2,
+          "recent message sent at": chat.recentMessageSentAt,
+          "recent message sent by": chat.recentMessageSentBy,
+          "recent message text": chat.recentMessageText,
+          "read by": chat.readBy,
+        };
+
+        await chatCollection.doc(chatID).set(chatFields);
+        //create message subcollection
+        return await chatCollection
+            .doc(chatID)
+            .collection('messages')
+            .doc(DateTime.now().millisecondsSinceEpoch.toString())
+            .set(fields);
+      } else {
+        return await chatCollection
+            .doc(check.keys.first)
+            .collection('messages')
+            .doc(DateTime.now().millisecondsSinceEpoch.toString())
+            .set(fields);
+      }
     } on FirebaseException catch (e) {
       print(e);
     }
   }
 
   //get chats
-  Stream<QuerySnapshot> getChats(String chatID, int limit) {
-    return chatCollection
-        .doc(chatID)
-        .collection('messages')
-        .orderBy('timestamp', descending: true)
-        .limit(limit)
-        .snapshots();
+  Stream<List<ChatMessages?>?> getChats(String member1, String member2) async* {
+    Future<Map<String, bool>> chatExists() async {
+      var data = await chatCollection
+          .where(
+            Filter.or(
+              Filter("member1", isEqualTo: member1),
+              Filter("member2", isEqualTo: member2),
+              Filter("member1", isEqualTo: member2),
+              Filter("member2", isEqualTo: member1),
+            ),
+          )
+          .get();
+      if (data.docs.isNotEmpty) {
+        var result = data.docs.first.data() as Map<String, dynamic>;
+        var existingChatID = result["chatID"];
+        print(existingChatID);
+        return {existingChatID: true};
+      } else {
+        return {"": false};
+      }
+    }
+
+    var check = await chatExists();
+    if (check.values.contains(true)) {
+      var result = chatCollection
+          .doc(check.keys.first)
+          .collection('messages')
+          .snapshots();
+      await for (var event in result) {
+        yield event.docs.map((e) => ChatMessages.fromJson(e.data())).toList();
+      }
+    } else {
+      // Instead of yielding null, yield an empty list
+      yield [];
+    }
   }
 
   // add and remove from wishlist and get wishList
@@ -694,19 +1012,181 @@ class DataBaseService {
   }
 
   //become a seller
-  Future becomeASeller() async {
+  Future becomeASeller(Vendors vendor) async {
     try {
-      var state = await userProfileCollection.doc(currentUser!.uid).get();
-      if (state.exists) {
-        var data = state.data() as Map<String, dynamic>;
+      var result = await userProfileCollection.doc(vendor.userID).get();
+      if (result.exists) {
+        //create a vendor collection for them
+        var docID = vendorsCollection.doc().id;
+        Map<String, dynamic> fields = vendor.todata(docID: docID);
+        await vendorsCollection.doc(docID).set(fields);
+
+        // update their isVendor tag
+        var data = result.data() as Map<String, dynamic>;
         if (data['isVendor'] == false) {
-          return await userProfileCollection
+          await userProfileCollection
               .doc(currentUser!.uid)
               .update({"isVendor": true});
         }
+        return 'success';
       }
+    } on FirebaseException catch (e) {
+      print(e);
+    }
+  }
+
+  //check if wallet exists
+  Future<String?> checkIfWalletExists(String userID) async {
+    var response = await walletCollection.doc(userID).get();
+    if (response.exists) {
+      return "exists";
+    }
+    return null;
+  }
+
+  //handle things wallet i.e create and update wallet and transactions
+  void updateWalletAfterOrderPlacement(
+      String userID, int amount, String description, String type) async {
+    // Retrieve the user's wallet document reference
+    DocumentReference walletRef = walletCollection.doc(userID);
+
+    //check if wallet for user already exists
+    if (await checkIfWalletExists(userID) != null) {
+      if (type == 'credit') {
+        // Update the wallet balance (assuming it's a credit)
+        await walletRef.update({
+          'userID': userID,
+          'balance': FieldValue.increment(amount),
+        });
+      } else if (type == 'debit') {
+        // Update the wallet balance (assuming it's a debit)
+        await walletRef.update({
+          'userID': userID,
+          'balance': FieldValue.increment(-amount),
+        });
+      }
+    } else {
+      if (type == 'credit') {
+        // Update the wallet balance (assuming it's a credit)
+        await walletRef.set({
+          'userID': userID,
+          'balance': FieldValue.increment(amount),
+          'withdrawable balance': "0",
+        });
+      } else if (type == 'debit') {
+        // Update the wallet balance (assuming it's a debit)
+        await walletRef.set({
+          'userID': userID,
+          'balance': FieldValue.increment(-amount),
+        });
+      }
+    }
+
+    // Add a transaction record
+    var transactionID = walletRef.collection('transactions').doc().id;
+    await walletRef.collection('transactions').doc(transactionID).set(
+      {
+        'transaction ID': transactionID,
+        'amount': amount,
+        'type': type,
+        'timestamp': FieldValue.serverTimestamp(),
+        'description': description,
+      },
+    );
+  }
+
+  //get wallet balance and get transactions list
+  //get wallet balance
+  Stream<Wallet> getWalletBalance(String userID) {
+    return walletCollection
+        .doc(userID)
+        .snapshots()
+        .map((event) => Wallet.fromJson(event.data() as Map<String, dynamic>));
+  }
+
+  //get transactions list and details
+  Stream<List<Transactions>> getTransactions(String userID) {
+    return walletCollection
+        .doc(userID)
+        .collection('transactions')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((event) {
+      if (event.docs.isEmpty) {
+        return <Transactions>[];
+      } else {
+        return event.docs
+            .map((doc) => Transactions.fromJson(doc.data()))
+            .toList();
+      }
+    });
+  }
+
+  // request withdrawal
+  Future requestWithdrawal(
+      String? withdrawalAmount, Map accountDetails, String userID) async {
+    try {
+      await walletCollection
+          .doc(userID)
+          .collection("withdrawal requests")
+          .doc()
+          .set({
+        "withdrawal amount": withdrawalAmount,
+        "account name": accountDetails["account name"],
+        "account number": accountDetails["account number"],
+        "bank name": accountDetails["bank name"],
+        "timestamp": FieldValue.serverTimestamp(),
+        "status": "Not approved",
+        "userID": userID,
+      });
+      return "success";
+    } on FirebaseException catch (e) {
+      print(e.message);
     } catch (e) {
       print(e);
     }
+  }
+
+  //get vendor withdrawal requests
+  Stream<List<WithdrawalRequest>> getWithdrawalRequests(String userId) {
+    var result = walletCollection
+        .doc(userId)
+        .collection("withdrawal requests")
+        .snapshots();
+    return result.map(
+      (event) => event.docs
+          .map(
+            (doc) => WithdrawalRequest.fromJson(doc.data()),
+          )
+          .toList(),
+    );
+  }
+
+  //verify transaction from paystack
+  Future<bool> verifyTransaction({
+    required String reference,
+  }) async {
+    String? secretKey = dotenv.env['PAYSTACK_SECRET_KEY'];
+    final url = "https://api.paystack.co/transaction/verify/$reference";
+    var response = await http
+        .get(Uri.parse(url), headers: {"Authorization": "Bearer $secretKey"});
+    var body = response.body;
+    print(jsonDecode(body));
+    final data = jsonDecode(body);
+    return data["status"];
+  }
+
+  //get notifications
+  Stream<List<Notifications>> getNotifications() {
+    var result = notificationsCollection
+        .doc(currentUser!.uid)
+        .collection("notifications")
+        .orderBy("time stamp", descending: true)
+        .snapshots();
+    return result.map((event) {
+      return event.docs
+          .map((doc) => Notifications.fromJson(doc.data()))
+          .toList();
+    });
   }
 }

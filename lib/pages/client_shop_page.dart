@@ -65,7 +65,7 @@ class _ClientShopPageState extends State<ClientShopPage>
               size: 24, color: Colors.black),
         ),
         title: Text(
-          widget.vendorName == null ? 'Vendor' : '${widget.vendorName}!',
+          widget.vendorName == null ? 'Vendor' : '${widget.vendorName}',
           style: const TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,

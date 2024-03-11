@@ -17,4 +17,15 @@ class MyUser {
       this.isAdmin,
       this.isBuyer,
       this.isVendor});
+
+  factory MyUser.fromJson(Map<String, dynamic> json) => MyUser(
+        uid: json["uid"],
+        fullname: json["fullname"],
+        email: json["email"],
+        phoneNumber: json["phonenumber"],
+        isAdmin: json["isAdmin"],
+        isBuyer: json["isBuyer"],
+        isVendor: json["isVendor"],
+        address: json["address"],
+      );
 }

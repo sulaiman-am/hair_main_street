@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/pages/notifcation.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/Shop_page.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/userController.dart';
@@ -91,6 +92,24 @@ class MenuPage extends StatelessWidget {
                   ),
                 ),
                 centerTitle: true,
+                actions: [
+                  Transform.rotate(
+                    angle: 0.3490659,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: IconButton(
+                        onPressed: () {
+                          Get.to(() => NotificationsPage());
+                        },
+                        icon: const Icon(
+                          Icons.notifications_active_rounded,
+                          size: 32,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  )
+                ],
                 //backgroundColor: Color(0xFF0E4D92),
                 // flexibleSpace: Container(
                 //   decoration: BoxDecoration(gradient: appBarGradient),
@@ -138,21 +157,22 @@ class MenuPage extends StatelessWidget {
                     const SizedBox(
                       height: 12,
                     ),
-                    userController.userState.value!.isVendor == true
-                        ? MenuButton(
-                            text: "Vendor Dashboard",
-                            iconData: Symbols.store,
-                            onPressed: () => Get.to(() => VendorPage()),
-                          )
-                        : MenuButton(
-                            text: "Become a Vendor",
-                            iconData: Icons.shopping_bag_outlined,
-                            onPressed: () {
-                              Get.to(() => BecomeAVendorPage());
-                              print(userController.userState.value!.isVendor);
-                              print(userController.userState.value!.email);
-                            },
-                          ),
+                    if (userController.userState.value!.isVendor == true)
+                      MenuButton(
+                        text: "Vendor Dashboard",
+                        iconData: Symbols.store,
+                        onPressed: () => Get.to(() => VendorPage()),
+                      )
+                    else
+                      MenuButton(
+                        text: "Become a Vendor",
+                        iconData: Icons.shopping_bag_outlined,
+                        onPressed: () {
+                          Get.to(() => BecomeAVendorPage());
+                          print(userController.userState.value!.isVendor);
+                          print(userController.userState.value!.email);
+                        },
+                      ),
                     //  MenuButton(
                     //  text: "Share Trial",
                     //iconData: Symbols.store,
