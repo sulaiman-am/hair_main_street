@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/get_rx.dart';
 import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/models/review.dart';
@@ -19,7 +22,7 @@ class ProductController extends GetxController {
   Rx<List<Product?>> filteredProducts = Rx<List<Product?>>([]);
   Rx<List<Review?>> reviews = Rx<List<Review?>>([]);
   // VendorController vendorController = Get.find<VendorController>();
-  var imageList = [].obs;
+  RxList<File> imageList = RxList<File>([]);
   var downloadUrls = [].obs;
   var isLoading = false.obs;
   var isProductadded = false.obs;
@@ -131,19 +134,53 @@ class ProductController extends GetxController {
     }
   }
 
-  //upload a product Image
-  uploadImage() async {
-    var image = await DataBaseService().uploadProductImage();
-    if (image == null) {}
-    imageList.value = image ?? [];
-    print("imageList:${imageList}");
-    for (var imageRef in imageList) {
-      if (imageRef.state == TaskState.success) {
-        var downloadUrl = await imageRef.ref.getDownloadURL();
-        downloadUrls.add(downloadUrl);
+  //select image from file system
+  selectImage() async {
+    var images = await DataBaseService().createLocalImages();
+    if (images.isNotEmpty) {
+      for (File photo in images) {
+        imageList.add(photo);
       }
     }
   }
+
+// flutter toast
+  void showMyToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT, // 3 seconds by default, adjust if needed
+      gravity: ToastGravity.BOTTOM, // Position at the bottom of the screen
+      //timeInSec: 0.3, // Display for 0.3 seconds (300 milliseconds)
+      backgroundColor: Colors.white, // Optional: Set background color
+      textColor: Colors.black, // Optional: Set text color
+      fontSize: 14.0, // Optional: Set font size
+    );
+  }
+
+  //upload image
+  uploadImage() async {
+    var result = await DataBaseService().uploadProductImage(imageList.value);
+    if (result.isNotEmpty) {
+      showMyToast("Photos uploaded successfully!");
+      downloadUrls.value = result;
+    } else {
+      showMyToast("Problems Occured while Uploading Photos");
+    }
+  }
+
+  //upload a product Image
+  // uploadImage() async {
+  //   var image = await DataBaseService().uploadProductImage();
+  //   if (image == null) {}
+  //   imageList.value = image ?? [];
+  //   print("imageList:${imageList}");
+  //   for (var imageRef in imageList) {
+  //     if (imageRef.state == TaskState.success) {
+  //       var downloadUrl = await imageRef.ref.getDownloadURL();
+  //       downloadUrls.add(downloadUrl);
+  //     }
+  //   }
+  // }
 
   //update a product
   updateProduct(Product product) async {
@@ -164,6 +201,7 @@ class ProductController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
+      Get.close(2);
     } else {
       Get.snackbar(
         "Error",
@@ -184,7 +222,7 @@ class ProductController extends GetxController {
 
   //delete a product
   deleteProduct(Product product) async {
-    var result = await DataBaseService().deleteProduct(product);
+    var result = await DataBaseService().clientDeleteProduct(product);
     if (result == "success") {
       isProductadded.value = true;
       Get.snackbar(

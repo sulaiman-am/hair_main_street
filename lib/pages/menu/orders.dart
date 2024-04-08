@@ -3,21 +3,53 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/models/orderModel.dart';
 import 'package:hair_main_street/pages/menu/order_detail.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/cards.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class OrdersPage extends StatelessWidget {
+class OrdersPage extends StatefulWidget {
   OrdersPage({super.key});
 
+  @override
+  State<OrdersPage> createState() => _OrdersPageState();
+}
+
+class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
   CheckOutController checkOutController = Get.find<CheckOutController>();
+
   UserController userController = Get.find<UserController>();
+  bool showContent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkOutController.getBuyerOrders(userController.userState.value!.uid!);
+    Future.delayed(Duration(seconds: 1), () {
+      setState(() {
+        showContent = true;
+      });
+    });
+    // checkOutController
+    //     .filterTheBuyerOrderList(checkOutController.buyerOrderList);
+  }
+
   @override
   Widget build(BuildContext context) {
+    List categories = [
+      "All",
+      "Once",
+      "Installment",
+      "Confirmed",
+      "Expired",
+      "Cancelled",
+      "Deleted",
+    ];
+    TabController tabController =
+        TabController(length: categories.length, vsync: this);
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
-    checkOutController.getBuyerOrders(userController.userState.value!.uid!);
     Gradient myGradient = const LinearGradient(
       colors: [
         Color.fromARGB(255, 255, 224, 139),
@@ -57,10 +89,33 @@ class OrdersPage extends StatelessWidget {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E4D92),
+              color: Colors.black,
             ),
           ),
           centerTitle: true,
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: TabBar(
+                  tabAlignment: TabAlignment.start,
+                  isScrollable: true,
+                  controller: tabController,
+                  indicatorWeight: 4,
+                  indicatorColor: Colors.black,
+                  tabs: categories
+                      .map((e) => Text(
+                            e,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 15,
+                            ),
+                          ))
+                      .toList()),
+            ),
+          ),
           // flexibleSpace: Container(
           //   decoration: BoxDecoration(gradient: appBarGradient),
           // ),
@@ -72,6 +127,9 @@ class OrdersPage extends StatelessWidget {
           builder: (context, snapshot) {
             // print(snapshot.data);
             if (snapshot.hasData) {
+              if (!showContent) {
+                return const SizedBox(); // Return an empty SizedBox if content should not be displayed yet
+              }
               return checkOutController.buyerOrderList.isEmpty
                   ? BlankPage(
                       text: "No Orders Currently",
@@ -85,19 +143,17 @@ class OrdersPage extends StatelessWidget {
                         size: 40,
                       ),
                     )
-                  : Container(
-                      //decoration: BoxDecoration(gradient: myGradient),
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: ListView.builder(
-                        //shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          //print(checkOutController.buyerOrderList.length);
-                          return OrderCard(
-                            index: index,
-                          );
-                        },
-                        itemCount: checkOutController.buyerOrderList.length,
-                      ),
+                  : TabBarView(
+                      controller: tabController,
+                      children: [
+                        _buildTabContent("All"),
+                        _buildTabContent("Once"),
+                        _buildTabContent("Installment"),
+                        _buildTabContent("Confirmed"),
+                        _buildTabContent("Expired"),
+                        _buildTabContent("Cancelled"),
+                        _buildTabContent("Deleted"),
+                      ],
                     );
             } else {
               return const Center(
@@ -110,5 +166,29 @@ class OrdersPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildTabContent(String tabName) {
+    return Obx(() {
+      final orders = checkOutController.buyerOrderMap[tabName]!;
+      return orders.isNotEmpty
+          ? Container(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: ListView.builder(
+                itemBuilder: (context, index) =>
+                    OrderCard(mapKey: tabName, index: index),
+                itemCount: orders.length,
+              ),
+            )
+          : const Center(
+              child: Text(
+                "Nothing Here",
+                style: TextStyle(
+                  fontSize: 40,
+                  color: Colors.black,
+                ),
+              ),
+            );
+    });
   }
 }

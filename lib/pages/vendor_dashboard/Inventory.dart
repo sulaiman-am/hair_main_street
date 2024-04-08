@@ -64,7 +64,7 @@ class InventoryPage extends StatelessWidget {
       () => Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(
+            icon: const Icon(
               Symbols.arrow_back_ios_new_rounded,
               size: 24,
               color: Colors.black,
@@ -114,7 +114,7 @@ class InventoryPage extends StatelessWidget {
                         ),
                         text: "You dont have any product in your Inventory",
                         interactionText: "Add Products",
-                        interactionIcon: Icon(
+                        interactionIcon: const Icon(
                           Icons.person_2_outlined,
                           size: 24,
                           color: Colors.white,
@@ -139,6 +139,49 @@ class InventoryPage extends StatelessWidget {
                             },
                             onDelete: () {
                               // Implement the delete action
+                              Get.dialog(
+                                AlertDialog(
+                                  backgroundColor: Colors.white,
+                                  title: const Text('Delete Product'),
+                                  content: const Text(
+                                      'You are about to delete this product.\nAre you sure?'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () {
+                                        Get.back(); // Close the dialog
+                                      },
+                                      style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.white),
+                                      ),
+                                      child: const Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                            fontSize: 16, color: Colors.black),
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        vendorController.deleteProduct(
+                                            vendorController
+                                                .productList[index]);
+                                        Get.back();
+                                      },
+                                      style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.red),
+                                      ),
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(
+                                            fontSize: 16, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
                             },
                           );
                         },

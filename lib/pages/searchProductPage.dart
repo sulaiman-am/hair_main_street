@@ -463,11 +463,11 @@ class _SearchProductPageState extends State<SearchProductPage> {
                               ),
                             ),
                             onPressed: () {
-                              Get.to(
-                                () => const CheckOutPage2(
-                                  method: "installment",
-                                ),
-                              );
+                              // Get.to(
+                              //   () => const CheckOutPage2(
+                              //     method: "installment",
+                              //   ),
+                              // );
                             },
                             child: const Text(
                               "Pay Installmentally",
@@ -497,9 +497,9 @@ class _SearchProductPageState extends State<SearchProductPage> {
                               ),
                             ),
                             onPressed: () {
-                              Get.to(() => const CheckOutPage2(
-                                    method: "once",
-                                  ));
+                              // Get.to(() => const CheckOutPage2(
+                              //       method: "once",
+                              //     ));
                             },
                             child: const Text(
                               "Pay Once",

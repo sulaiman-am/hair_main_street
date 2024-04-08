@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/cartController.dart';
@@ -55,7 +56,7 @@ class _ProductPageState extends State<ProductPage> {
     averageRating() {
       double sum = 0;
       productController.reviews.value.forEach((review) {
-        sum += review!.stars ?? 0;
+        sum += review!.stars;
       });
       double average = sum / productController.reviews.value.length;
       //print(average);
@@ -108,7 +109,7 @@ class _ProductPageState extends State<ProductPage> {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E4D92),
+              color: Colors.black87,
             ),
           ),
           centerTitle: true,
@@ -121,7 +122,7 @@ class _ProductPageState extends State<ProductPage> {
               onPressed: () =>
                   Get.to(() => CartPage(), transition: Transition.fade),
               icon: const Icon(Symbols.shopping_cart_rounded,
-                  size: 28, color: Colors.black),
+                  size: 24, color: Colors.black),
             ),
             IconButton(
               tooltip: "Chat with Vendor",
@@ -134,7 +135,36 @@ class _ProductPageState extends State<ProductPage> {
                 );
               },
               icon: const Icon(Symbols.message_rounded,
-                  size: 28, color: Colors.black),
+                  size: 24, color: Colors.black),
+            ),
+            PopupMenuButton<String>(
+              color: Colors.white,
+              tooltip: "More Option",
+              icon: const Icon(
+                Icons.more_vert,
+                size: 24,
+                color: Colors.black,
+              ), // Three dots icon
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'addToWishlist',
+                  child: Text('Add to Wishlist'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'options',
+                  child: Text('Options'),
+                ),
+              ],
+              onSelected: (String value) {
+                switch (value) {
+                  case 'addToWishlist':
+                    // Handle 'Add to Wishlist' option
+                    break;
+                  case 'options':
+                    // Handle 'Options' option
+                    break;
+                }
+              },
             ),
           ],
           //backgroundColor: Colors.transparent,
@@ -199,6 +229,17 @@ class _ProductPageState extends State<ProductPage> {
               const SizedBox(
                 height: 8,
               ),
+              Text(
+                "N${product.price}",
+                style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(
+                height: 8,
+              ),
               Visibility(
                 visible: product.description!.isEmpty != true,
                 child: Text(
@@ -214,133 +255,334 @@ class _ProductPageState extends State<ProductPage> {
               const SizedBox(
                 height: 8,
               ),
-              Visibility(
-                visible: product.hasOption! == true,
+              Container(
+                padding: EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black45, width: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      "Details",
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Options",
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 20,
-                            color: Colors.black,
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.grey[300],
+                          ),
+                          padding: const EdgeInsets.all(10),
+                          child: const Icon(
+                            Icons.table_rows_outlined,
+                            size: 28,
                           ),
                         ),
+                        const SizedBox(
+                          width: 20,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Length",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text(
+                              "100cm",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black45,
+                              ),
+                            ),
+                          ],
+                        )
                       ],
                     ),
                     const SizedBox(
-                      height: 4,
+                      height: 8,
                     ),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          ToggleButtons(
-                            selectedBorderColor: Colors.black,
-                            borderWidth: 2.4,
-                            //selectedColor: Colors.red[50],
-                            fillColor: Colors.grey[200],
-                            isSelected: toggleSelection,
-                            children: [Toggles(), Toggles(), Toggles()],
-                            onPressed: (int index) {
-                              setState(() {
-                                for (int i = 0;
-                                    i < toggleSelection.length;
-                                    i++) {
-                                  toggleSelection[i] = i == index;
-                                }
-                              });
-                            },
-                          )
-                        ],
-                      ),
-                    ),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.grey[300],
+                          ),
+                          padding: const EdgeInsets.all(10),
+                          child: const Icon(
+                            Icons.table_rows_outlined,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 20,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Texture/Material",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text(
+                              "Human Hair",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black45,
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    )
                   ],
                 ),
               ),
               const SizedBox(
                 height: 8,
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Quantity",
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black),
-                    overflow: TextOverflow.ellipsis,
+              Center(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    shape: const RoundedRectangleBorder(
+                      side: BorderSide(
+                        width: 0.4,
+                        color: Colors.black45,
+                      ),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                    ),
                   ),
-                  Divider(
-                    thickness: 1.5,
-                    color: Colors.transparent,
-                    height: 4,
-                  ),
-                  GetX<ProductController>(
-                    builder: (_) {
-                      num? quantity = productController.quantity.value;
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              _.decreaseQuantity();
-                              print(quantity);
-                            },
-                            icon: Icon(
-                              Symbols.remove,
-                              size: 24,
-                              color: Colors.black,
-                            ),
-                          ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 1, horizontal: 2),
-                            //width: 28,
-                            //height: 28,
-                            color: const Color.fromARGB(255, 200, 242, 237),
-                            child: Center(
-                              child: Text(
-                                "$quantity",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 24,
-                                  //backgroundColor: Colors.blue,
+                  onPressed: () {
+                    Get.bottomSheet(
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        color: Colors.white,
+                        //height: 300, // Adjust the height as needed
+                        child: Stack(
+                          children: [
+                            // Content of the bottom sheet
+                            Positioned.fill(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Visibility(
+                                      visible: product.hasOption! == true,
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Text(
+                                                "Options",
+                                                style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.black),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              IconButton(
+                                                onPressed: () {},
+                                                icon: const Icon(
+                                                  Icons.arrow_forward_rounded,
+                                                  size: 20,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 4,
+                                          ),
+                                          SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              children: [
+                                                ToggleButtons(
+                                                  selectedBorderColor:
+                                                      Colors.black,
+                                                  borderWidth: 2.4,
+                                                  //selectedColor: Colors.red[50],
+                                                  fillColor: Colors.grey[200],
+                                                  isSelected: toggleSelection,
+                                                  children: [
+                                                    Toggles(),
+                                                    Toggles(),
+                                                    Toggles()
+                                                  ],
+                                                  onPressed: (int index) {
+                                                    setState(() {
+                                                      for (int i = 0;
+                                                          i <
+                                                              toggleSelection
+                                                                  .length;
+                                                          i++) {
+                                                        toggleSelection[i] =
+                                                            i == index;
+                                                      }
+                                                    });
+                                                  },
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 8,
+                                    ),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "Quantity",
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const Divider(
+                                          thickness: 1.5,
+                                          color: Colors.transparent,
+                                          height: 4,
+                                        ),
+                                        GetX<ProductController>(
+                                          builder: (_) {
+                                            num? quantity = productController
+                                                .quantity.value;
+                                            return Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              children: [
+                                                IconButton(
+                                                  onPressed: () {
+                                                    _.decreaseQuantity();
+                                                    print(quantity);
+                                                  },
+                                                  icon: const Icon(
+                                                    Symbols.remove,
+                                                    size: 24,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      vertical: 1,
+                                                      horizontal: 2),
+                                                  //width: 28,
+                                                  //height: 28,
+                                                  color: const Color.fromARGB(
+                                                      255, 200, 242, 237),
+                                                  child: Center(
+                                                    child: Text(
+                                                      "$quantity",
+                                                      style: const TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: 24,
+                                                        //backgroundColor: Colors.blue,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  onPressed: () {
+                                                    _.increaseQuantity();
+                                                    print(quantity);
+                                                  },
+                                                  icon: const Icon(
+                                                    Symbols.add,
+                                                    size: 24,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        )
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              _.increaseQuantity();
-                              print(quantity);
-                            },
-                            icon: Icon(
-                              Symbols.add,
-                              size: 24,
-                              color: Colors.black,
+                            // Button to close the bottom sheet
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.black,
+                                    // padding: EdgeInsets.symmetric(
+                                    //   vertical: 8,
+                                    //   horizontal: screenWidth * 0.26,
+                                    // ),
+                                    //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
+                                    shape: const RoundedRectangleBorder(
+                                      side: BorderSide(
+                                        width: 0.5,
+                                        color: Colors.white,
+                                      ),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      Get.back(), // Close the bottom sheet
+
+                                  child: const Text(
+                                    'Done',
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.white),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  )
-                ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "Select Specs",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(
                 height: 8,
@@ -390,7 +632,9 @@ class _ProductPageState extends State<ProductPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => ReviewPage(reviews)),
+                                  builder: (context) => ReviewPage(
+                                      productController.reviews.value
+                                          .cast<Review>())),
                             );
                           },
                           icon: const Icon(
@@ -407,8 +651,12 @@ class _ProductPageState extends State<ProductPage> {
               Visibility(
                 visible: productController.reviews.value.isNotEmpty,
                 child: ListView.builder(
-                  itemBuilder: (_, index) => ReviewCard(),
-                  itemCount: 2,
+                  itemBuilder: (_, index) => ReviewCard(
+                    index: index,
+                  ),
+                  itemCount: productController.reviews.value.length < 2
+                      ? productController.reviews.value.length
+                      : 2,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                 ),
@@ -466,19 +714,19 @@ class _ProductPageState extends State<ProductPage> {
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0xFF000000),
-                    blurStyle: BlurStyle.normal,
-                    offset: Offset.zero,
-                    blurRadius: 2,
-                  ),
-                ],
-                //gradient: myGradient,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(16),
-                ),
+                // boxShadow: const [
+                //   BoxShadow(
+                //     color: Color(0xFF000000),
+                //     blurStyle: BlurStyle.normal,
+                //     offset: Offset.zero,
+                //     blurRadius: 2,
+                //   ),
+                // ],
+                // //gradient: myGradient,
+                // borderRadius: const BorderRadius.only(
+                //   topLeft: Radius.circular(12),
+                //   topRight: Radius.circular(16),
+                // ),
               ),
               child: Column(
                 children: [
@@ -503,36 +751,36 @@ class _ProductPageState extends State<ProductPage> {
                           children: [
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Color.fromARGB(255, 127, 116, 166),
+                                backgroundColor: Colors.black,
                                 // padding: EdgeInsets.symmetric(
-                                //     vertical: 8, horizontal: screenWidth * 0.26),
+                                //   vertical: 8,
+                                //   horizontal: screenWidth * 0.26,
+                                // ),
                                 //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                                shape: RoundedRectangleBorder(
-                                  side: const BorderSide(
-                                    width: 1,
-                                    color: Colors.black,
+                                shape: const RoundedRectangleBorder(
+                                  side: BorderSide(
+                                    width: 0.5,
+                                    color: Colors.white,
                                   ),
-                                  borderRadius: BorderRadius.only(
-                                    // topRight: Radius.circular(16),
-                                    topLeft: Radius.circular(16),
-                                    bottomLeft: Radius.circular(16),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
                                   ),
                                 ),
                               ),
                               onPressed: () {
-                                checkOutController.createCheckOutItem(
+                                var val = checkOutController.createCheckBoxItem(
                                     product.productID,
                                     productController.quantity.value,
-                                    product.price! *
-                                        productController.quantity.value,
+                                    (product.price! as num) *
+                                        (productController.quantity.value),
                                     userController.userState.value!);
 
                                 print(checkOutController
                                     .checkOutItem.value.address);
                                 Get.to(
-                                  () => const CheckOutPage2(
+                                  () => CheckOutPage2(
                                     method: "installment",
+                                    products: [val],
                                   ),
                                 );
                               },
@@ -547,34 +795,35 @@ class _ProductPageState extends State<ProductPage> {
                             ),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Color.fromARGB(255, 127, 116, 166),
+                                backgroundColor: Colors.black,
                                 // padding: EdgeInsets.symmetric(
-                                //     vertical: 8, horizontal: screenWidth * 0.26),
+                                //   vertical: 8,
+                                //   horizontal: screenWidth * 0.26,
+                                // ),
                                 //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                                shape: RoundedRectangleBorder(
-                                  side: const BorderSide(
-                                    width: 1,
-                                    color: Colors.black,
+                                shape: const RoundedRectangleBorder(
+                                  side: BorderSide(
+                                    width: 0.5,
+                                    color: Colors.white,
                                   ),
-                                  borderRadius: BorderRadius.only(
-                                      //topLeft: Radius.circular(16),
-                                      bottomRight: Radius.circular(16),
-                                      topRight: Radius.circular(16)),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
                                 ),
                               ),
                               onPressed: () {
-                                checkOutController.createCheckOutItem(
+                                var val = checkOutController.createCheckBoxItem(
                                     product.productID,
                                     productController.quantity.value,
-                                    product.price! *
-                                        productController.quantity.value,
+                                    (product.price! as num) *
+                                        (productController.quantity.value),
                                     userController.userState.value!);
 
                                 print(checkOutController
                                     .checkOutItem.value.price);
-                                Get.to(() => const CheckOutPage2(
+                                Get.to(() => CheckOutPage2(
                                       method: "once",
+                                      products: [val],
                                     ));
                               },
                               child: const Text(
@@ -594,101 +843,100 @@ class _ProductPageState extends State<ProductPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Obx(
-                        () => Expanded(
-                          child: Text(
-                            "₦${product.price! * (productController.quantity.value)}.00",
-                            style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
+                      // Obx(
+                      //   () => Expanded(
+                      //     child: Text(
+                      //       "₦${product.price! * (productController.quantity.value)}.00",
+                      //       style: const TextStyle(
+                      //           fontSize: 20,
+                      //           fontWeight: FontWeight.w600,
+                      //           color: Colors.black),
+                      //       overflow: TextOverflow.ellipsis,
+                      //     ),
+                      //   ),
+                      // ),
                       // SizedBox(
                       //   width: screenWidth * .12,
                       // ),
-                      Row(
-                        children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF392F5A),
-                              // padding: EdgeInsets.symmetric(
-                              //     vertical: 8, horizontal: screenWidth * 0.26),
-                              //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                              shape: const RoundedRectangleBorder(
-                                side: BorderSide(
-                                  width: 1,
-                                  color: Colors.black,
-                                ),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(16),
-                                  bottomLeft: Radius.circular(16),
-                                ),
+                      SizedBox(
+                        width: screenWidth * 0.45,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            // padding: EdgeInsets.symmetric(
+                            //     vertical: 8, horizontal: screenWidth * 0.26),
+                            //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
+                            shape: const RoundedRectangleBorder(
+                              side: BorderSide(
+                                width: 0.4,
+                                color: Colors.black45,
                               ),
-                            ),
-                            onPressed: () {
-                              cartController.addToCart(
-                                CartItem(
-                                  price: product.price! *
-                                      (productController.quantity.value),
-                                  quantity: productController.quantity.value,
-                                  productID: product.productID,
-                                ),
-                              );
-                              checkOutController.checkoutList.add(
-                                CheckOutTickBoxModel(
-                                    productID: product.productID,
-                                    price: product.price! *
-                                        (productController.quantity.value),
-                                    quantity: productController.quantity.value,
-                                    user: userController.userState.value),
-                              );
-                            },
-                            child: const Text(
-                              "Add to Cart",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
                               ),
                             ),
                           ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Color.fromARGB(255, 127, 116, 166),
-                              // padding: EdgeInsets.symmetric(
-                              //   vertical: 8,
-                              //   horizontal: screenWidth * 0.26,
-                              // ),
-                              //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                              shape: const RoundedRectangleBorder(
-                                side: const BorderSide(
-                                  width: 1,
-                                  color: Colors.black,
-                                ),
-                                borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                ),
+                          onPressed: () {
+                            cartController.addToCart(
+                              CartItem(
+                                price: product.price! *
+                                    (productController.quantity.value),
+                                quantity: productController.quantity.value,
+                                productID: product.productID,
                               ),
+                            );
+                            // checkOutController.checkoutList.add(
+                            //   CheckOutTickBoxModel(
+                            //       productID: product.productID,
+                            //       price: product.price!,
+                            //       quantity: productController.quantity.value,
+                            //       user: userController.userState.value),
+                            // );
+                          },
+                          child: const Text(
+                            "Add to Cart",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                isVisible = true;
-                              });
-                              // Get.to(() => CheckOutPage());
-                            },
-                            child: const Text(
-                              "Buy",
-                              style: TextStyle(
-                                fontSize: 16,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(
+                        width: screenWidth * 0.45,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            // padding: EdgeInsets.symmetric(
+                            //   vertical: 8,
+                            //   horizontal: screenWidth * 0.26,
+                            // ),
+                            //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
+                            shape: const RoundedRectangleBorder(
+                              side: BorderSide(
+                                width: 0.5,
                                 color: Colors.white,
+                              ),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
                               ),
                             ),
                           ),
-                        ],
+                          onPressed: () {
+                            setState(() {
+                              isVisible = true;
+                            });
+                            // Get.to(() => CheckOutPage());
+                          },
+                          child: const Text(
+                            "Buy Now",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -697,24 +945,24 @@ class _ProductPageState extends State<ProductPage> {
             ),
           ]),
         ),
-        floatingActionButton: IconButton(
-          style: IconButton.styleFrom(
-            backgroundColor: Color(0xFF392F5A),
-            shape: CircleBorder(
-              side: BorderSide(width: 2, color: Colors.white),
-            ),
-          ),
-          onPressed: () => Get.bottomSheet(
-            Container(
-              color: Colors.white,
-              height: screenHeight * .5,
-            ),
-          ),
-          icon: const Icon(
-            Icons.filter_alt_rounded,
-            color: Colors.white,
-          ),
-        ),
+        // floatingActionButton: IconButton(
+        //   style: IconButton.styleFrom(
+        //     backgroundColor: Color(0xFF392F5A),
+        //     shape: CircleBorder(
+        //       side: BorderSide(width: 2, color: Colors.white),
+        //     ),
+        //   ),
+        //   onPressed: () => Get.bottomSheet(
+        //     Container(
+        //       color: Colors.white,
+        //       height: screenHeight * .5,
+        //     ),
+        //   ),
+        //   icon: const Icon(
+        //     Icons.filter_alt_rounded,
+        //     color: Colors.white,
+        //   ),
+        // ),
         extendBody: true,
       ),
     );

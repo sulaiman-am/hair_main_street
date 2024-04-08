@@ -51,9 +51,12 @@ class UserController extends GetxController {
 
   get getRoleDynamically {
     DataBaseService().getRoleDynamically.listen((doc) {
-      if (doc.exists) {
-        userState.value!.isVendor = doc.get('isVendor');
-        userState.value!.fullname = doc.get('fullname');
+      if (doc != null && doc.exists) {
+        // Make sure userState.value is not null
+        if (userState.value != null) {
+          userState.value!.isVendor = doc.get('isVendor');
+          userState.value!.fullname = doc.get('fullname');
+        }
       }
     });
   }
@@ -107,6 +110,7 @@ class UserController extends GetxController {
           ),
         );
         Get.offAll(() => HomePage());
+        return "success";
       } else {
         isLoading.value = false;
         Get.snackbar(
@@ -200,10 +204,13 @@ class UserController extends GetxController {
 
   //edit user profile
   editUserProfile(String fieldName, value) async {
-    var user = await DataBaseService().updateUserProfile(fieldName, value);
-    userState.value!.fullname = user['fullname'];
-    userState.value!.address = user['address'];
-    userState.value!.phoneNumber = user['phoneNumber'];
+    var result = await DataBaseService().updateUserProfile(fieldName, value);
+    userState.update((myUser) {
+      myUser!.fullname = result['fullname'];
+      myUser.address = result['address'];
+      myUser.phoneNumber = result['phoneNumber'];
+      // Update other fields if necessary
+    });
   }
 
   changePassword(String oldPassword, String newPassword) async {

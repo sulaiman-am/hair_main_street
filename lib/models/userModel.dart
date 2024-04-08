@@ -7,16 +7,21 @@ class MyUser {
   bool? isBuyer = true;
   bool? isVendor;
   bool? isAdmin;
+  String? referralCode;
+  String? referralLink;
 
-  MyUser(
-      {this.uid,
-      this.address,
-      this.email,
-      this.phoneNumber,
-      this.fullname,
-      this.isAdmin,
-      this.isBuyer,
-      this.isVendor});
+  MyUser({
+    this.uid,
+    this.address,
+    this.email,
+    this.phoneNumber,
+    this.fullname,
+    this.isAdmin,
+    this.isBuyer,
+    this.isVendor,
+    this.referralCode,
+    this.referralLink,
+  });
 
   factory MyUser.fromJson(Map<String, dynamic> json) => MyUser(
         uid: json["uid"],
@@ -27,5 +32,7 @@ class MyUser {
         isBuyer: json["isBuyer"],
         isVendor: json["isVendor"],
         address: json["address"],
+        referralCode: json["referral code"],
+        referralLink: json["referral link"],
       );
 }

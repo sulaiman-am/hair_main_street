@@ -114,7 +114,7 @@ class CartPage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.w900,
-                                color: Color(0xFF0E4D92),
+                                color: Colors.black,
                               ),
                             ),
                             centerTitle: true,
@@ -139,6 +139,17 @@ class CartPage extends StatelessWidget {
                                     .isMasterCheckboxChecked.value,
                                 onChanged: (val) {
                                   checkOutController.toggleMasterCheckbox();
+                                  // for (var item
+                                  //     in checkOutController.checkoutList) {
+                                  //   //print(item.price);
+                                  //   print(item.quantity);
+                                  // }
+                                  checkOutController
+                                      .getTotalPriceAndTotalQuantity();
+                                  // Future.delayed(Duration(seconds: 2), () {
+                                  //   checkOutController
+                                  //       .getTotalPriceAndTotalQuantity();
+                                  // });
                                 },
                               ),
                             ),

@@ -13,6 +13,7 @@ class Vendors {
   bool? firstVerification;
   bool? secondVerification;
   dynamic createdAt;
+  num? installmentDuration;
 
   Vendors(
       {this.accountInfo,
@@ -22,17 +23,20 @@ class Vendors {
       this.firstVerification,
       this.shopName,
       this.docID,
-      this.userID});
+      this.userID,
+      this.installmentDuration});
 
   factory Vendors.fromdata(Map<String, dynamic> data) => Vendors(
-      userID: data['userID'],
-      secondVerification: data['second verification'],
-      firstVerification: data['first verification'],
-      shopName: data['shop name'],
-      contactInfo: data['contact info'],
-      accountInfo: data['account info'],
-      docID: data['docID'],
-      createdAt: data['created at']);
+        userID: data['userID'],
+        secondVerification: data['second verification'],
+        firstVerification: data['first verification'],
+        shopName: data['shop name'],
+        contactInfo: data['contact info'],
+        accountInfo: data['account info'],
+        docID: data['docID'],
+        createdAt: data['created at'],
+        installmentDuration: data['installment duration'] ?? 0,
+      );
 
   Map<String, dynamic> todata({String? docID}) => {
         "account info": accountInfo,
@@ -43,5 +47,6 @@ class Vendors {
         "second verification": secondVerification,
         "shop name": shopName,
         "created at": createdAt,
+        "installment duration": installmentDuration,
       };
 }

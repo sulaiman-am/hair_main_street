@@ -1,6 +1,10 @@
 // ignore_for_file: prefer_const_constructors
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
+import 'package:hair_main_street/pages/cancellation_page.dart';
+import 'package:hair_main_street/pages/submit_review_page.dart';
 
 import 'dart:ffi';
 import 'package:intl/intl.dart';
@@ -25,6 +29,7 @@ class OrderDetailsPage extends StatelessWidget {
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     var isVisible = (orderDetails!.orderStatus == "delivered").obs;
+    var isVisible2 = (orderDetails!.orderStatus == "confirmed").obs;
 
     DateTime resolveTimestampWithoutAdding(Timestamp timestamp) {
       DateTime dateTime = timestamp.toDate(); // Convert Timestamp to DateTime
@@ -92,7 +97,7 @@ class OrderDetailsPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF0E4D92),
+            color: Colors.black,
           ),
         ),
         centerTitle: true,
@@ -291,20 +296,65 @@ class OrderDetailsPage extends StatelessWidget {
                     height: 4,
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: orderDetails!.orderStatus != "confirmed"
+                        ? MainAxisAlignment.spaceBetween
+                        : MainAxisAlignment.center,
                     children: [
-                      Container(
-                        //margin: EdgeInsets.only(left: 270),
+                      Visibility(
+                        visible: orderDetails!.orderStatus != "confirmed",
+                        child: Expanded(
+                          flex: 1,
+                          child: TextButton(
+                            onPressed: () {
+                              Get.to(
+                                () => CancellationPage(
+                                  orderId: orderDetails!.orderId!,
+                                ),
+                                transition: Transition.fadeIn,
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 4, horizontal: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(
+                                  width: 1.5,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              "Cancel Order",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      orderDetails!.orderStatus != "confirmed"
+                          ? const SizedBox(
+                              width: 10,
+                            )
+                          : SizedBox.shrink(),
+                      Expanded(
+                        flex: 1,
                         child: TextButton(
                           onPressed: () {
                             Get.to(
-                              () => RefundPage(),
+                              () => RefundPage(
+                                orderId: orderDetails!.orderId!,
+                              ),
                               transition: Transition.fadeIn,
                             );
                           },
                           style: TextButton.styleFrom(
-                            backgroundColor: Color(0xFF392F5A),
-                            padding: EdgeInsets.all(4),
+                            backgroundColor: Colors.black,
+                            padding: EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 8),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: const BorderSide(
@@ -445,7 +495,8 @@ class OrderDetailsPage extends StatelessWidget {
                     height: 7,
                     color: Colors.black,
                   ),
-                  Center(
+                  SizedBox(
+                    width: double.infinity,
                     child: TextButton(
                       onPressed: () {
                         Get.to(
@@ -456,8 +507,9 @@ class OrderDetailsPage extends StatelessWidget {
                         );
                       },
                       style: TextButton.styleFrom(
-                        backgroundColor: Color(0xFF392F5A),
-                        padding: EdgeInsets.all(4),
+                        backgroundColor: Colors.black,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: const BorderSide(
@@ -525,13 +577,14 @@ class OrderDetailsPage extends StatelessWidget {
                       height: 7,
                       color: Colors.black,
                     ),
-                    Center(
+                    SizedBox(
+                      width: double.infinity,
                       child: TextButton(
                         onPressed: () {
-                          Get.to(() => MessagesPage());
+                          //Get.to(() => MessagesPage());
                         },
                         style: TextButton.styleFrom(
-                          backgroundColor: Color(0xFF392F5A),
+                          backgroundColor: Colors.black,
                           padding: EdgeInsets.all(4),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -565,7 +618,7 @@ class OrderDetailsPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         width: 2,
-                        color: Color(0xFF392F5A),
+                        color: Colors.black,
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -585,10 +638,11 @@ class OrderDetailsPage extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Center(
+                        SizedBox(
+                          width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF392F5A),
+                              backgroundColor: Colors.black,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 side: BorderSide(
@@ -608,6 +662,77 @@ class OrderDetailsPage extends StatelessWidget {
                                 color: Colors.white,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(
+              height: 8,
+            ),
+            Obx(
+              () {
+                return Visibility(
+                  visible: isVisible2.value,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        width: 2,
+                        color: Colors.black,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF000000),
+                          blurStyle: BlurStyle.normal,
+                          offset: Offset.fromDirection(-4.0),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Care to Write a Review?",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: Colors.white,
+                                  width: 1.2,
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              Get.to(() => SubmitReviewPage(
+                                    productID: product!.productID,
+                                  ));
+                              // order.orderStatus = "confirmed";
+                              // await checkOutController.updateOrder(order);
+                              // isVisible.value = false;
+                            },
+                            child: Text(
+                              "Write a Review",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),

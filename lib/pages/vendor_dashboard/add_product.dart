@@ -1,9 +1,14 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/pages/menu.dart';
+import 'package:recase/recase.dart';
 import 'package:string_validator/string_validator.dart' as validator;
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -18,6 +23,8 @@ class AddproductPage extends StatefulWidget {
 class _AddproductPageState extends State<AddproductPage> {
   GlobalKey<FormState> formKey = GlobalKey();
   ProductController productController = Get.find<ProductController>();
+  var _categoryValue = "natural hairs";
+  var _availableValue = "Yes";
 
   bool checkbox1 = true;
   String? hello;
@@ -29,6 +36,9 @@ class _AddproductPageState extends State<AddproductPage> {
     quantity: 0,
     hasOption: false,
     allowInstallment: true,
+    isAvailable: true,
+    isDeleted: false,
+    category: "",
     image: [],
     description: "",
   );
@@ -74,7 +84,7 @@ class _AddproductPageState extends State<AddproductPage> {
           child: Container(
             height: screenHeight * .24,
             width: screenWidth * .64,
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(12),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: Colors.grey[200],
@@ -109,6 +119,7 @@ class _AddproductPageState extends State<AddproductPage> {
                         ),
                       ),
                       onPressed: () {
+                        productController.imageList.clear();
                         return Get.close(2);
                       },
                       child: const Text(
@@ -155,8 +166,15 @@ class _AddproductPageState extends State<AddproductPage> {
       );
     }
 
-    return WillPopScope(
-      onWillPop: () async => await showCancelDialog(),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) async {
+        if (didPop) {
+          return;
+        } else {
+          await showCancelDialog();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -169,7 +187,7 @@ class _AddproductPageState extends State<AddproductPage> {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E4D92),
+              color: Colors.black,
             ),
           ),
           centerTitle: true,
@@ -189,7 +207,7 @@ class _AddproductPageState extends State<AddproductPage> {
                   highlightColor: Colors.green,
                   splashColor: Colors.black,
                   onTap: () {
-                    productController.uploadImage();
+                    productController.selectImage();
                   },
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 28, vertical: 12),
@@ -241,21 +259,21 @@ class _AddproductPageState extends State<AddproductPage> {
                   height: 8,
                 ),
                 GetX<ProductController>(builder: (controller) {
-                  return controller.downloadUrls.isNotEmpty
+                  return controller.imageList.isNotEmpty
                       ? SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: List.generate(
-                                controller.downloadUrls.length,
+                                controller.imageList.length,
                                 (index) => Container(
-                                      margin: EdgeInsets.symmetric(
+                                      margin: const EdgeInsets.symmetric(
                                         horizontal: 4,
                                       ),
                                       color: Colors.black,
                                       width: screenWidth * 0.16,
                                       height: screenHeight * .08,
-                                      child: Image.network(
-                                        "${controller.downloadUrls[index]}",
+                                      child: Image.file(
+                                        controller.imageList[index].absolute,
                                         fit: BoxFit.fill,
                                         // loadingBuilder:
                                         //     (context, child, loadingProgress) =>
@@ -285,7 +303,7 @@ class _AddproductPageState extends State<AddproductPage> {
                               return Center(
                                 widthFactor: 1,
                                 child: Container(
-                                  margin: EdgeInsets.symmetric(
+                                  margin: const EdgeInsets.symmetric(
                                     horizontal: 14,
                                   ),
                                   alignment: Alignment.center,
@@ -340,6 +358,154 @@ class _AddproductPageState extends State<AddproductPage> {
                   },
                 ),
                 const SizedBox(
+                  height: 16,
+                ),
+                Row(
+                  //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        "Category:",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: PopupMenuButton<String>(
+                        //shadowColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(
+                            color: Colors.black,
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 10,
+                        itemBuilder: (BuildContext context) {
+                          return <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'natural hairs',
+                              child: Text('Natural Hairs'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'accessories',
+                              child: Text('Accessories'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'wigs',
+                              child: Text('Wigs'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'lashes',
+                              child: Text('Lashes'),
+                            ),
+                          ];
+                        },
+                        onSelected: (String value) {
+                          setState(() {
+                            _categoryValue = value;
+                            product!.category = _categoryValue;
+                            // _updateSelectedValue(
+                            //     value); // Update Firestore with the new value
+                          });
+                        },
+                        child: ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                              color: Colors.black,
+                              width: 1,
+                            ),
+                          ),
+                          title: Text(
+                            _categoryValue.titleCase,
+                            style: const TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                          trailing: const Icon(Icons.arrow_drop_down),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+                Row(
+                  //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        "Available:",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: PopupMenuButton<String>(
+                        //shadowColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(
+                            color: Colors.black,
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 10,
+                        itemBuilder: (BuildContext context) {
+                          return <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'Yes',
+                              child: Text('Yes'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'No',
+                              child: Text('No'),
+                            ),
+                          ];
+                        },
+                        onSelected: (String value) {
+                          setState(() {
+                            if (value == "Yes") {
+                              _availableValue = value;
+                              product!.isAvailable = true;
+                            } else if (value == "No") {
+                              _availableValue = value;
+                              product!.isAvailable = false;
+                            }
+                            print(product!.isAvailable);
+                            // _updateSelectedValue(
+                            //     value); // Update Firestore with the new value
+                          });
+                        },
+                        child: ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                              color: Colors.black,
+                              width: 1,
+                            ),
+                          ),
+                          title: Text(
+                            _availableValue.toString(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                          trailing: const Icon(Icons.arrow_drop_down),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
                   height: 8,
                 ),
                 CheckboxListTile(
@@ -390,7 +556,7 @@ class _AddproductPageState extends State<AddproductPage> {
                       (index) => Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
+                          const Expanded(
                             flex: 2,
                             child: TextInputWidget(
                               labelText: "Option",
@@ -400,7 +566,7 @@ class _AddproductPageState extends State<AddproductPage> {
                           // SizedBox(
                           //   width: 8,
                           // ),
-                          Expanded(
+                          const Expanded(
                             flex: 2,
                             child: TextInputWidget(
                               labelText: "Price",
@@ -419,7 +585,7 @@ class _AddproductPageState extends State<AddproductPage> {
                                         listItems++;
                                       });
                                     },
-                                    icon: Icon(
+                                    icon: const Icon(
                                       Icons.add_circle_outline_rounded,
                                       size: 20,
                                     ),
@@ -432,7 +598,7 @@ class _AddproductPageState extends State<AddproductPage> {
                                         }
                                       });
                                     },
-                                    icon: Icon(
+                                    icon: const Icon(
                                       Icons.remove_circle_outline_rounded,
                                       size: 20,
                                     ),
@@ -485,9 +651,10 @@ class _AddproductPageState extends State<AddproductPage> {
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: () {
+                        onPressed: () async {
                           bool? validate = formKey.currentState!.validate();
                           if (validate) {
+                            await productController.uploadImage();
                             if (productController.isProductadded.value ==
                                 false) {
                               Get.dialog(
@@ -505,15 +672,15 @@ class _AddproductPageState extends State<AddproductPage> {
                               }
                             }
                             formKey.currentState!.save();
-                            productController.addAProduct(product!);
+                            await productController.addAProduct(product!);
                             //debugPrint(hello);
                           }
                         },
                         style: TextButton.styleFrom(
                           // padding: EdgeInsets.symmetric(
                           //     horizontal: screenWidth * 0.24),
-                          backgroundColor: Color(0xFF392F5A),
-                          side: BorderSide(color: Colors.white, width: 2),
+                          backgroundColor: Colors.black,
+                          side: const BorderSide(color: Colors.white, width: 1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

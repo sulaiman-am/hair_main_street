@@ -27,7 +27,7 @@ class BecomeAVendorPage extends StatelessWidget {
         title: const Text(
           'Become A Vendor',
           style: TextStyle(
-            color: Color(0xFF0E4D92),
+            color: Colors.black,
             fontSize: 28,
             fontWeight: FontWeight.w800,
           ),
@@ -199,8 +199,8 @@ class BecomeAVendorPage extends StatelessWidget {
               style: TextButton.styleFrom(
                 // padding: EdgeInsets.symmetric(
                 //     horizontal: screenWidth * 0.24),
-                backgroundColor: Color(0xFF392F5A),
-                side: BorderSide(color: Colors.white, width: 2),
+                backgroundColor: Colors.black,
+                side: const BorderSide(color: Colors.white, width: 2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

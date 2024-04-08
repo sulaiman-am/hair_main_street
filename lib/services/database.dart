@@ -8,6 +8,8 @@ import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/messageModel.dart';
 import 'package:hair_main_street/models/notificationsModel.dart';
 import 'package:hair_main_street/models/orderModel.dart';
+import 'package:hair_main_street/models/referralModel.dart';
+import 'package:hair_main_street/models/refund_request_model.dart';
 import 'package:hair_main_street/models/review.dart';
 import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
@@ -53,8 +55,20 @@ class DataBaseService {
   CollectionReference notificationsCollection =
       FirebaseFirestore.instance.collection('notifications');
 
+  CollectionReference referralsCollection =
+      FirebaseFirestore.instance.collection('referrals');
+
+  CollectionReference reviewsCollection =
+      FirebaseFirestore.instance.collection('reviews');
+
+  CollectionReference refundsCollection =
+      FirebaseFirestore.instance.collection('refunds');
+
+  CollectionReference cancellationCollection =
+      FirebaseFirestore.instance.collection('cancellations');
+
   //get the role dynamically
-  Stream<DocumentSnapshot> get getRoleDynamically {
+  Stream<DocumentSnapshot?> get getRoleDynamically {
     return userProfileCollection.doc(currentUser!.uid).snapshots();
   }
 
@@ -162,6 +176,26 @@ class DataBaseService {
       return "success";
     } on FirebaseException catch (e) {
       print("Error: ${e.code} and ${e.message}");
+    }
+  }
+
+  //update a vendor
+  Future updateVendor(String fieldName, value) async {
+    try {
+      await vendorsCollection
+          .doc(currentUser!.uid)
+          .set({fieldName: value}, SetOptions(merge: true));
+      return "success";
+      // var result = await userProfileCollection.doc(currentUser!.uid).get();
+      // //result.data() as Map<String, dynamic>;
+      // var user = result.data() as Map<String, dynamic>;
+      // return {
+      //   "fullname": user['fullname'],
+      //   "address": user['address'],
+      //   "phoneNumber": user['phonenumber']
+      // };
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -455,6 +489,22 @@ class DataBaseService {
           "price": orderItem.price,
         });
 
+        // Start a transaction to delete the product from the user's cart
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          var cartCollectionRef =
+              userProfileCollection.doc(order.buyerId).collection('cart');
+          var querySnapshot = await cartCollectionRef
+              .where('productID', isEqualTo: orderItem.productId)
+              .get();
+
+          // Iterate over the documents in the query snapshot
+          for (var doc in querySnapshot.docs) {
+            // Get the reference to the document and delete it
+            var cartDocRef = doc.reference;
+            transaction.delete(cartDocRef);
+          }
+        });
+
         return {'Order Created': orderID};
       }
     } on FirebaseException catch (e) {
@@ -521,25 +571,24 @@ class DataBaseService {
     }
   }
 
-  //image upload for products
-  Future<List<dynamic>?> uploadProductImage() async {
+  //create local image file first
+  Future<List<File>> createLocalImages() async {
     try {
-      //actual image
-      List<dynamic> productImageList = [];
-      dynamic productImage;
+      List<File> compressedImages = [];
       var appDirectoryPath = await getApplicationDocumentsDirectory();
 
-      //pickFile
+      //pickFiles
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowMultiple: true,
         allowedExtensions: ["png", "jpg", "jpeg"],
       );
+
       if (result != null) {
         print("result ${result.paths}");
         for (var image in result.files) {
           var targetPath =
-              "${appDirectoryPath.path}/compressed_image[[${Random().nextInt(1000) + 1}].jpg";
+              "${appDirectoryPath.path}/compressed_image${Random().nextInt(1000) + 1}.jpg"; // Add closing parenthesis here
           print("targetPath: $targetPath");
           print("image ${image.path}");
           //compress image
@@ -552,30 +601,83 @@ class DataBaseService {
 
           //convert to file
           final finalImage = File(compressedImage!.path);
-          //firebase Storage reference
-          final storageReference = FirebaseStorage.instance.ref("productImage");
-          //product images reference
-          final productImageReference = storageReference
-              .child(currentUser!.uid)
-              .child("compress_image[${Random().nextInt(1000) + 1}].jpg");
-          //final metadata = await productImageReference.getMetadata();
-
-          productImage = await productImageReference.putFile(finalImage);
-
-          //make sure picture does not already exist
-          if (productImageList.contains(productImage)) {
-            print("Image Already Added");
-          }
-          productImageList.add(productImage);
+          compressedImages.add(finalImage);
         }
-        return productImageList;
-      } else {
-        return null;
       }
+      print("compressedImage: $compressedImages");
+      return compressedImages;
+    } catch (e) {
+      print(e);
+      return []; // Return an empty list if an error occurs
+    }
+  }
+
+  //other image uploads
+  Future<List<String>> imageUpload(List<File>? images, String imagePath) async {
+    List<String> imageUrls = [];
+
+    if (images == null || images.isEmpty) {
+      throw Exception('No images provided for upload.');
+    }
+
+    try {
+      for (File image in images) {
+        final storageReference = FirebaseStorage.instance.ref(imagePath);
+        final productImageReference = storageReference
+            .child(currentUser!.uid)
+            .child("compressed_image[${Random().nextInt(1000) + 1}].jpg");
+
+        var uploadTask = productImageReference.putFile(image);
+
+        // Wait for the upload to complete
+        await uploadTask;
+
+        // Get download URL
+        String downloadURL = await productImageReference.getDownloadURL();
+
+        // Add download URL to list
+        imageUrls.add(downloadURL);
+      }
+      print("image Urls: $imageUrls");
+      return imageUrls;
     } catch (e) {
       print(e.toString());
+      throw Exception('Failed to upload images: $e');
     }
-    return null;
+  }
+
+  //image upload for products
+  Future<List<String>> uploadProductImage(List<File>? images) async {
+    List<String> imageUrls = [];
+
+    if (images == null || images.isEmpty) {
+      throw Exception('No images provided for upload.');
+    }
+
+    try {
+      for (File image in images) {
+        final storageReference = FirebaseStorage.instance.ref("productImage");
+        final productImageReference = storageReference
+            .child(currentUser!.uid)
+            .child("compressed_image[${Random().nextInt(1000) + 1}].jpg");
+
+        var uploadTask = productImageReference.putFile(image);
+
+        // Wait for the upload to complete
+        await uploadTask;
+
+        // Get download URL
+        String downloadURL = await productImageReference.getDownloadURL();
+
+        // Add download URL to list
+        imageUrls.add(downloadURL);
+      }
+      print("image Urls: $imageUrls");
+      return imageUrls;
+    } catch (e) {
+      print(e.toString());
+      throw Exception('Failed to upload images: $e');
+    }
   }
 
   //create product
@@ -590,12 +692,12 @@ class DataBaseService {
         String productID = productRef.id;
         //print(productID);
 
-        //create a reviews subcollection
-        productsCollection
-            .doc(productID)
-            .collection('reviews')
-            .doc(productID)
-            .set({});
+        // //create a reviews subcollection
+        // productsCollection
+        //     .doc(productID)
+        //     .collection('reviews')
+        //     .doc(productID)
+        //     .set({});
 
         //create the actual product
         await productsCollection.doc(productID).set({
@@ -603,7 +705,10 @@ class DataBaseService {
           "name": product!.name,
           "price": product.price,
           "image": product.image,
+          "category": product.category,
           "hasOption": product.hasOption,
+          "isAvailable": product.isAvailable,
+          "isDeleted": product.isDeleted,
           "allowInstallment": product.allowInstallment,
           "quantity": product.quantity,
           "description": product.description,
@@ -629,8 +734,11 @@ class DataBaseService {
       if (role!.keys.contains("Vendor")) {
         if (role["Vendor"] == product!.vendorId) {
           var updatedFields = {
-            "productID": product!.productID,
+            "productID": product.productID,
             "name": product.name,
+            "category": product.category,
+            "isAvailable": product.isAvailable,
+            "isDeleted": product.isDeleted,
             "price": product.price,
             "image": product.image,
             "hasOption": product.hasOption,
@@ -652,7 +760,25 @@ class DataBaseService {
     }
   }
 
-  //delete product
+  //client delete product
+  Future clientDeleteProduct(Product product) async {
+    try {
+      var role = await verifyRole();
+      if (role!.keys.contains("Vendor") && role["Vendor"] == product.vendorId) {
+        await productsCollection.doc(product.productID).set({
+          "isDeleted": true,
+        }, SetOptions(merge: true));
+        return "success";
+      } else {
+        print('not authorized');
+        return 'not authorized';
+      }
+    } on FirebaseException catch (e) {
+      print("${e.message} ${e.code}");
+    }
+  }
+
+  // admin delete product
   Future deleteProduct(Product product) async {
     try {
       var role = await verifyRole();
@@ -668,22 +794,25 @@ class DataBaseService {
     }
   }
 
-  //convert to product
-  List<Product?> convertToProduct(QuerySnapshot<Object?> products) {
-    if (products.docs.isEmpty) {}
+  // Convert to Product
+  List<Product> convertToProduct(QuerySnapshot<Object?> products) {
+    if (products.docs.isEmpty) {
+      return [];
+    }
+
     return products.docs.map((doc) {
       var data = doc.data() as Map<String, dynamic>;
-      return Product.fromdata(data);
+      //print("${Product.fromdata(data)}).toList()}");
+      return Product.fromdata(
+          data); // Assuming a factory constructor named 'fromData'
     }).toList();
   }
 
-  //fetch products
-  Stream<List<Product?>> fetchProducts() {
+// Fetch products
+  Stream<List<Product>> fetchProducts() {
     var stuff = productsCollection.snapshots();
-    //print(stuff);
-    return stuff.map(
-      (event) => convertToProduct(event),
-    );
+    //print('stuff: $stuff');
+    return stuff.map((event) => convertToProduct(event));
   }
 
   //fetch single product
@@ -729,47 +858,40 @@ class DataBaseService {
     }
   }
 
-  //create or update a vendor
-  Future createOrUpdateVendor(Vendors vendor) async {
-    try {
-      var role = await verifyRole();
-      if (role!.keys.contains("Vendor")) {
-        if (vendor.docID == null) {
-          var docID = vendorsCollection.doc().id;
-          Map<String, dynamic> fields = vendor.todata(docID: docID);
-          await vendorsCollection.doc(docID).set(fields);
-        } else {
-          Map<String, dynamic> updateFields = vendor.todata();
-          await vendorsCollection.doc(vendor.docID).update(updateFields);
-        }
-        return 'success';
-      }
-      return 'not authorized';
-    } on FirebaseException catch (e) {
-      print(e);
-    }
-  }
-
   //get ,add, edit and delete reviews
   Stream<List<Review?>> getReviews(String productID) {
     try {
-      return productsCollection
-          .doc(productID)
-          .collection("reviews")
+      return reviewsCollection
+          .where('productID', isEqualTo: productID)
+          .snapshots()
+          .map((querySnapshot) {
+        if (querySnapshot.docs.isEmpty) {
+          return <Review>[];
+        }
+        return querySnapshot.docs.map((doc) {
+          var data = doc.data() as Map<String, dynamic>;
+          return Review.fromData(data);
+        }).toList();
+      });
+    } catch (e) {
+      print(e.toString());
+      throw Exception(e.toString());
+    }
+  }
+
+  Stream<List<Review?>> getUserReviews(String userID) {
+    // Fetch all products
+    try {
+      return reviewsCollection
+          .where("userID", isEqualTo: userID)
           .snapshots()
           .map((querySnapshot) {
         if (querySnapshot.docs.isEmpty) {
           return <Review>[];
         }
         return querySnapshot.docs.map((data) {
-          var doc = data.data();
-          return Review(
-            reviewID: doc['reviewID'],
-            user: doc['user'],
-            createdAt: doc['createdAt'],
-            comment: doc['comment'],
-            stars: doc['stars'],
-          );
+          var doc = data.data() as Map<String, dynamic>;
+          return Review.fromData(doc);
         }).toList();
       });
     } on FirebaseException catch (e) {
@@ -780,24 +902,21 @@ class DataBaseService {
 
   Future addAReview(Review review, String productID) async {
     try {
-      review.user = currentUser!.uid;
-      review.createdAt = FieldValue.serverTimestamp() as Timestamp;
+      Product product = await fetchSingleProduct(productID);
       final role = await verifyRole();
-      if (role!.keys.contains("Buyer")) {
+      if (role!.keys.contains("Buyer") && product.vendorId != role["Buyer"]) {
         //create review ref and get its id before creating the review
-        var reviewRef =
-            productsCollection.doc(productID).collection('review').doc();
-        var reviewID = reviewRef.id;
-        await productsCollection
-            .doc(productID)
-            .collection('reviews')
-            .doc(reviewID)
-            .set({
-          "user": currentUser!.uid,
-          "createdAt": FieldValue.serverTimestamp(),
+        var reviewID = reviewsCollection.doc().id;
+        await reviewsCollection.doc(reviewID).set({
+          "review images": review.reviewImages,
+          "display name": review.displayName,
+          "userID": review.userID,
+          "created at": FieldValue.serverTimestamp(),
           "comment": review.comment,
           "stars": review.stars,
-          "reviewID": review.reviewID,
+          "reviewID": reviewID,
+          "extra info": review.extraInfo,
+          "productID": productID,
         });
         return "success";
       } else {
@@ -808,15 +927,11 @@ class DataBaseService {
     }
   }
 
-  Future deleteReview(String productID, dynamic reviewID) async {
+  Future deleteReview(String reviewID) async {
     try {
       final role = await verifyRole();
       if (role!.keys.contains("Buyer")) {
-        return await productsCollection
-            .doc(productID)
-            .collection('reviews')
-            .doc(reviewID)
-            .delete();
+        return await reviewsCollection.doc(reviewID).delete();
       }
     } on FirebaseException catch (e) {
       print("Error: ${e.code} and ${e.message}");
@@ -826,6 +941,106 @@ class DataBaseService {
   //payment stuff
 
   //referral
+  //generate referral code
+  String generateReferralCode() {
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final random = Random();
+    return String.fromCharCodes(Iterable.generate(
+        6, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
+  }
+
+  //generate referral link
+  String generateReferralLink(String referralCode) {
+    // Replace 'your_domain.com' with your actual domain
+    return 'https://hairmainstreet.com/register?referralCode=$referralCode';
+  }
+
+  //confirm referral code and reward referrer
+  Future<String> confirmRefCodeAndRewardRef({
+    String? referralCode,
+    String? referredID,
+  }) async {
+    try {
+      int rewardPointToAdd = 10;
+      // Query the userProfileCollection to find the user with the given referral code
+      var userQuery = await userProfileCollection
+          .where("referral code", isEqualTo: referralCode)
+          .get();
+
+      // If the user exists
+      if (userQuery.docs.isNotEmpty) {
+        var userData = userQuery.docs.first.data() as Map<String, dynamic>;
+        String referralID = referralsCollection.doc().id;
+
+        // Create a new referral document
+        await referralsCollection
+            .doc(userData["uid"])
+            .collection("referrals")
+            .doc(referralID)
+            .set({
+          "referralID": referralID,
+          "referrerID": userData["uid"],
+          "referredID": referredID,
+          "timestamp": FieldValue.serverTimestamp(),
+        });
+
+        // Start a Firestore transaction to update the referrer's reward points
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          DocumentReference docRef = referralsCollection.doc(userData["uid"]);
+          DocumentSnapshot snapshot = await transaction.get(docRef);
+
+          int? currentValue =
+              (snapshot.data() as Map<String, dynamic>?)?["reward point"] ?? 0;
+
+          // If the current value is 0 or null, set the reward points to 10
+          if (currentValue == 0) {
+            transaction.set(docRef, {"reward point": 10});
+          } else {
+            // If the current value is greater than 0, update the reward points by adding 10
+            transaction.update(docRef, {
+              "reward point": FieldValue.increment(rewardPointToAdd),
+            });
+          }
+        });
+
+        return "success";
+      } else {
+        return "User not found for the given referral code";
+      }
+    } on FirebaseException catch (e) {
+      // Handle Firebase errors more gracefully
+      return "Firebase error: ${e.message}";
+    } catch (e) {
+      // Handle other errors
+      return "Error: $e";
+    }
+  }
+
+  //get referrals
+  Stream<List<Referral>> getReferrals() {
+    return referralsCollection
+        .doc(currentUser!.uid)
+        .collection("referrals")
+        .snapshots()
+        .map((querySnapshot) => querySnapshot.docs
+            .map((doc) => Referral.fromJson(doc.data()))
+            .toList());
+  }
+
+  //get reward points
+  Stream<int> getRewardPoints() {
+    var snapshot = referralsCollection.doc(currentUser!.uid).snapshots();
+    return snapshot.map((event) {
+      final data = event.data();
+      if (data != null && data is Map<String, dynamic>) {
+        return (data["reward point"] as int?) ?? 0;
+      } else {
+        // Handle the case when data is null or not of the expected type
+        return 0; // Or any default value you prefer
+      }
+    });
+  }
 
   //chats
   //start chat
@@ -1170,10 +1385,21 @@ class DataBaseService {
     final url = "https://api.paystack.co/transaction/verify/$reference";
     var response = await http
         .get(Uri.parse(url), headers: {"Authorization": "Bearer $secretKey"});
-    var body = response.body;
-    print(jsonDecode(body));
-    final data = jsonDecode(body);
-    return data["status"];
+
+    if (response.statusCode == 200) {
+      var body = response.body;
+      if (body.isNotEmpty) {
+        final data = jsonDecode(body);
+        print(data);
+        return data["status"];
+      } else {
+        print("Response body is empty");
+        return false;
+      }
+    } else {
+      print("Request failed with status: ${response.statusCode}");
+      return false;
+    }
   }
 
   //get notifications
@@ -1188,5 +1414,56 @@ class DataBaseService {
           .map((doc) => Notifications.fromJson(doc.data()))
           .toList();
     });
+  }
+
+  //refund and cancellation stuff
+  //refund request
+  Future submitRefundRequest(RefundRequest refundRequest) async {
+    try {
+      var role = await verifyRole();
+      if (role != null && role.containsKey('Buyer')) {
+        String requestID = refundsCollection.doc().id;
+        await refundsCollection.doc(requestID).set({
+          "userID": refundRequest.userID,
+          "requestID": requestID,
+          "added details": refundRequest.addedDetails,
+          "reason": refundRequest.reason,
+          "refund status": "pending",
+          "orderID": refundRequest.orderID,
+        });
+        return "success";
+      } else {
+        return "not authorized";
+      }
+    } on FirebaseException catch (e) {
+      print(e.message);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  //cancellation request
+  Future submitOrderCancellationRequest(
+      CancellationRequest cancellationRequest) async {
+    try {
+      var role = await verifyRole();
+      if (role != null && role.containsKey("Buyer")) {
+        String requestID = cancellationCollection.doc().id;
+        await cancellationCollection.doc(requestID).set({
+          "userID": cancellationRequest.userID,
+          "requestID": requestID,
+          "reason": cancellationRequest.reason,
+          "cancellation status": "pending",
+          "orderID": cancellationRequest.orderID,
+        });
+        return "success";
+      } else {
+        return "not authorized";
+      }
+    } on FirebaseException catch (e) {
+      print(e.message);
+    } catch (e) {
+      print(e);
+    }
   }
 }

@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/review_controller.dart';
 import 'package:hair_main_street/pages/notifcation.dart';
+import 'package:hair_main_street/pages/review_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/Shop_page.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/userController.dart';
@@ -23,6 +25,7 @@ class MenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     UserController userController = Get.find<UserController>();
+    Get.put(ReviewController());
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -84,11 +87,11 @@ class MenuPage extends StatelessWidget {
           : Scaffold(
               appBar: AppBar(
                 title: const Text(
-                  'Menu',
+                  'Me',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0E4D92),
+                    color: Colors.black,
                   ),
                 ),
                 centerTitle: true,
@@ -119,9 +122,10 @@ class MenuPage extends StatelessWidget {
               backgroundColor: Colors.grey[100],
               extendBodyBehindAppBar: false,
               body: Container(
+                color: Colors.white,
                 //decoration: BoxDecoration(gradient: myGradient),
                 child: ListView(
-                  padding: EdgeInsets.fromLTRB(8, screenHeight * 0.08, 8, 0),
+                  padding: EdgeInsets.fromLTRB(8, screenHeight * 0.02, 8, 0),
                   children: [
                     MenuButton(
                       text: "Profile",
@@ -144,6 +148,15 @@ class MenuPage extends StatelessWidget {
                       text: "Orders",
                       iconData: Symbols.local_shipping_rounded,
                       onPressed: () => Get.to(() => OrdersPage(),
+                          transition: Transition.fadeIn),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    MenuButton(
+                      text: "Reviews",
+                      iconData: Symbols.reviews_rounded,
+                      onPressed: () => Get.to(() => ClientReviewPage(),
                           transition: Transition.fadeIn),
                     ),
                     const SizedBox(

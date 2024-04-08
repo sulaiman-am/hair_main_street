@@ -56,8 +56,8 @@ class VendorController extends GetxController {
   }
 
   //create or update vendor
-  createOrUpdateVendor(Vendors vendor) async {
-    var result = await DataBaseService().createOrUpdateVendor(vendor);
+  updateVendor(String fieldName, dynamic value) async {
+    var result = await DataBaseService().updateVendor(fieldName, value);
     if (result == 'success') {
       Get.snackbar(
         "Success",
@@ -73,6 +73,7 @@ class VendorController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
+      update();
     } else {
       Get.snackbar(
         "Error",
@@ -82,6 +83,43 @@ class VendorController extends GetxController {
         forwardAnimationCurve: Curves.decelerate,
         reverseAnimationCurve: Curves.easeOut,
         backgroundColor: Colors.red[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    }
+  }
+
+  //delete a product
+  deleteProduct(Product product) async {
+    var result = await DataBaseService().clientDeleteProduct(product);
+    if (result == "success") {
+      //isProductadded.value = true;
+      Get.snackbar(
+        "Successful",
+        "Product Deleted",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    } else {
+      Get.snackbar(
+        "Error",
+        "Failed to Delete Product",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[400],
         margin: EdgeInsets.only(
           left: 12,
           right: 12,

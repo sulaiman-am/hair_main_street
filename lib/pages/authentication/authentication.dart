@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/referralController.dart';
 import 'package:hair_main_street/pages/authentication/forgotten_password.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/models/userModel.dart';
@@ -13,8 +14,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:string_validator/string_validator.dart' as validator;
 
 class SignInUpPage extends StatefulWidget {
-  const SignInUpPage({super.key});
-
+  final String? referralCode;
+  const SignInUpPage({super.key, this.referralCode});
   @override
   State<SignInUpPage> createState() => _SignInPageState();
 }
@@ -23,6 +24,10 @@ class _SignInPageState extends State<SignInUpPage>
     with SingleTickerProviderStateMixin {
   late TabController tabController;
   UserController userController = Get.find<UserController>();
+  ReferralController referralController = Get.find<ReferralController>();
+
+  String? referralCode;
+
   @override
   void initState() {
     super.initState();
@@ -40,38 +45,14 @@ class _SignInPageState extends State<SignInUpPage>
 
   @override
   Widget build(BuildContext context) {
+    referralCode = widget.referralCode;
+    debugPrint(referralCode);
     dismissKeyBoard() {
       FocusScope.of(context).requestFocus(FocusNode());
     }
 
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
-    Gradient myGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 255, 224, 139),
-        Color.fromARGB(255, 200, 242, 237)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
-    Gradient appBarGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 200, 242, 237),
-        Color.fromARGB(255, 255, 224, 139)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
     TextEditingController emailController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
     TextEditingController confirmpasswordController = TextEditingController();
@@ -84,12 +65,12 @@ class _SignInPageState extends State<SignInUpPage>
             icon: const Icon(Symbols.arrow_back_ios_new_rounded,
                 size: 24, color: Colors.black),
           ),
-          title: const Text(
+          title: Text(
             'Sign Up/In',
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E4D92),
+              color: Colors.black,
             ),
           ),
           centerTitle: true,
@@ -239,25 +220,33 @@ class _SignInPageState extends State<SignInUpPage>
                           height: 20,
                         ),
                         TextButton(
-                          child: const Text(
-                            "Sign Up",
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
-                            ),
-                          ),
-                          onPressed: () {
+                          onPressed: () async {
                             bool validated = formKey.currentState!.validate();
                             if (validated) {
                               formKey.currentState!.save();
                               userController.isLoading.value = true;
-                              userController.createUser(email, password);
+                              var usercreation = await userController
+                                  .createUser(email, password);
+                              if (usercreation == "success" &&
+                                  referralCode != null) {
+                                referralController.handleReferrals(
+                                    referralCode!,
+                                    userController.myUser.value.uid!);
+                              }
                             }
                           },
                           style: TextButton.styleFrom(
-                            backgroundColor: Color(0xFF392F5A),
+                            padding: EdgeInsets.all(12),
+                            backgroundColor: Colors.black,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            "Sign Up",
+                            style: TextStyle(
+                              fontSize: 24,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -383,7 +372,8 @@ class _SignInPageState extends State<SignInUpPage>
                             }
                           },
                           style: TextButton.styleFrom(
-                            backgroundColor: Color(0xFF392F5A),
+                            padding: EdgeInsets.all(12),
+                            backgroundColor: Colors.black,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

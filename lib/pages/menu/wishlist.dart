@@ -52,7 +52,7 @@ class WishListPage extends StatelessWidget {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E4D92),
+              color: Colors.black,
             ),
           ),
           centerTitle: true,
@@ -64,7 +64,7 @@ class WishListPage extends StatelessWidget {
         extendBodyBehindAppBar: false,
         body: wishListController.wishListItems.isEmpty
             ? Container(
-                color: Colors.grey[100],
+                color: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: const Center(
                   child: Column(
@@ -91,6 +91,7 @@ class WishListPage extends StatelessWidget {
                 ),
               )
             : Container(
+                color: Colors.white,
                 //decoration: BoxDecoration(gradient: myGradient),
                 padding: EdgeInsets.symmetric(horizontal: 4),
                 //padding: EdgeInsets.all(8),

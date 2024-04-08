@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
@@ -7,6 +8,7 @@ import 'package:hair_main_street/pages/menu.dart';
 import 'package:string_validator/string_validator.dart' as validator;
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:recase/recase.dart';
 
 class EditProductPage extends StatefulWidget {
   final String? productID;
@@ -19,6 +21,9 @@ class EditProductPage extends StatefulWidget {
 class _EditProductPageState extends State<EditProductPage> {
   GlobalKey<FormState> formKey = GlobalKey();
   ProductController productController = Get.find<ProductController>();
+
+  var _initialCategoryValue;
+  var _initialAvailability;
 
   bool checkbox1 = true;
   String? hello;
@@ -37,6 +42,28 @@ class _EditProductPageState extends State<EditProductPage> {
       productPrice,
       productDescription,
       quantity = TextEditingController();
+
+  @override
+  void initState() {
+    var product = productController.getSingleProduct(widget.productID!);
+    if (product!.category == null) {
+      _initialCategoryValue = "natural hairs";
+    } else {
+      _initialCategoryValue = product.category;
+    }
+
+    if (product.isAvailable == null) {
+      _initialAvailability = "Yes";
+    } else {
+      if (product.isAvailable!) {
+        _initialAvailability = "Yes";
+      } else {
+        _initialAvailability = "No";
+      }
+    }
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,8 +161,15 @@ class _EditProductPageState extends State<EditProductPage> {
       );
     }
 
-    return WillPopScope(
-      onWillPop: () async => await showCancelDialog(),
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (val) async {
+        if (val) {
+          return;
+        } else {
+          return await showCancelDialog();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -148,7 +182,7 @@ class _EditProductPageState extends State<EditProductPage> {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E4D92),
+              color: Colors.black,
             ),
           ),
           centerTitle: true,
@@ -158,7 +192,7 @@ class _EditProductPageState extends State<EditProductPage> {
           //backgroundColor: Colors.transparent,
         ),
         body: Container(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           //decoration: BoxDecoration(gradient: myGradient),
           child: Form(
             key: formKey,
@@ -309,7 +343,7 @@ class _EditProductPageState extends State<EditProductPage> {
                     Expanded(
                       child: TextButton(
                         onPressed: () {
-                          productController.uploadImage();
+                          productController.selectImage();
                         },
                         style: TextButton.styleFrom(
                             backgroundColor: const Color(0xFF392F5A),
@@ -384,7 +418,149 @@ class _EditProductPageState extends State<EditProductPage> {
                   },
                 ),
                 const SizedBox(
-                  height: 8,
+                  height: 16,
+                ),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        "Category:",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: PopupMenuButton<String>(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(
+                            color: Colors.black,
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 10,
+                        itemBuilder: (BuildContext context) {
+                          return <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'natural hairs',
+                              child: Text('Natural Hairs'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'accessories',
+                              child: Text('Accessories'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'wigs',
+                              child: Text('Wigs'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'lashes',
+                              child: Text('Lashes'),
+                            ),
+                          ];
+                        },
+                        onSelected: (String value) {
+                          setState(() {
+                            _initialCategoryValue = value;
+                            product.category = _initialCategoryValue;
+                            print(_initialCategoryValue);
+                            //_updateSelectedValue(value); // Update Firestore with the new value
+                          });
+                        },
+                        child: ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                              color: Colors.black,
+                              width: 1,
+                            ),
+                          ),
+                          title: Text(
+                            _initialCategoryValue.toString().titleCase,
+                            style: const TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                          trailing: const Icon(Icons.arrow_drop_down),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        "Availability:",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: PopupMenuButton<String>(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(
+                            color: Colors.black,
+                            width: 1,
+                          ),
+                        ),
+                        elevation: 10,
+                        itemBuilder: (BuildContext context) {
+                          return <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'Yes',
+                              child: Text('Yes'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'No',
+                              child: Text('No'),
+                            ),
+                          ];
+                        },
+                        onSelected: (String value) {
+                          setState(() {
+                            _initialAvailability = value;
+                            if (_initialAvailability == "Yes") {
+                              product.isAvailable = true;
+                            } else if (_initialAvailability == "No") {
+                              product.isAvailable = false;
+                            }
+                            print(_initialAvailability);
+                            //_updateSelectedValue(value); // Update Firestore with the new value
+                          });
+                        },
+                        child: ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                              color: Colors.black,
+                              width: 1,
+                            ),
+                          ),
+                          title: Text(
+                            _initialAvailability.toString().titleCase,
+                            style: const TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                          trailing: const Icon(Icons.arrow_drop_down),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 16,
                 ),
                 CheckboxListTile(
                   contentPadding:
@@ -531,8 +707,9 @@ class _EditProductPageState extends State<EditProductPage> {
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: () {
+                        onPressed: () async {
                           bool? validate = formKey.currentState!.validate();
+                          await productController.uploadImage();
                           if (validate) {
                             if (productController.isProductadded.value ==
                                 false) {
@@ -551,14 +728,14 @@ class _EditProductPageState extends State<EditProductPage> {
                               }
                             }
                             formKey.currentState!.save();
-                            productController.addAProduct(product!);
+                            await productController.updateProduct(product);
                             //debugPrint(hello);
                           }
                         },
                         style: TextButton.styleFrom(
                           // padding: EdgeInsets.symmetric(
                           //     horizontal: screenWidth * 0.24),
-                          backgroundColor: Color(0xFF392F5A),
+                          backgroundColor: Colors.black,
                           side: const BorderSide(color: Colors.white, width: 2),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

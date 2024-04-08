@@ -132,7 +132,7 @@ class _WalletPageState extends State<WalletPage> {
           icon: const Icon(Symbols.arrow_back_ios_new_rounded,
               size: 24, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF0E4D92),
+        backgroundColor: Colors.black,
         // title: const Text(
         //   'Wallet',
         //   style: TextStyle(
@@ -167,7 +167,7 @@ class _WalletPageState extends State<WalletPage> {
                       borderRadius: BorderRadius.all(
                         Radius.circular(0),
                       ),
-                      color: Color(0xFF0E4D92),
+                      color: Colors.black,
                       // boxShadow: [
                       //   BoxShadow(
                       //     color: Color(0xFF000000),
@@ -198,7 +198,7 @@ class _WalletPageState extends State<WalletPage> {
                                 height: 16,
                               ),
                               Text(
-                                "₦${walletController.wallet.value.balance}",
+                                "N${walletController.wallet.value.balance}",
                                 style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w700,
@@ -221,7 +221,7 @@ class _WalletPageState extends State<WalletPage> {
                                     MainAxisAlignment.spaceAround,
                                 children: [
                                   const Expanded(
-                                    flex: 1,
+                                    flex: 2,
                                     child: Text(
                                       "Amount available for withdrawal:",
                                       style: TextStyle(
@@ -237,7 +237,7 @@ class _WalletPageState extends State<WalletPage> {
                                   Expanded(
                                     flex: 1,
                                     child: Text(
-                                      "₦${walletController.wallet.value.withdrawableBalance}",
+                                      "N${walletController.wallet.value.withdrawableBalance}",
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
@@ -295,7 +295,7 @@ class _WalletPageState extends State<WalletPage> {
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF0E4D92),
+                              backgroundColor: Colors.black,
                               shape: RoundedRectangleBorder(
                                 side: const BorderSide(
                                   width: 0.8,
@@ -445,7 +445,7 @@ class _WalletPageState extends State<WalletPage> {
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 30, vertical: 30),
                                   //alignment: Alignment.centerLeft,
-                                  backgroundColor: Color(0xFF9DD9D2),
+                                  backgroundColor: Colors.white,
                                   shape: const RoundedRectangleBorder(
                                     side: BorderSide(
                                         color: Colors.black, width: 2),

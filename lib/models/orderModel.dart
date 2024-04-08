@@ -9,7 +9,7 @@ class Orders {
   int? paymentPrice;
   String? buyerId;
   String? vendorId;
-  int? totalPrice;
+  num? totalPrice;
   String? shippingAddress;
   int? installmentNumber;
   int? installmentPaid;
@@ -18,6 +18,7 @@ class Orders {
   dynamic updatedAt;
   String? paymentMethod;
   String? paymentStatus;
+  String? transactionID;
 
   Orders({
     this.orderId,
@@ -33,6 +34,7 @@ class Orders {
     this.updatedAt,
     this.paymentMethod,
     this.paymentStatus,
+    this.transactionID,
   });
 
   factory Orders.fromJson(Map<String, dynamic> json) => Orders(
@@ -48,6 +50,7 @@ class Orders {
       installmentNumber: json["installment number"],
       paymentMethod: json['payment method'],
       paymentStatus: json['payment status'],
+      transactionID: json['transactionID'],
       paymentPrice: json['payment price']);
 
   Map<String, dynamic> toJson() => {
@@ -64,6 +67,7 @@ class Orders {
         "payment status": paymentStatus,
         "installment number": installmentNumber,
         "installment paid": installmentPaid,
+        "transactionID": transactionID,
       };
 }
 
@@ -102,10 +106,10 @@ String databaseOrderResposeToJson(OrderItem data) => json.encode(data.toJson());
 
 class DatabaseOrderResponse {
   String? orderId;
-  int? paymentPrice;
+  num? paymentPrice;
   String? buyerId;
   String? vendorId;
-  int? totalPrice;
+  num? totalPrice;
   String? shippingAddress;
   int? installmentNumber;
   int? installmentPaid;
@@ -114,6 +118,7 @@ class DatabaseOrderResponse {
   dynamic updatedAt;
   String? paymentMethod;
   String? paymentStatus;
+  String? transactionID;
   List<OrderItem>? orderItem;
 
   DatabaseOrderResponse(
@@ -128,6 +133,7 @@ class DatabaseOrderResponse {
       this.paymentStatus,
       this.orderItem,
       this.shippingAddress,
+      this.transactionID,
       this.totalPrice,
       this.updatedAt,
       this.vendorId});
@@ -146,6 +152,7 @@ class DatabaseOrderResponse {
         installmentPaid: json["installment paid"],
         paymentMethod: json['payment method'],
         paymentStatus: json['payment status'],
+        transactionID: json['transactionID'],
         paymentPrice: json['payment price'],
         orderItem: List<OrderItem>.from(json["orderItems"].map((x) => x)),
       );
@@ -160,6 +167,7 @@ class DatabaseOrderResponse {
         "order status": orderStatus,
         "created at": createdAt,
         "updated at": updatedAt,
+        "transactionID": transactionID,
         "payment method": paymentMethod,
         "payment status": paymentStatus,
         "installment number": installmentNumber,

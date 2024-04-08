@@ -10,22 +10,36 @@ class AuthService {
   CollectionReference userProfileCollection =
       FirebaseFirestore.instance.collection("userProfile");
 
-  MyUser? convertToMyUserType(User? user) {
-    return user != null
-        ? MyUser(
-            uid: user.uid,
-            email: user.email,
-            // isBuyer: true,
-            // isAdmin: false,
-            // isVendor: false,
-          )
-        : null;
+  Future<MyUser?> convertToMyUserType(User? user) async {
+    if (user == null) {
+      return null;
+    }
+    var otherDetails = await userProfileCollection.doc(user.uid).get();
+    if (otherDetails.exists) {
+      var data = otherDetails.data() as Map<String, dynamic>;
+      return MyUser(
+          uid: user.uid,
+          email: user.email,
+          referralLink: data["referral link"],
+          referralCode: data["referral code"],
+          isBuyer:
+              data["isBuyer"] ?? true, // Ensure isBuyer has a default value
+          phoneNumber: data["phonenumber"],
+          isVendor: data["isVendor"],
+          fullname: data["fullname"],
+          address: data["address"]
+          // Set other properties here if needed
+          );
+    } else {
+      return null; // Return null if user details don't exist
+    }
   }
 
-// determine the auth state of the app
+// Determine the auth state of the app
   Stream<MyUser?> get authState {
-    return auth.authStateChanges().map((user) => convertToMyUserType(user));
-    //auth.currentUser!.reload();
+    return auth
+        .authStateChanges()
+        .asyncMap((user) => convertToMyUserType(user));
   }
 
 // register with email and password
@@ -35,9 +49,15 @@ class AuthService {
           email: email!, password: password!);
       dynamic user = result.user;
       await DataBaseService(uid: user.uid).createUserProfile();
+      var referralCode = DataBaseService().generateReferralCode();
+      var referralLink = DataBaseService().generateReferralLink(referralCode);
       String? token = await NotificationService().getDeviceToken();
-      userProfileCollection.doc(user.uid).update({"token": token});
-      return convertToMyUserType(user);
+      await userProfileCollection.doc(user.uid).update({
+        "token": token,
+        "referral code": referralCode,
+        "referral link": referralLink
+      });
+      return await convertToMyUserType(user);
     } catch (e) {
       //print(e.toString());
       return e;
@@ -49,10 +69,20 @@ class AuthService {
     try {
       UserCredential result = await auth.signInWithEmailAndPassword(
           email: email!, password: password!);
-      dynamic user = result.user;
+      User? user = result.user;
       String? token = await NotificationService().getDeviceToken();
-      userProfileCollection.doc(user.uid).update({"token": token});
-      return convertToMyUserType(user);
+      var profile = await userProfileCollection.doc(user!.uid).get();
+      var data = profile.data() as Map<String, dynamic>;
+      if (data["referral code"] == null && data["referral link"] == null) {
+        var referralCode = DataBaseService().generateReferralCode();
+        var referralLink = DataBaseService().generateReferralLink(referralCode);
+        await userProfileCollection.doc(user.uid).update(
+            {"referral code": referralCode, "referral link": referralLink});
+      }
+      await userProfileCollection.doc(user.uid).update({
+        "token": token,
+      });
+      return await convertToMyUserType(user);
     } catch (e) {
       //print(e.toString());
       return e;

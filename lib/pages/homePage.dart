@@ -14,6 +14,8 @@ import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/pages/cart.dart';
 import 'package:hair_main_street/pages/feed.dart';
 import 'package:hair_main_street/pages/menu.dart';
+import 'package:hair_main_street/pages/new_feed.dart';
+import 'package:hair_main_street/pages/orders_stuff/checkout%20copy.dart';
 //import 'dart:math' as math;
 
 //import 'package:hair_main_street/widgets/cards.dart';
@@ -30,7 +32,7 @@ class _HomePageState extends State<HomePage> {
   UserController userController = Get.find<UserController>();
 
   //var anotherController = Get.put(VendorController());
-  List tabs = [FeedPage(), CartPage(), MenuPage()];
+  List tabs = [NewFeedPage(), CartPage(), MenuPage()];
   var _selectedTab = 0;
 
   CartController cartController = Get.put(CartController());
@@ -97,15 +99,36 @@ class _HomePageState extends State<HomePage> {
                       visible: _selectedTab == 1 &&
                           checkOutController.checkoutList.isNotEmpty,
                       child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         //height: screenHeight * .05,
                         color: Colors.white,
                         //padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Total:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  "N${checkOutController.totalPriceAndQuantity["totalPrice"]}",
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF392F5A),
+                                backgroundColor: Colors.black,
                                 padding: EdgeInsets.symmetric(
                                     vertical: 2,
                                     horizontal: screenWidth * 0.04),
@@ -115,16 +138,18 @@ class _HomePageState extends State<HomePage> {
                                     width: 1.2,
                                     color: Colors.black,
                                   ),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               onPressed: () {
+                                Get.to(() => CheckOutPage2(
+                                    products: checkOutController.checkoutList));
                                 // DataBaseService().addProduct();
                               },
                               child: GetX<CheckOutController>(
                                 builder: (_) {
                                   return Text(
-                                    "Check Out(${checkOutController.checkoutList.length})",
+                                    "Check Out(${checkOutController.totalPriceAndQuantity["totalQuantity"]})",
                                     style: const TextStyle(
                                       fontSize: 24,
                                       color: Colors.white,

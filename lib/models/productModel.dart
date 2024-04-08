@@ -10,6 +10,9 @@ class Product {
   bool? allowInstallment;
   Timestamp? createdAt;
   String? description;
+  String? category;
+  bool? isDeleted;
+  bool? isAvailable;
   bool? hasOption;
   List<dynamic>? image;
   String? name;
@@ -24,36 +27,48 @@ class Product {
     this.createdAt,
     this.description,
     this.hasOption,
+    this.category,
     this.image,
     this.name,
+    this.isAvailable,
+    this.isDeleted,
     this.price,
     this.quantity,
     this.updatedAt,
     this.vendorId,
   });
 
-  factory Product.fromdata(Map<String, dynamic> data) => Product(
-        productID: data["productID"],
-        allowInstallment: data["allowInstallment"],
-        createdAt: data["createdAt"],
-        description: data["description"],
-        hasOption: data["hasOption"],
-        image: List<dynamic>.from(data["image"].map((x) => x)),
-        name: data["name"],
-        price: data["price"],
-        quantity: data["quantity"],
-        updatedAt: data["updatedAt"],
-        vendorId: data["vendorID"],
-      );
+  factory Product.fromdata(Map<String, dynamic> data) {
+    final List<dynamic>? images = data["image"];
+    return Product(
+      productID: data["productID"],
+      allowInstallment: data["allowInstallment"],
+      category: data["category"],
+      createdAt: data["createdAt"],
+      description: data["description"],
+      hasOption: data["hasOption"],
+      image: images != null ? List<dynamic>.from(images.map((x) => x)) : [],
+      name: data["name"],
+      isAvailable: data["isAvailable"],
+      isDeleted: data["isDeleted"],
+      price: data["price"],
+      quantity: data["quantity"],
+      updatedAt: data["updatedAt"],
+      vendorId: data["vendorID"],
+    );
+  }
 
   Map<String, dynamic> todata() => {
         "allowInstallment": allowInstallment,
         "createdAt": createdAt,
         "description": description,
+        "category": category,
         "hasOption": hasOption,
         "image": List<dynamic>.from(image!.map((x) => x)),
         "name": name,
         "price": price,
+        "isDeleted": isDeleted,
+        "isAvailable": isAvailable,
         "quantity": quantity,
         "updatedAt": updatedAt,
         "vendorID": vendorId,

@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
@@ -14,10 +16,12 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     UserController userController = Get.find<UserController>();
+    CheckOutController checkOutController = Get.find<CheckOutController>();
     TextEditingController? oldPasswordController,
         newPasswordController = TextEditingController();
     //num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
+    num screenHeight = MediaQuery.of(context).size.height;
 
     Gradient myGradient = const LinearGradient(
       colors: [
@@ -46,36 +50,36 @@ class ProfilePage extends StatelessWidget {
       //transform: GradientRotation(math.pi / 4),
     );
 
-    return GetBuilder<UserController>(
+    return GetX<UserController>(
       builder: (_) => Scaffold(
         appBar: AppBar(
           elevation: 0,
           leading: IconButton(
             onPressed: () => Get.back(),
             icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-                size: 24, color: Colors.black),
+                size: 24, color: Colors.white),
           ),
           title: const Text(
             'Profile',
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E4D92),
+              color: Colors.white,
             ),
           ),
           centerTitle: true,
           // flexibleSpace: Container(
           //   decoration: BoxDecoration(gradient: appBarGradient),
           // ),
-          //backgroundColor: Colors.transparent,
+          backgroundColor: Colors.black,
         ),
-        body: Container(
-          padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
-          //decoration: BoxDecoration(gradient: myGradient),
-          child: ListView(
-            padding: EdgeInsets.only(top: 12),
-            children: [
-              Center(
+        body: ListView(
+          //padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
+          children: [
+            Container(
+              padding: EdgeInsets.fromLTRB(12, 12, 12, 32),
+              color: Colors.black,
+              child: Center(
                 child: Stack(
                   //alignment: AlignmentDirectional.bottomEnd,
                   children: [
@@ -99,228 +103,247 @@ class ProfilePage extends StatelessWidget {
                     Positioned(
                       bottom: 8,
                       right: 16,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xFF392F5A),
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.camera_alt_rounded,
-                            size: 32,
-                            color: Colors.white,
-                          ),
+                      child: IconButton(
+                        style: IconButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(
+                              color: Colors.black,
+                              width: 1,
+                            )),
+                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.camera_alt_rounded,
+                          size: 32,
+                          color: Colors.black,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(
-                height: 24,
-              ),
-              ProfileLabel(
+            ),
+            const SizedBox(
+              height: 18,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: ProfileLabel(
                 hintText: "${userController.userState.value!.fullname}",
                 isVisible: true,
                 labelText: "Full Name",
                 //onPressed: () => showCancelDialog("Full Name"),
               ),
-              const SizedBox(
-                height: 8,
-              ),
-              ProfileLabel(
+            ),
+            const SizedBox(
+              height: 8,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: ProfileLabel(
                 hintText: "${userController.userState.value!.address}",
                 isVisible: true,
                 labelText: "Address",
               ),
-              const SizedBox(
-                height: 8,
-              ),
-              ProfileLabel(
+            ),
+            const SizedBox(
+              height: 8,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: ProfileLabel(
                 hintText: "${userController.userState.value!.email}",
                 isVisible: false,
                 labelText: "Email",
               ),
-              const SizedBox(
-                height: 8,
-              ),
-              ProfileLabel(
+            ),
+            const SizedBox(
+              height: 8,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: ProfileLabel(
                 hintText: "${userController.userState.value!.phoneNumber}",
                 isVisible: true,
                 labelText: "Phone Number",
               ),
-              const SizedBox(
-                height: 12,
-              ),
-              Container(
-                margin: EdgeInsets.only(right: screenWidth * .32),
-                child: TextButton.icon(
-                  style: TextButton.styleFrom(
-                    //alignment: Alignment.centerLeft,
-                    backgroundColor: Color(0xFF392F5A),
-                    shape: const RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.white, width: 2),
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(16),
-                      ),
-                    ),
-                  ),
-                  onPressed: () {
-                    Get.bottomSheet(
-                      Form(
-                        key: formKey,
-                        child: Container(
-                          color: Colors.white,
-                          height: Get.height * .40,
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              TextInputWidget(
-                                labelText: "Old Password",
-                                visibilityIcon: IconButton(
-                                  onPressed: () => _.toggle(),
-                                  icon: _.isObscure.value
-                                      ? const Icon(
-                                          Icons.visibility_off_rounded,
-                                          size: 20,
-                                        )
-                                      : const Icon(
-                                          Icons.visibility_rounded,
-                                          size: 20,
-                                        ),
-                                ),
-                                validator: (val) {
-                                  if (val!.isEmpty) {
-                                    return 'Cannot be Empty';
-                                  }
-                                  return null;
-                                },
-                                onChanged: (val) {
-                                  oldPasswordController!.text = val!;
-                                  return null;
-                                },
-                              ),
-                              TextInputWidget(
-                                labelText: "New Password",
-                                visibilityIcon: IconButton(
-                                  onPressed: () => _.toggle(),
-                                  icon: _.isObscure.value
-                                      ? const Icon(
-                                          Icons.visibility_off_rounded,
-                                          size: 20,
-                                        )
-                                      : const Icon(
-                                          Icons.visibility_rounded,
-                                          size: 20,
-                                        ),
-                                ),
-                                validator: (val) {
-                                  if (val!.isEmpty) {
-                                    return 'Cannot be Empty';
-                                  } else if (val.length < 6 &&
-                                      !validator.isAlphanumeric(val)) {
-                                    return "Must be greater than 6 characters &\nmust have letters and numbers";
-                                  }
-                                  return null;
-                                },
-                                onChanged: (val) {
-                                  newPasswordController.text = val!;
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(
-                                height: 16,
-                              ),
-                              TextButton(
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.red.shade300,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      12,
-                                    ),
-                                    side: const BorderSide(
-                                      width: 2,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  var validated =
-                                      formKey.currentState!.validate();
-                                  if (validated) {
-                                    userController.changePassword(
-                                        oldPasswordController!.text,
-                                        newPasswordController.text);
-                                    userController.isObscure.value = false;
-                                    Get.back();
-                                  }
-                                },
-                                child: const Text(
-                                  "Confirm Change",
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(
-                    Symbols.edit_rounded,
-                    size: 20,
-                    color: Colors.white,
-                  ),
-                  label: const Text(
-                    "Change Password",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 24,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+          ],
         ),
         bottomNavigationBar: Container(
-          margin: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-          decoration: BoxDecoration(color: Color(0xFF9DD9D2)),
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          height: screenHeight * 0.13,
+          //margin: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+          //decoration: BoxDecoration(color: Color(0xFF9DD9D2)),
           child: SafeArea(
-            child: TextButton(
-              style: TextButton.styleFrom(
-                //alignment: Alignment.centerLeft,
-                backgroundColor: Colors.red[400],
-                shape: const RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.white, width: 2),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(12),
+            child: Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      //alignment: Alignment.centerLeft,
+                      backgroundColor: Colors.black,
+                      shape: const RoundedRectangleBorder(
+                        side: BorderSide(color: Colors.white, width: 2),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(12),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      Get.bottomSheet(
+                        Form(
+                          key: formKey,
+                          child: Container(
+                            color: Colors.white,
+                            height: Get.height * .40,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                TextInputWidget(
+                                  labelText: "Old Password",
+                                  visibilityIcon: IconButton(
+                                    onPressed: () => _.toggle(),
+                                    icon: _.isObscure.value
+                                        ? const Icon(
+                                            Icons.visibility_off_rounded,
+                                            size: 20,
+                                          )
+                                        : const Icon(
+                                            Icons.visibility_rounded,
+                                            size: 20,
+                                          ),
+                                  ),
+                                  validator: (val) {
+                                    if (val!.isEmpty) {
+                                      return 'Cannot be Empty';
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (val) {
+                                    oldPasswordController!.text = val!;
+                                    return null;
+                                  },
+                                ),
+                                TextInputWidget(
+                                  labelText: "New Password",
+                                  visibilityIcon: IconButton(
+                                    onPressed: () => _.toggle(),
+                                    icon: _.isObscure.value
+                                        ? const Icon(
+                                            Icons.visibility_off_rounded,
+                                            size: 20,
+                                          )
+                                        : const Icon(
+                                            Icons.visibility_rounded,
+                                            size: 20,
+                                          ),
+                                  ),
+                                  validator: (val) {
+                                    if (val!.isEmpty) {
+                                      return 'Cannot be Empty';
+                                    } else if (val.length < 6 &&
+                                        !validator.isAlphanumeric(val)) {
+                                      return "Must be greater than 6 characters &\nmust have letters and numbers";
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (val) {
+                                    newPasswordController.text = val!;
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(
+                                  height: 16,
+                                ),
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.red.shade300,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        12,
+                                      ),
+                                      side: const BorderSide(
+                                        width: 2,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    var validated =
+                                        formKey.currentState!.validate();
+                                    if (validated) {
+                                      userController.changePassword(
+                                          oldPasswordController!.text,
+                                          newPasswordController.text);
+                                      userController.isObscure.value = false;
+                                      Get.back();
+                                    }
+                                  },
+                                  child: const Text(
+                                    "Confirm Change",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.lock,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      "Change Password",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              onPressed: () {
-                userController.signOut();
-                Get.offAll(() => HomePage());
-              },
-              child: const Text(
-                "Sign Out",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w400,
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      //alignment: Alignment.centerLeft,
+                      backgroundColor: Colors.red[400],
+                      shape: const RoundedRectangleBorder(
+                        side: BorderSide(color: Colors.white, width: 2),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(12),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      userController.signOut();
+                      checkOutController.checkoutList.clear();
+                      Get.offAll(() => HomePage());
+                    },
+                    child: const Text(
+                      "Sign Out",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -551,8 +574,8 @@ class ProfileLabel extends StatelessWidget {
               ),
             ],
           ),
-          child: GetX<UserController>(
-            builder: (_) {
+          child: Obx(
+            () {
               var newHint = hintText.obs;
               return Text(
                 hintText == null ? "hint" : newHint.value!,

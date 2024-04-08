@@ -42,7 +42,7 @@ class NotificationsPage extends StatelessWidget {
           "Notifications",
           style: TextStyle(
             fontSize: 32,
-            color: Color(0xFF0E4D92),
+            color: Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -54,6 +54,7 @@ class NotificationsPage extends StatelessWidget {
           ),
         ),
       ),
+      backgroundColor: Colors.white,
       body: StreamBuilder(
           stream: DataBaseService().getNotifications(),
           builder: (context, snapshot) {
@@ -69,7 +70,7 @@ class NotificationsPage extends StatelessWidget {
                 );
               } else {}
               return ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   itemCount: notificationController.notifications.length,
                   itemBuilder: (context, index) {
                     return GestureDetector(
@@ -101,7 +102,7 @@ class NotificationsPage extends StatelessWidget {
                         color: Colors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(
-                          side: const BorderSide(color: Colors.black, width: 2),
+                          side: const BorderSide(color: Colors.black, width: 1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Padding(
@@ -130,12 +131,13 @@ class NotificationsPage extends StatelessWidget {
                               ),
                               Row(
                                 children: [
-                                  CircleAvatar(
-                                    backgroundColor: Colors.green.shade300,
+                                  const CircleAvatar(
+                                    backgroundColor: Colors.black,
                                     radius: 36,
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.list_alt_rounded,
                                       size: 48,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   const SizedBox(
