@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/productController.dart';
+import 'package:hair_main_street/controllers/review_controller.dart';
 import 'package:hair_main_street/extras/delegate.dart';
 import 'package:hair_main_street/pages/notifcation.dart';
 import 'package:hair_main_street/widgets/cards.dart';
@@ -26,19 +27,20 @@ class _NewFeedPageState extends State<NewFeedPage>
 
   @override
   Widget build(BuildContext context) {
+    Get.put(ReviewController());
     ProductController productController = Get.find<ProductController>();
     //VendorController vendorController = Get.find<VendorController>();
     GlobalKey<FormState> formKey = GlobalKey();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
-    List<Map> categories = [
+    List<Map<String, num>> categories = [
       {
-        "Natural Hair":
-            "assets/images/DALL·E 2024-02-13 10.22.29 - an image i can use as the category image for  natural hair on an app.png"
+        "All": 4,
       },
-      {"Wigs": "assets/images/wigs.jpeg"},
-      {"Accessories": "assets/images/accessories.jpeg"},
-      {"Lashes": "assets/images/DIY lash extensions.jpeg"},
+      {"Natural Hair": 1},
+      {"Wigs": 1},
+      {"Accessories": 1},
+      {"Lashes": 1},
     ];
     TabController tabController =
         TabController(length: categories.length, vsync: this);
@@ -157,9 +159,9 @@ class _NewFeedPageState extends State<NewFeedPage>
 
         //backgroundColor: Colors.transparent,
       ),
-      extendBody: true,
+      //extendBody: true,
       body: GetX<ProductController>(builder: (controller) {
-        return controller.products.value.isEmpty
+        return controller.products.isEmpty
             ? const Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 4,
@@ -168,101 +170,230 @@ class _NewFeedPageState extends State<NewFeedPage>
             : TabBarView(
                 controller: tabController,
                 children: [
-                  ListView.builder(
-                    // padding:
-                    //     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            GridView.builder(
-                              physics: const NeverScrollableScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                  Obx(
+                    () {
+                      var products = productController.productMap["All"];
+                      return products.isEmpty
+                          ? const Center(
+                              child: Text(
+                                "Nothing Here",
+                                style: TextStyle(
+                                  fontSize: 40,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            )
+                          : ListView(
                               shrinkWrap: true,
-                              itemCount: itemCount,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisExtent: screenHeight * 0.28,
-                                mainAxisSpacing: 12,
-                              ),
-                              itemBuilder: (context, index) => ProductCard(
-                                index: index,
-                                id: productController
-                                    .products.value[index]!.productID,
-                              ),
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: TextButton(
-                                onPressed: () {
-                                  //print(controller.products.value.length);
-                                  setState(() {
-                                    itemCount = itemCount! + 2;
-                                  });
-                                },
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: const BorderSide(
-                                      width: 2,
-                                      color: Colors.black,
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              children: [
+                                GridView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  shrinkWrap: true,
+                                  itemCount: itemCount,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 12,
+                                    mainAxisExtent: screenHeight * 0.28,
+                                    mainAxisSpacing: 12,
+                                  ),
+                                  itemBuilder: (context, index) => ProductCard(
+                                    index: index,
+                                    id: productController
+                                        .productMap["All"][index]!.productID,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: TextButton(
+                                    onPressed: () {
+                                      //print(controller.products.value.length);
+                                      setState(() {
+                                        if (itemCount! <
+                                            productController
+                                                .productMap["All"].length) {
+                                          print("hello");
+                                          itemCount = itemCount! + 2;
+                                        } else {
+                                          print("not hello");
+                                        }
+                                      });
+                                    },
+                                    style: TextButton.styleFrom(
+                                      backgroundColor: Colors.black,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        side: const BorderSide(
+                                          width: 2,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      "Load More...",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                child: const Text(
-                                  "Load More...",
+                                const SizedBox(
+                                  height: 12,
+                                ),
+                                const Text(
+                                  "Vendor Highlights",
+                                  textAlign: TextAlign.left,
                                   style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 12,
-                            ),
-                            const Text(
-                              "Vendor Highlights",
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 12,
-                            ),
-                            GridView.builder(
-                              physics: NeverScrollableScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              shrinkWrap: true,
-                              itemCount: controller.vendorsList.length,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisExtent: screenHeight * 0.25,
-                                mainAxisSpacing: 12,
-                              ),
-                              itemBuilder: (context, index) =>
-                                  VendorHighlightsCard(
-                                index: index,
-                                // id: productController
-                                //     .products.value[index]!.productID,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
+                                const SizedBox(
+                                  height: 8,
+                                ),
+                                GridView.builder(
+                                  physics: NeverScrollableScrollPhysics(),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  shrinkWrap: true,
+                                  itemCount: controller.vendorsList.length,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 12,
+                                    mainAxisExtent: screenHeight * 0.25,
+                                    mainAxisSpacing: 12,
+                                  ),
+                                  itemBuilder: (context, index) =>
+                                      VendorHighlightsCard(
+                                    index: index,
+                                    // id: productController
+                                    //     .products.value[index]!.productID,
+                                  ),
+                                ),
+                              ],
+                            );
                     },
-                    itemCount: 1,
                   ),
                   // Repeat the above pattern for other TabBarView children
+                  Obx(() {
+                    var product = productController.productMap["Natural Hairs"];
+
+                    return product.isEmpty
+                        ? const Center(
+                            child: Text(
+                              "Nothing Here",
+                              style: TextStyle(
+                                fontSize: 40,
+                                color: Colors.black,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            // padding:
+                            //     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    GridView.builder(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                      shrinkWrap: true,
+                                      itemCount: productController
+                                          .productMap["Natural Hairs"].length,
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        crossAxisSpacing: 12,
+                                        mainAxisExtent: screenHeight * 0.28,
+                                        mainAxisSpacing: 12,
+                                      ),
+                                      itemBuilder: (context, index) =>
+                                          ProductCard(
+                                        index: index,
+                                        id: productController
+                                            .productMap["Natural Hairs"][index]!
+                                            .productID,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: TextButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            itemCount = itemCount! + 2;
+                                          });
+                                        },
+                                        style: TextButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            side: const BorderSide(
+                                              width: 2,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          "Load More...",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 12,
+                                    ),
+                                    const Text(
+                                      "Vendor Highlights",
+                                      textAlign: TextAlign.left,
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 12,
+                                    ),
+                                    GridView.builder(
+                                      physics: NeverScrollableScrollPhysics(),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8),
+                                      shrinkWrap: true,
+                                      itemCount: controller.vendorsList.length,
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        crossAxisSpacing: 12,
+                                        mainAxisExtent: screenHeight * 0.25,
+                                        mainAxisSpacing: 12,
+                                      ),
+                                      itemBuilder: (context, index) =>
+                                          VendorHighlightsCard(
+                                        index: index,
+                                        // id: productController
+                                        //     .products.value[index]!.productID,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            itemCount: 1);
+                  }),
                   ListView.builder(
                     // padding:
                     //     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -276,7 +407,8 @@ class _NewFeedPageState extends State<NewFeedPage>
                               physics: const NeverScrollableScrollPhysics(),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shrinkWrap: true,
-                              itemCount: itemCount,
+                              itemCount: productController
+                                  .productMap["Accessories"].length,
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
@@ -287,7 +419,103 @@ class _NewFeedPageState extends State<NewFeedPage>
                               itemBuilder: (context, index) => ProductCard(
                                 index: index,
                                 id: productController
-                                    .products.value[index]!.productID,
+                                    .productMap["Accessories"][index]!
+                                    .productID,
+                              ),
+                            ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    itemCount = itemCount! + 2;
+                                  });
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: const BorderSide(
+                                      width: 2,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Load More...",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 12,
+                            ),
+                            const Text(
+                              "Vendor Highlights",
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 12,
+                            ),
+                            GridView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              shrinkWrap: true,
+                              itemCount: controller.vendorsList.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisExtent: screenHeight * 0.25,
+                                mainAxisSpacing: 12,
+                              ),
+                              itemBuilder: (context, index) =>
+                                  VendorHighlightsCard(
+                                index: index,
+                                // id: productController
+                                //     .products.value[index]!.productID,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    itemCount: 1,
+                  ),
+
+                  ListView.builder(
+                    // padding:
+                    //     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GridView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shrinkWrap: true,
+                              itemCount:
+                                  productController.productMap["Wigs"].length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisExtent: screenHeight * 0.28,
+                                mainAxisSpacing: 12,
+                              ),
+                              itemBuilder: (context, index) => ProductCard(
+                                index: index,
+                                id: productController
+                                    .productMap["Wigs"][index]!.productID,
                               ),
                             ),
                             SizedBox(
@@ -369,7 +597,8 @@ class _NewFeedPageState extends State<NewFeedPage>
                               physics: const NeverScrollableScrollPhysics(),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shrinkWrap: true,
-                              itemCount: itemCount,
+                              itemCount:
+                                  productController.productMap["Lashes"].length,
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
@@ -380,7 +609,7 @@ class _NewFeedPageState extends State<NewFeedPage>
                               itemBuilder: (context, index) => ProductCard(
                                 index: index,
                                 id: productController
-                                    .products.value[index]!.productID,
+                                    .productMap["Lashes"][index]!.productID,
                               ),
                             ),
                             SizedBox(
@@ -424,101 +653,8 @@ class _NewFeedPageState extends State<NewFeedPage>
                             const SizedBox(
                               height: 12,
                             ),
-                            GridView.builder(
-                              physics: NeverScrollableScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              shrinkWrap: true,
-                              itemCount: controller.vendorsList.length,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisExtent: screenHeight * 0.25,
-                                mainAxisSpacing: 12,
-                              ),
-                              itemBuilder: (context, index) =>
-                                  VendorHighlightsCard(
-                                index: index,
-                                // id: productController
-                                //     .products.value[index]!.productID,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    itemCount: 1,
-                  ),
-                  ListView.builder(
-                    // padding:
-                    //     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
                             GridView.builder(
                               physics: const NeverScrollableScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shrinkWrap: true,
-                              itemCount: itemCount,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisExtent: screenHeight * 0.28,
-                                mainAxisSpacing: 12,
-                              ),
-                              itemBuilder: (context, index) => ProductCard(
-                                index: index,
-                                id: productController
-                                    .products.value[index]!.productID,
-                              ),
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    itemCount = itemCount! + 2;
-                                  });
-                                },
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: const BorderSide(
-                                      width: 2,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                                child: const Text(
-                                  "Load More...",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 12,
-                            ),
-                            const Text(
-                              "Vendor Highlights",
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 12,
-                            ),
-                            GridView.builder(
-                              physics: NeverScrollableScrollPhysics(),
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               shrinkWrap: true,
                               itemCount: controller.vendorsList.length,

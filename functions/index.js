@@ -1,23 +1,26 @@
 /* eslint-disable */
 
-const functions = require('firebase-functions')
-const admin = require('firebase-admin')
-const nodemailer = require('nodemailer')
+import { firestore, pubsub, https } from 'firebase-functions'
+import { firestore as _firestore, messaging } from 'firebase-admin'
+import { createTransport } from 'nodemailer'
 require('dotenv').config()
-const { initializeApp } = require('firebase-admin/app')
-const { Timestamp } = require('firebase-admin/firestore')
+import { initializeApp } from 'firebase-admin/app'
+import { Timestamp } from 'firebase-admin/firestore'
 initializeApp()
 const t = Timestamp.now()
-const db = admin.firestore()
-const express = require('express')
-const axios = require('axios')
-const cors = require('cors')
-const bodyParser = require('body-parser')
+const db = _firestore()
+import express from 'express'
+import { post } from 'axios'
+import cors from 'cors'
+import { json } from 'body-parser'
 
 const app = express()
 
+const ADMIN_EMAIL =
+  process.env.ADMIN_EMAIL ?? 'hairmainstreetofficial01@gmail.com'
+
 //middle ware
-app.use(bodyParser.json())
+app.use(json())
 app.use(cors({ origin: true }))
 
 app.post('/refund', async (req, res) => {
@@ -25,7 +28,7 @@ app.post('/refund', async (req, res) => {
   const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY
 
   try {
-    const response = await axios.post(
+    const response = await post(
       'https://api.paystack.co/refund',
       {
         transaction: transactionId,
@@ -70,7 +73,7 @@ async function sendFcmNotification(topic, body, title, data) {
   }
 
   try {
-    await admin.messaging().send(message)
+    await messaging().send(message)
     console.log('FCM notification sent successfully')
   } catch (error) {
     console.error('Error sending FCM notification:', error)
@@ -78,7 +81,7 @@ async function sendFcmNotification(topic, body, title, data) {
 }
 
 async function sendEmail(email, subject, body) {
-  const transporter = nodemailer.createTransport({
+  const transporter = createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL,
@@ -101,7 +104,7 @@ async function sendEmail(email, subject, body) {
   }
 }
 
-exports.notifyBuyerOnOrderStatusChange = functions.firestore
+export const notifyBuyerOnOrderStatusChange = firestore
   .document('orders/{orderId}')
   .onUpdate(async (change, context) => {
     const newOrderData = change.after.data()
@@ -152,7 +155,7 @@ exports.notifyBuyerOnOrderStatusChange = functions.firestore
     return null
   })
 
-exports.notifyOnOrderCreation = functions.firestore
+export const notifyOnOrderCreation = firestore
   .document('orders/{orderId}')
   .onCreate(async (snapshot, context) => {
     const orderData = snapshot.data()
@@ -219,8 +222,7 @@ exports.notifyOnOrderCreation = functions.firestore
     return null
   })
 
-// update wallet balance
-exports.updateWalletAfterOrderPlacement = functions.firestore
+export const updateWalletAfterOrderPlacement = firestore
   .document('orders/{orderId}')
   .onCreate(async (snapshot, context) => {
     const order = snapshot.data()
@@ -256,7 +258,7 @@ exports.updateWalletAfterOrderPlacement = functions.firestore
     await transactionRef.set({
       orderId: orderId,
       type: 'credit',
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      timestamp: _firestore.FieldValue.serverTimestamp(),
       amount: paymentPrice
     })
 
@@ -264,8 +266,7 @@ exports.updateWalletAfterOrderPlacement = functions.firestore
     return null
   })
 
-// update amount withdrawable
-exports.processConfirmedOrder = functions.firestore
+export const processConfirmedOrder = firestore
   .document('orders/{orderId}')
   .onUpdate(async (change, context) => {
     const orderId = context.params.orderId
@@ -308,8 +309,7 @@ exports.processConfirmedOrder = functions.firestore
     return null
   })
 
-//monitor installmental transactions
-exports.checkInstallmentPayments = functions.pubsub
+export const checkInstallmentPayments = pubsub
   .schedule('every 15 hours')
   .onRun(async context => {
     const currentTime = Date.now()
@@ -448,9 +448,9 @@ exports.checkInstallmentPayments = functions.pubsub
     return null
   })
 
-exports.api = functions.https.onRequest(app)
+export const api = https.onRequest(app)
 
-exports.handleRefundRequestCreation = functions.firestore
+export const handleRefundRequestCreation = firestore
   .document('refunds/{requestId}')
   .onCreate(async (snapshot, context) => {
     try {
@@ -502,6 +502,46 @@ exports.handleRefundRequestCreation = functions.firestore
         'A new refund request has been submitted.'
       )
 
+      //send FCM notifications
+      await sendFcmNotification(
+        `buyer_${buyerId}`,
+        'Your refund request has been submitted successfully.',
+        'Refund Request Submitted',
+        orderId
+      )
+
+      await sendFcmNotification(
+        `vendor_${vendorId}`,
+        'A new refund request has been submitted by a buyer.',
+        'New Refund Request',
+        orderId
+      )
+
+      //update notifications in db
+      await db
+        .collection('notifications')
+        .doc(buyerId)
+        .collection('notifications')
+        .add({
+          userID: buyerId,
+          'extra data': orderId,
+          title: 'Refund Request Submitted',
+          body: 'Your refund request has been submitted successfully.',
+          'time stamp': t
+        })
+
+      await db
+        .collection('notifications')
+        .doc(vendorId)
+        .collection('notifications')
+        .add({
+          userID: vendorId,
+          'extra data': orderId,
+          title: 'New Refund Request',
+          body: 'A new refund request has been submitted by a buyer.',
+          'time stamp': t
+        })
+
       return null
     } catch (error) {
       console.error('Error handling refund request creation:', error)
@@ -509,8 +549,7 @@ exports.handleRefundRequestCreation = functions.firestore
     }
   })
 
-// Function to handle order cancel request creation
-exports.handleOrderCancelRequestCreation = functions.firestore
+export const handleOrderCancelRequestCreation = firestore
   .document('cancellations/{requestID}')
   .onCreate(async (snapshot, context) => {
     try {
@@ -607,3 +646,291 @@ exports.handleOrderCancelRequestCreation = functions.firestore
       return null
     }
   })
+
+async function initiateRefund(transactionId, amount) {
+  try {
+    const response = await post(
+      'https://api.paystack.co/refund',
+      {
+        amount,
+        transaction: transactionId
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+
+    return response.data.data
+  } catch (error) {
+    console.error('Error initiating refund:', error.response.data)
+    throw error
+  }
+}
+
+export const handleRefunds = firestore
+  .document('refunds/{refundId}')
+  .onUpdate(async (change, context) => {
+    const refundId = context.params.refundId
+    const newValue = change.after.data()
+    const oldValue = change.before.data()
+
+    if (
+      newValue['refund status'] === 'approved' &&
+      oldValue['refund status'] !== 'approved'
+    ) {
+      try {
+        // ... (Retrieve order data, calculate refund amount, get user and vendor data)
+        const orderId = newValue['orderID']
+        const orderSnapshot = await db.collection('orders').doc(orderId).get()
+        const orderData = orderSnapshot.data()
+        if (!orderData) {
+          throw new Error('Order data is missing')
+        }
+
+        // Get payment amount and calculate refund amount based on the reason
+        const paymentAmount = orderData['payment price']
+        const transactionId = orderData['transactionID']
+        let refundAmount
+        if (
+          newValue['reason'] === 'Defective Product' ||
+          newValue['reason'] === 'Received Wrong Item'
+        ) {
+          refundAmount = paymentAmount
+        } else {
+          refundAmount = paymentAmount - paymentAmount * 0.1
+        }
+
+        // Get user and vendor data
+        const buyerId = orderData['buyerID']
+        const vendorId = orderData['vendorID']
+        const buyerSnapshot = await db
+          .collection('userProfile')
+          .doc(buyerId)
+          .get()
+        const vendorSnapshot = await db
+          .collection('userProfile')
+          .doc(vendorId)
+          .get()
+        const buyerData = buyerSnapshot.data()
+        const vendorData = vendorSnapshot.data()
+        if (!buyerData || !vendorData) {
+          throw new Error('Buyer or vendor data is missing')
+        }
+
+        // Send email notifications
+        await Promise.all([
+          sendEmail(
+            buyerData['email'],
+            'Refund Approved',
+            'Your refund has been approved.'
+          ),
+          sendEmail(
+            vendorData['email'],
+            'Refund Approved',
+            'A refund has been approved.'
+          ),
+          sendEmail(
+            ADMIN_EMAIL,
+            'Refund Approved',
+            'A refund has been approved.'
+          )
+        ])
+
+        //send notification to both vendor and buyer
+        const buyerFcmBody = 'Refund has been approved.'
+        const fcmTitle = 'Refund Approved'
+
+        await Promise.all([
+          sendFcmNotification(
+            `buyer_${buyerId}`,
+            buyerFcmBody,
+            fcmTitle,
+            orderId
+          ),
+          db
+            .collection('notifications')
+            .doc(buyerId)
+            .collection('notifications')
+            .set({
+              body: buyerFcmBody,
+              'extra data': orderId,
+              'time stamp': t,
+              title: fcmTitle,
+              userID: buyerId
+            }),
+
+          sendFcmNotification(
+            `vendor_${vendorId}`,
+            buyerFcmBody,
+            fcmTitle,
+            orderId
+          ),
+          db
+            .collection('notifications')
+            .doc(vendorId)
+            .collection('notifications')
+            .set({
+              body: buyerFcmBody,
+              'extra data': orderId,
+              'time stamp': t,
+              title: fcmTitle,
+              userID: vendorId
+            })
+        ])
+
+        // Call Paystack refund API
+        const refundResponse = await initiateRefund(transactionId, refundAmount)
+
+        if (refundResponse.status === 'processed') {
+          const refundWebhookUrl = `https://${process.env.PROJECT_ID}.firebaseapp.com/paystackRefundWebhook`
+
+          // Register the webhook with Paystack
+          await post(
+            'https://api.paystack.co/webhook',
+            {
+              url: refundWebhookUrl,
+              events: ['refund.processed']
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${paystackSecretKey}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          )
+        } else {
+          console.error('Refund failed:', refundResponse)
+        }
+      } catch (error) {
+        console.error('Error processing refund:', error)
+      }
+    }
+  })
+
+export const paystackRefundWebhook = https.onRequest(async (req, res) => {
+  // Verify the Paystack webhook signature
+  const signature = req.headers['x-paystack-signature']
+  if (!signature || !validateSignature(req.rawBody, signature)) {
+    res.status(400).send('Invalid signature')
+    return
+  }
+
+  const event = req.body
+
+  if (event.event === 'refund.processed') {
+    const refundId = event.data.id
+
+    try {
+      // Update refund status to completed in Firestore
+      await db
+        .collection('refunds')
+        .doc(refundId)
+        .update({ 'refund status': 'completed' })
+
+      // Get buyer and vendor data from the refund document
+      const refundSnapshot = await db.collection('refunds').doc(refundId).get()
+      const refundData = refundSnapshot.data()
+      const orderSnapshot = await db
+        .collection('orders')
+        .doc(refundData['orderID'])
+        .get()
+      const orderData = orderSnapshot.data()
+      const buyerId = orderData['buyerID']
+      const vendorId = orderData['vendorID']
+
+      const buyerSnapshot = await db
+        .collection('userProfile')
+        .doc(buyerId)
+        .get()
+      const vendorSnapshot = await db
+        .collection('userProfile')
+        .doc(vendorId)
+        .get()
+      const buyerData = buyerSnapshot.data()
+      const vendorData = vendorSnapshot.data()
+
+      // Send emails about refund completion
+      await Promise.all([
+        sendEmail(
+          ADMIN_EMAIL,
+          'Refund Completed',
+          'A refund has been completed.'
+        ),
+        sendEmail(
+          vendorData['email'],
+          'Refund Completed',
+          'A refund has been completed.'
+        ),
+        sendEmail(
+          buyerData['email'],
+          'Refund Completed',
+          'Your refund has been completed.'
+        )
+      ])
+
+      //send notification to both vendor and buyer
+      const buyerFcmBody = 'Refund has been completed.'
+      const fcmTitle = 'Refund Completed'
+
+      await Promise.all([
+        sendFcmNotification(
+          `buyer_${buyerId}`,
+          buyerFcmBody,
+          fcmTitle,
+          refundData['orderID']
+        ),
+        db
+          .collection('notifications')
+          .doc(buyerId)
+          .collection('notifications')
+          .set({
+            body: buyerFcmBody,
+            'extra data': refundData['orderID'],
+            'time stamp': t,
+            title: fcmTitle,
+            userID: buyerId
+          }),
+
+        sendFcmNotification(
+          `vendor_${vendorId}`,
+          buyerFcmBody,
+          fcmTitle,
+          refundData['orderID']
+        ),
+        db
+          .collection('notifications')
+          .doc(vendorId)
+          .collection('notifications')
+          .set({
+            body: buyerFcmBody,
+            'extra data': refundData['orderID'],
+            'time stamp': t,
+            title: fcmTitle,
+            userID: vendorId
+          })
+      ])
+
+      res.status(200).send('Webhook received and processed successfully.')
+    } catch (error) {
+      console.error('Error processing refund webhook:', error)
+      res.status(500).send('Error processing webhook')
+    }
+  } else {
+    res.status(200).send('Webhook received but not processed.')
+  }
+})
+
+// Helper function to validate Paystack webhook signature
+function validateSignature(body, signature) {
+  const crypto = require('crypto')
+  const hash = crypto
+    .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
+    .update(JSON.stringify(body))
+    .digest('hex')
+
+  return hash === signature
+}
+

@@ -310,10 +310,10 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                   ),
                   Center(
                     child: GetX<ProductController>(builder: (controller) {
-                      return controller.products.value.isEmpty
+                      return controller.products.isEmpty
                           ? const Center(
                               child: CircularProgressIndicator(
-                                backgroundColor: Color(0xFF392F5A),
+                                backgroundColor: Colors.black,
                                 strokeWidth: 4,
                               ),
                             )
@@ -329,10 +329,10 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                                 crossAxisSpacing: 12,
                               ),
                               itemBuilder: (_, index) => ProductCard(
-                                id: controller.products.value[index]!.productID,
+                                id: controller.products[index]!.productID,
                                 index: index,
                               ),
-                              itemCount: controller.products.value.length,
+                              itemCount: controller.products.length,
                             );
                     }),
                   ),

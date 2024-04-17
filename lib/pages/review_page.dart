@@ -54,6 +54,7 @@ class ReviewPage extends StatelessWidget {
       //transform: GradientRotation(math.pi / 4),
     );
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Get.back(),
@@ -72,7 +73,7 @@ class ReviewPage extends StatelessWidget {
       ),
       body: Container(
         color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         //decoration: BoxDecoration(gradient: myGradient),
         child: ListView(
           shrinkWrap: true,

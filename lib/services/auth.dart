@@ -18,18 +18,18 @@ class AuthService {
     if (otherDetails.exists) {
       var data = otherDetails.data() as Map<String, dynamic>;
       return MyUser(
-          uid: user.uid,
-          email: user.email,
-          referralLink: data["referral link"],
-          referralCode: data["referral code"],
-          isBuyer:
-              data["isBuyer"] ?? true, // Ensure isBuyer has a default value
-          phoneNumber: data["phonenumber"],
-          isVendor: data["isVendor"],
-          fullname: data["fullname"],
-          address: data["address"]
-          // Set other properties here if needed
-          );
+        uid: user.uid,
+        email: user.email,
+        referralLink: data["referral link"],
+        referralCode: data["referral code"],
+        isBuyer: data["isBuyer"] ?? true, // Ensure isBuyer has a default value
+        phoneNumber: data["phonenumber"],
+        isVendor: data["isVendor"],
+        fullname: data["fullname"],
+        address: data["address"],
+        profilePhoto: data["profile photo"],
+        // Set other properties here if needed
+      );
     } else {
       return null; // Return null if user details don't exist
     }

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/review_controller.dart';
+import 'package:hair_main_street/pages/chats_page.dart';
 import 'package:hair_main_street/pages/notifcation.dart';
 import 'package:hair_main_street/pages/review_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/Shop_page.dart';
@@ -25,7 +26,7 @@ class MenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     UserController userController = Get.find<UserController>();
-    Get.put(ReviewController());
+    ReviewController reviewController = Get.find<ReviewController>();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -166,6 +167,14 @@ class MenuPage extends StatelessWidget {
                         text: "Referral",
                         iconData: Symbols.redeem_rounded,
                         onPressed: () => Get.to(() => ReferralPage(),
+                            transition: Transition.fadeIn)),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    MenuButton(
+                        text: "Chats",
+                        iconData: Symbols.redeem_rounded,
+                        onPressed: () => Get.to(() => ChatPage(),
                             transition: Transition.fadeIn)),
                     const SizedBox(
                       height: 12,

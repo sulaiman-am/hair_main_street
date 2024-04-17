@@ -562,27 +562,27 @@ class _EditProductPageState extends State<EditProductPage> {
                 const SizedBox(
                   height: 16,
                 ),
-                CheckboxListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                  value: product.allowInstallment,
-                  onChanged: (val) {
-                    setState(() {
-                      checkbox1 = val!;
-                      product.allowInstallment = val;
-                    });
-                  },
-                  title: const Text(
-                    "Available for Installment",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
+                // CheckboxListTile(
+                //   contentPadding:
+                //       const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                //   value: product.allowInstallment,
+                //   onChanged: (val) {
+                //     setState(() {
+                //       checkbox1 = val!;
+                //       product.allowInstallment = val;
+                //     });
+                //   },
+                //   title: const Text(
+                //     "Available for Installment",
+                //     style: TextStyle(
+                //       fontSize: 20,
+                //       fontWeight: FontWeight.w500,
+                //     ),
+                //   ),
+                // ),
+                // const SizedBox(
+                //   height: 8,
+                // ),
                 CheckboxListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 4),

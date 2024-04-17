@@ -18,9 +18,10 @@ import 'package:http/http.dart' as http;
 class ProductController extends GetxController {
   RxList<Vendors?> vendorsList = RxList<Vendors?>();
   RxList<Vendors?> filteredVendorsList = RxList<Vendors?>();
-  Rx<List<Product?>> products = Rx<List<Product?>>([]);
+  RxList<Product?> products = RxList<Product?>([]);
   Rx<List<Product?>> filteredProducts = Rx<List<Product?>>([]);
-  Rx<List<Review?>> reviews = Rx<List<Review?>>([]);
+  RxList<Review?> reviews = RxList<Review?>([]);
+  RxMap productMap = RxMap();
   // VendorController vendorController = Get.find<VendorController>();
   RxList<File> imageList = RxList<File>([]);
   var downloadUrls = [].obs;
@@ -35,20 +36,66 @@ class ProductController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    var productList = fetchProducts();
+    productList.listen((elements) {
+      products.assignAll(elements);
+      filterTheproductsList(elements);
+    });
     vendorsList.bindStream(getVendors());
-    products.bindStream(fetchProducts());
-    print(products.value);
-    if (products.value.isEmpty) {
+    if (products.isEmpty) {
       isLoading.value = true;
     } else {
       isLoading.value = false;
     }
   }
 
-  // @override
-  // void onReady(){
+  //filter products according to category
+  //function to filter the buyer order list
+  void filterTheproductsList(List<Product?> products) {
+    // No filter
+    productMap["All"] = products;
 
-  // }
+    // Filter the once only payment method
+    productMap["Natural Hairs"] = products
+        .where((product) =>
+            product!.category != null && product.category == "natural hairs")
+        .toList();
+
+    // Filter the installment only payment method
+    productMap["Accessories"] = products
+        .where((product) =>
+            product!.category != null && product.category == "accessories")
+        .toList();
+
+    // Filter the completed orders
+    productMap["Wigs"] = products
+        .where((product) =>
+            product!.category != null && product.category == "wigs")
+        .toList();
+
+    // Filter the cancelled orders
+    productMap["Lashes"] = products
+        .where((product) =>
+            product!.category != null && product.category == "lashes")
+        .toList();
+
+    // // Filter the deleted orders
+    // productMap["Deleted"] = products
+    //     .where((order) =>
+    //         order.orderStatus != null && order.orderStatus == "deleted")
+    //     .toList();
+
+    // // Filter the expired orders
+    // productMap["Expired"] = products
+    //     .where((order) =>
+    //         order.orderStatus != null && order.orderStatus == "expired")
+    //     .toList();
+
+    //print(productMap["once"]!.length);
+    // Update listeners after filtering
+    // Assuming `productMap` is an RxMap or similar reactive object
+    productMap.refresh();
+  }
 
   Stream<List<Vendors>> getVendors() {
     return DataBaseService().getVendors();
@@ -201,7 +248,7 @@ class ProductController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
-      Get.close(2);
+      Get.back();
     } else {
       Get.snackbar(
         "Error",
@@ -260,6 +307,7 @@ class ProductController extends GetxController {
   //get reviews of products
   dynamic getReviews(String? productID) {
     reviews.bindStream(DataBaseService().getReviews(productID!));
+    //print(reviews);
   }
 
   //get vendors list

@@ -8,6 +8,7 @@ class MyUser {
   bool? isVendor;
   bool? isAdmin;
   String? referralCode;
+  String? profilePhoto;
   String? referralLink;
 
   MyUser({
@@ -19,6 +20,7 @@ class MyUser {
     this.isAdmin,
     this.isBuyer,
     this.isVendor,
+    this.profilePhoto,
     this.referralCode,
     this.referralLink,
   });
@@ -31,6 +33,7 @@ class MyUser {
         isAdmin: json["isAdmin"],
         isBuyer: json["isBuyer"],
         isVendor: json["isVendor"],
+        profilePhoto: json["profile photo"],
         address: json["address"],
         referralCode: json["referral code"],
         referralLink: json["referral link"],

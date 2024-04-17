@@ -16,6 +16,8 @@ import 'package:hair_main_street/pages/feed.dart';
 import 'package:hair_main_street/pages/menu.dart';
 import 'package:hair_main_street/pages/new_feed.dart';
 import 'package:hair_main_street/pages/orders_stuff/checkout%20copy.dart';
+
+import '../controllers/chatController.dart';
 //import 'dart:math' as math;
 
 //import 'package:hair_main_street/widgets/cards.dart';

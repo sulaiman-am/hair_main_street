@@ -7,9 +7,9 @@ import 'package:hair_main_street/models/review.dart';
 import 'package:hair_main_street/services/database.dart';
 
 class ReviewController extends GetxController {
-  num screenHeight = Get.height;
   RxList<File> imageList = RxList<File>([]);
   var myReviews = [].obs;
+  num screenHeight = Get.height;
 
   void showMyToast(String message) {
     Fluttertoast.showToast(

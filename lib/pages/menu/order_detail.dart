@@ -340,34 +340,37 @@ class OrderDetailsPage extends StatelessWidget {
                               width: 10,
                             )
                           : SizedBox.shrink(),
-                      Expanded(
-                        flex: 1,
-                        child: TextButton(
-                          onPressed: () {
-                            Get.to(
-                              () => RefundPage(
-                                orderId: orderDetails!.orderId!,
-                              ),
-                              transition: Transition.fadeIn,
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: EdgeInsets.symmetric(
-                                vertical: 4, horizontal: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: const BorderSide(
-                                width: 1.5,
-                                color: Colors.black,
+                      Visibility(
+                        visible: orderDetails!.orderStatus == 'confirmed',
+                        child: Expanded(
+                          flex: 1,
+                          child: TextButton(
+                            onPressed: () {
+                              Get.to(
+                                () => RefundPage(
+                                  orderId: orderDetails!.orderId!,
+                                ),
+                                transition: Transition.fadeIn,
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 4, horizontal: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(
+                                  width: 1.5,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Text(
-                            "Refund",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
+                            child: Text(
+                              "Refund",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
                             ),
                           ),
                         ),

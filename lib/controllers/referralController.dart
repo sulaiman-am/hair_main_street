@@ -5,15 +5,15 @@ class ReferralController extends GetxController {
   var myReferrals = [].obs;
   var myRewardPoints = 0.obs;
 
-  @override
-  onInit() {
-    //myRewardPoints.bindStream(getRewardPoints());
-    myReferrals.bindStream(getReferrals());
-    super.onInit();
-  }
+  // @override
+  // onInit() {
+  //   //myRewardPoints.bindStream(getRewardPoints());
+  //   myReferrals.bindStream(getReferrals());
+  //   super.onInit();
+  // }
 
   getReferrals() {
-    return DataBaseService().getReferrals();
+    myReferrals.bindStream(DataBaseService().getReferrals());
   }
 
   getRewardPoints() {

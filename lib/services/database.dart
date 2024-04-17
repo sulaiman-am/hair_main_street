@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/messageModel.dart';
@@ -15,6 +16,8 @@ import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/models/wallet_transaction.dart';
 import 'package:hair_main_street/pages/messages.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -132,9 +135,11 @@ class DataBaseService {
       //result.data() as Map<String, dynamic>;
       var user = result.data() as Map<String, dynamic>;
       return {
+        "result": "success",
         "fullname": user['fullname'],
         "address": user['address'],
-        "phoneNumber": user['phonenumber']
+        "phoneNumber": user['phonenumber'],
+        "profile photo": user['profile photo'],
       };
     } catch (e) {
       print(e);
@@ -208,19 +213,20 @@ class DataBaseService {
   }
 
   //get vendor details
-  Stream<Vendors?> getVendorDetails() {
+  Stream<Vendors?> getVendorDetails({String? userID}) {
     try {
       if (currentUser == null) {
         return Stream.error("Current user is null");
       }
 
       var response = vendorsCollection
-          .where('userID', isEqualTo: currentUser!.uid)
+          .where('userID', isEqualTo: userID ?? currentUser!.uid)
           .snapshots();
 
       return response.map((event) {
         if (event.docs.isNotEmpty) {
           var data = event.docs.first.data() as Map<String, dynamic>;
+          //print(data);
           return Vendors.fromdata(data);
         } else {
           return null;
@@ -568,6 +574,36 @@ class DataBaseService {
       return DatabaseOrderResponse.fromJson(orderResultData);
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<String?> pickAndSaveImage(ImageSource source, String imagePath) async {
+    try {
+      final image = await ImagePicker().pickImage(source: source);
+      if (image == null) return null; // User canceled or no image selected
+
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = basename(image.path); // Extract filename
+      final savePath = '$imagePath/$fileName';
+      final fullPath = '${directory.path}/$savePath';
+
+      // Ensure the directory exists
+      final saveDir = Directory('${directory.path}/$imagePath');
+      if (!await saveDir.exists()) {
+        await saveDir.create(
+            recursive: true); // Create the directory if it doesn't exist
+      }
+
+      final bytes = await File(image.path).readAsBytes();
+      await File(fullPath).writeAsBytes(bytes);
+
+      return fullPath; // Return the saved image path
+    } on PlatformException catch (e) {
+      print("Error picking image: $e");
+      return null;
+    } catch (e) {
+      print("Error saving image: $e");
+      return null;
     }
   }
 
@@ -1083,7 +1119,7 @@ class DataBaseService {
           "chatID": chatID,
           "member1": chat.member1,
           "member2": chat.member2,
-          "recent message sent at": chat.recentMessageSentAt,
+          "recent message sent at": FieldValue.serverTimestamp(),
           "recent message sent by": chat.recentMessageSentBy,
           "recent message text": chat.recentMessageText,
           "read by": chat.readBy,
@@ -1124,7 +1160,6 @@ class DataBaseService {
       if (data.docs.isNotEmpty) {
         var result = data.docs.first.data() as Map<String, dynamic>;
         var existingChatID = result["chatID"];
-        print(existingChatID);
         return {existingChatID: true};
       } else {
         return {"": false};
@@ -1138,12 +1173,31 @@ class DataBaseService {
           .collection('messages')
           .snapshots();
       await for (var event in result) {
+        //print(event.docs.map((e) => ChatMessages.fromJson(e.data())).toList());
         yield event.docs.map((e) => ChatMessages.fromJson(e.data())).toList();
       }
     } else {
       // Instead of yielding null, yield an empty list
       yield [];
     }
+  }
+
+  //get specific user chats
+  Stream<List<DatabaseChatResponse>> getUserChats(String userID) {
+    return chatCollection
+        .where(Filter.or(
+          Filter("member1", isEqualTo: userID),
+          Filter("member2", isEqualTo: userID),
+        ))
+        .snapshots()
+        .map(
+          (querySnapshot) => querySnapshot.docs
+              .map(
+                (doc) => DatabaseChatResponse.fromJson(
+                    doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
   }
 
   // add and remove from wishlist and get wishList

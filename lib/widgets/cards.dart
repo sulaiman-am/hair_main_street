@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/cartController.dart';
+import 'package:hair_main_street/controllers/chatController.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/controllers/review_controller.dart';
@@ -18,7 +19,10 @@ import 'package:hair_main_street/models/auxModels.dart';
 import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/models/review.dart';
+import 'package:hair_main_street/models/userModel.dart';
+import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/pages/client_shop_page.dart';
+import 'package:hair_main_street/pages/messages.dart';
 import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/searchProductPage.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/order_details.dart';
@@ -637,7 +641,7 @@ class CartCard extends StatelessWidget {
     num screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
-      height: screenHeight * 0.18,
+      //height: screenHeight * 0.18,
       width: screenWidth * 0.88,
       padding: EdgeInsets.all(8),
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
@@ -703,68 +707,71 @@ class CartCard extends StatelessWidget {
           const SizedBox(
             width: 12,
           ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "${product!.name}",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${product!.name}",
+                  maxLines: 3,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              Text(
-                "${cartItem.price}",
-                style: const TextStyle(
-                  fontSize: 18,
+                const SizedBox(
+                  height: 8,
                 ),
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // IconButton(
-                  //   onPressed: () {},
-                  //   icon: Icon(
-                  //     Symbols.remove,
-                  //     size: 24,
-                  //     color: Colors.black,
-                  //   ),
-                  // ),
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
-                    //width: 28,
-                    //height: 28,
-                    color: const Color(0xFF392F5A),
-                    child: Center(
-                      child: Text(
-                        "${cartItem.quantity}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          //backgroundColor: Colors.blue,
+                Text(
+                  "${cartItem.price}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // IconButton(
+                    //   onPressed: () {},
+                    //   icon: Icon(
+                    //     Symbols.remove,
+                    //     size: 24,
+                    //     color: Colors.black,
+                    //   ),
+                    // ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                      //width: 28,
+                      //height: 28,
+                      color: const Color(0xFF392F5A),
+                      child: Center(
+                        child: Text(
+                          "${cartItem.quantity}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            //backgroundColor: Colors.blue,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  // IconButton(
-                  //   onPressed: () {},
-                  //   icon: Icon(
-                  //     Symbols.add,
-                  //     size: 24,
-                  //     color: Colors.black,
-                  //   ),
-                  // ),
-                ],
-              )
-            ],
+                    // IconButton(
+                    //   onPressed: () {},
+                    //   icon: Icon(
+                    //     Symbols.add,
+                    //     size: 24,
+                    //     color: Colors.black,
+                    //   ),
+                    // ),
+                  ],
+                )
+              ],
+            ),
           ),
         ],
       ),
@@ -1316,8 +1323,8 @@ class ReviewCard extends StatelessWidget {
       return dateTime;
     }
 
-    ReviewController reviewController = Get.find<ReviewController>();
-    Review review = reviewController.myReviews[index!];
+    ProductController productController = Get.find<ProductController>();
+    Review review = productController.reviews[index!]!;
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     return Container(
@@ -1335,7 +1342,7 @@ class ReviewCard extends StatelessWidget {
             color: Color(0xFF000000),
             blurStyle: BlurStyle.normal,
             offset: Offset.fromDirection(-4.0),
-            blurRadius: 1.5,
+            blurRadius: 0.5,
           ),
         ],
       ),
@@ -2225,6 +2232,186 @@ class ClientReviewCard extends StatelessWidget {
                   ]),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class ChatsCard extends StatefulWidget {
+  int? index;
+  Vendors? vendorDetails;
+
+  ChatsCard({
+    super.key,
+    this.index,
+    this.vendorDetails,
+  });
+
+  @override
+  State<ChatsCard> createState() => _ChatsCardState();
+}
+
+class _ChatsCardState extends State<ChatsCard> {
+  ChatController chatController = Get.find<ChatController>();
+  UserController userController = Get.find<UserController>();
+  //var buyerDetails;
+
+  // @override
+  // void initState() async {
+  //   buyerDetails = await userController
+  //       .getUserDetails(chatController.myChats[widget.index!]!.member1!);
+  //   super.initState();
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    print(chatController.myChats[widget.index!]!.member2);
+    print(chatController.myChats[widget.index!]!.member1);
+    //Vendors? vendors = userController.vendorDetails.value;
+    DateTime resolveTimestampWithoutAdding(Timestamp timestamp) {
+      final now = DateTime.now();
+      final timestampDateTime = timestamp.toDate();
+
+      // Calculate the difference in hours between the timestamp and now
+      final hourDifference = now.difference(timestampDateTime).inHours;
+      print(timestampDateTime);
+      print(timestamp);
+
+      // If the difference is less than 24 hours, return only the time component
+      if (hourDifference < 24) {
+        return DateTime(
+          0,
+          0,
+          0,
+          timestampDateTime.hour,
+          timestampDateTime.minute,
+        );
+      } else {
+        // If the difference is 24 hours or more, return only the date component
+        // without extra zeros for the time component
+        return DateTime(
+          timestampDateTime.year,
+          timestampDateTime.month,
+          timestampDateTime.day,
+        );
+      }
+    }
+
+    //Review review = reviewController.myReviews[index!];
+    var screenWidth = Get.width;
+    return GestureDetector(
+      onTap: () => Get.to(
+        () => MessagesPage(
+          senderID: chatController.myChats[widget.index!]!.member1,
+          receiverID: chatController.myChats[widget.index!]!.member2,
+        ),
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: Colors.black38, width: 0.4),
+            borderRadius: BorderRadius.circular(10),
+            // boxShadow: [
+            //   BoxShadow(
+            //     color: Colors.black,
+            //     blurStyle: BlurStyle.normal,
+            //     offset: Offset.fromDirection(-2.0),
+            //     blurRadius: 0.5,
+            //   ),
+            // ],
+          ),
+          // Add some margin if needed (replace with desired values)
+          //margin: const EdgeInsets.all(8.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: Colors.black,
+                  //     blurStyle: BlurStyle.normal,
+                  //     offset: Offset.fromDirection(-4.0),
+                  //     blurRadius: 0.5,
+                  //   ),
+                  // ],
+                ),
+                child: CircleAvatar(
+                  radius: screenWidth * 0.08,
+                  backgroundColor: Colors.black,
+                ),
+              ),
+              const SizedBox(
+                width: 20,
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 20,
+                          child: Text(
+                            widget.vendorDetails!.shopName!,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          resolveTimestampWithoutAdding(chatController
+                                  .myChats[widget.index!]!.recentMessageSentAt!)
+                              .toString()
+                              .split(" ")[0],
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Text(
+                      chatController
+                              .myChats[widget.index!]!.recentMessageText ??
+                          "hello",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    // Row(
+                    //   children: [
+                    //     Icon(
+                    //       Icons.star_half_rounded,
+                    //       color: Colors.yellow[700],
+                    //     ),
+                    //     Text(
+                    //       "${review.stars}",
+                    //       style: const TextStyle(fontSize: 14),
+                    //     ),
+                    //   ],
+                    // ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

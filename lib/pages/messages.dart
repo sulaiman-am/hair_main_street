@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/chatController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/models/messageModel.dart';
+import 'package:hair_main_street/models/userModel.dart';
+import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 
@@ -11,11 +14,13 @@ class MessagesPage extends StatelessWidget {
   String? receiverID;
   MessagesPage({this.receiverID, this.senderID, super.key});
 
-  ChatController chatController = Get.put(ChatController());
+  ChatController chatController = Get.find<ChatController>();
+  UserController userController = Get.find<UserController>();
   @override
   Widget build(BuildContext context) {
-    chatController.member1UID.value = senderID!;
-    chatController.member2UID.value = receiverID!;
+    chatController.getMessages(senderID!, receiverID!);
+    // chatController.member1UID.value = senderID!;
+    // chatController.member2UID.value = receiverID!;
     GlobalKey<FormState> formKey = GlobalKey();
     TextEditingController messageController = TextEditingController();
     Chat chat = Chat(member1: "", member2: "");
@@ -32,7 +37,7 @@ class MessagesPage extends StatelessWidget {
         title: const Text(
           'Messages',
           style: TextStyle(
-            color: Color(0xFF0E4D92),
+            color: Colors.black,
             fontSize: 28,
             fontWeight: FontWeight.w800,
           ),
@@ -46,6 +51,7 @@ class MessagesPage extends StatelessWidget {
           ),
         ),
       ),
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Expanded(
@@ -66,12 +72,17 @@ class MessagesPage extends StatelessWidget {
                               )
                             : ListView.builder(
                                 shrinkWrap: true,
-                                padding: EdgeInsets.fromLTRB(12, 12, 12, 8),
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 12, 12, 8),
                                 //physics: const NeverScrollableScrollPhysics(),
                                 //shrinkWrap: true,
                                 itemCount:
                                     controller.messagesList.value!.length,
                                 itemBuilder: (context, index) {
+                                  userController.getBuyerDetails(controller
+                                      .messagesList.value![index]!.idFrom!);
+                                  userController.getVendorDetails(controller
+                                      .messagesList.value![index]!.idTo!);
                                   return ChatMessage(
                                       message: controller
                                           .messagesList.value![index]!);
@@ -139,7 +150,10 @@ class MessagesPage extends StatelessWidget {
                                   chatMessages.idTo = receiverID;
                                   chat.member1 = senderID;
                                   chat.member2 = receiverID;
+                                  chat.recentMessageSentBy = senderID;
                                   chatMessages.content = messageController.text;
+                                  chat.recentMessageText =
+                                      messageController.text;
                                   chatController.startChat(chat, chatMessages);
                                   debugPrint(
                                       "hellow:${messageController.text}");
@@ -208,36 +222,144 @@ class MessagesPage extends StatelessWidget {
   }
 }
 
-class ChatMessage extends StatelessWidget {
+class ChatMessage extends StatefulWidget {
   final ChatMessages message;
 
-  ChatMessage({required this.message});
+  ChatMessage({
+    required this.message,
+  });
+
+  @override
+  State<ChatMessage> createState() => _ChatMessageState();
+}
+
+class _ChatMessageState extends State<ChatMessage> {
+  UserController userController = Get.find<UserController>();
+  // var buyerDetails;
+
+  // getUserDetails() async {
+  //   buyerDetails = await userController.getUserDetails(widget.message.idFrom!);
+  // }
+
+  // @override
+  // void initState() {
+  //   getUserDetails();
+  //   userController.getVendorDetails(widget.message.idTo!);
+  //   // TODO: implement initState
+  //   super.initState();
+  // }
 
   @override
   Widget build(BuildContext context) {
-    UserController userController = Get.find<UserController>();
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Align(
-        alignment: message.idFrom == userController.userState.value!.uid
-            ? Alignment.centerRight
-            : Alignment.centerLeft,
-        child: Container(
-          padding: EdgeInsets.all(8.0),
-          decoration: BoxDecoration(
-            color: message.idFrom == userController.userState.value!.uid
-                ? Color(0xFF392F5A)
-                : Color(0xFF0E4D92),
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          child: Text(
-            message.content!,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
+    num screenWidth = Get.width;
+    DateTime resolveTimestampWithoutAdding(Timestamp timestamp) {
+      final timestampDateTime = timestamp.toDate();
+
+      // Return only the time component (hour, minute, second)
+      return DateTime(
+        0, // Year
+        0, // Month
+        0, // Day
+        timestampDateTime.hour,
+        timestampDateTime.minute,
+        timestampDateTime.second,
+      );
+    }
+
+    return Container(
+      padding: EdgeInsets.all(8.0),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        //borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              // boxShadow: [
+              //   BoxShadow(
+              //     color: Colors.black,
+              //     blurStyle: BlurStyle.normal,
+              //     offset: Offset.fromDirection(-4.0),
+              //     blurRadius: 0.5,
+              //   ),
+              // ],
+            ),
+            child: CircleAvatar(
+              radius: screenWidth * 0.08,
+              backgroundColor: Colors.black,
             ),
           ),
-        ),
+          const SizedBox(
+            width: 20,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: widget.message.idFrom ==
+                              userController.buyerDetails.value!.uid
+                          ? Text(
+                              userController.buyerDetails.value!.fullname!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )
+                          : Text(
+                              userController.vendorDetails.value!.shopName!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                    Text(
+                      "${resolveTimestampWithoutAdding(widget.message.timestamp!).toString().split(" ")[1]}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                Text(
+                  widget.message.content ?? "hello",
+                  maxLines: 5,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                // Row(
+                //   children: [
+                //     Icon(
+                //       Icons.star_half_rounded,
+                //       color: Colors.yellow[700],
+                //     ),
+                //     Text(
+                //       "${review.stars}",
+                //       style: const TextStyle(fontSize: 14),
+                //     ),
+                //   ],
+                // ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

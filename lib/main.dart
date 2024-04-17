@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hair_main_street/controllers/cartController.dart';
+import 'package:hair_main_street/controllers/chatController.dart';
 import 'package:hair_main_street/controllers/notificationController.dart';
 import 'package:hair_main_street/controllers/referralController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
@@ -33,7 +34,8 @@ void main() async {
   //await FirebaseMessaging.instance.getInitialMessage();
   Get.put(UserController());
   Get.lazyPut<NotificationController>(() => NotificationController());
-  Get.put(ReferralController());
+  Get.put<ChatController>(ChatController());
+  //Get.put(ReferralController());
   //Get.put(VendorController());
   await dotenv.load(fileName: ".env");
 

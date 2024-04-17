@@ -72,7 +72,11 @@ class NotificationService {
     //making the settings
     var androidInitialize =
         const AndroidInitializationSettings('@drawable/std_icon');
-    var iosInitialize = const DarwinInitializationSettings();
+    var iosInitialize = const DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
     var initializationSettings =
         InitializationSettings(android: androidInitialize, iOS: iosInitialize);
     await flutterLocalNotificationsPlugin.initialize(
@@ -106,6 +110,11 @@ class NotificationService {
                 androidChannel.name,
                 icon: "@drawable/std_icon",
                 styleInformation: bigTextStyleInformation,
+              ),
+              iOS: DarwinNotificationDetails(
+                subtitle: notification.body,
+                presentSound: true,
+                presentBadge: true,
               ),
             ),
             payload: jsonEncode(message.toMap()));

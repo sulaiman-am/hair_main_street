@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:string_validator/string_validator.dart' as validator;
 
@@ -22,6 +26,240 @@ class ProfilePage extends StatelessWidget {
     //num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     num screenHeight = MediaQuery.of(context).size.height;
+    //print(userController.userState.value!.profilePhoto!);
+
+    showImageUploadDialog() {
+      return Get.dialog(
+        Obx(() {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              height: userController.isImageSelected.value
+                  ? screenHeight * 0.80
+                  : screenHeight * 0.30,
+              width: screenWidth * 0.9,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Visibility(
+                      visible: userController.isImageSelected.value,
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: screenHeight * 0.45,
+                            width: screenWidth * 0.70,
+                            child: userController.selectedImage.value.isNotEmpty
+                                ? Image.file(
+                                    File(userController.selectedImage.value),
+                                    fit: BoxFit.fill,
+                                  )
+                                : const Text("Hello"),
+                          ),
+                          const SizedBox(
+                            height: 12,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      12,
+                                    ),
+                                    side: const BorderSide(
+                                      width: 2,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  await userController.profileUploadImage([
+                                    File(userController.selectedImage.value)
+                                  ], "profile photo");
+                                },
+                                child: const Text(
+                                  "Done",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 4,
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      12,
+                                    ),
+                                    side: const BorderSide(
+                                      width: 2,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  userController.selectedImage.value = "";
+                                  userController.isImageSelected.value = false;
+                                },
+                                child: const Text(
+                                  "Delete",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  12,
+                                ),
+                                side: const BorderSide(
+                                  width: 2,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            onPressed: () async {
+                              await userController.selectProfileImage(
+                                  ImageSource.camera, "profile_photo");
+                            },
+                            child: const Text(
+                              "Take Photo",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 4,
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  12,
+                                ),
+                                side: const BorderSide(
+                                  width: 2,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            onPressed: () async {
+                              await userController.selectProfileImage(
+                                  ImageSource.gallery, "profile_photo");
+                            },
+                            child: const Text(
+                              "Choose From Gallery",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              12,
+                            ),
+                            side: const BorderSide(
+                              width: 2,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        onPressed: () async {},
+                        child: const Text(
+                          "Delete Photo",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              12,
+                            ),
+                            side: const BorderSide(
+                              width: 2,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        onPressed: () async {
+                          Get.back();
+                        },
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+        barrierColor: Colors.transparent,
+        barrierDismissible: true,
+      );
+    }
 
     Gradient myGradient = const LinearGradient(
       colors: [
@@ -83,23 +321,19 @@ class ProfilePage extends StatelessWidget {
                 child: Stack(
                   //alignment: AlignmentDirectional.bottomEnd,
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFF000000),
-                            blurStyle: BlurStyle.normal,
-                            offset: Offset.fromDirection(-4.0),
-                            blurRadius: 8,
+                    userController.userState.value!.profilePhoto == null
+                        ? CircleAvatar(
+                            radius: screenWidth * 0.28,
+                            backgroundColor: Colors.blue,
+                          )
+                        : CircleAvatar(
+                            radius: screenWidth * 0.28,
+                            //backgroundColor: Colors.black,
+                            backgroundImage: NetworkImage(
+                              userController.userState.value!.profilePhoto!,
+                              scale: 1,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: CircleAvatar(
-                        radius: screenWidth * 0.28,
-                        backgroundColor: Colors.grey[200],
-                      ),
-                    ),
                     Positioned(
                       bottom: 8,
                       right: 16,
@@ -110,7 +344,9 @@ class ProfilePage extends StatelessWidget {
                               color: Colors.black,
                               width: 1,
                             )),
-                        onPressed: () {},
+                        onPressed: () {
+                          showImageUploadDialog();
+                        },
                         icon: const Icon(
                           Icons.camera_alt_rounded,
                           size: 32,
@@ -172,13 +408,12 @@ class ProfilePage extends StatelessWidget {
             ),
           ],
         ),
-        bottomNavigationBar: Container(
-          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          height: screenHeight * 0.13,
-          //margin: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-          //decoration: BoxDecoration(color: Color(0xFF9DD9D2)),
-          child: SafeArea(
+        bottomNavigationBar: SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            height: screenHeight * 0.14,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
                   width: double.infinity,
@@ -200,7 +435,7 @@ class ProfilePage extends StatelessWidget {
                           child: Container(
                             color: Colors.white,
                             height: Get.height * .40,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
