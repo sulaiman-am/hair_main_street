@@ -1,23 +1,29 @@
 //import 'package:dot_navigation_bar/dot_navigation_bar.dart';
-import 'dart:async';
 
 import 'package:awesome_bottom_bar/awesome_bottom_bar.dart';
+import 'package:bottom_navy_bar/bottom_navy_bar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:hair_main_street/controllers/cartController.dart';
 import 'package:hair_main_street/controllers/notificationController.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/productController.dart';
+import 'package:hair_main_street/controllers/refund_cancellation_Controller.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/pages/cart.dart';
-import 'package:hair_main_street/pages/feed.dart';
 import 'package:hair_main_street/pages/menu.dart';
 import 'package:hair_main_street/pages/new_feed.dart';
-import 'package:hair_main_street/pages/orders_stuff/checkout%20copy.dart';
+import 'package:hair_main_street/pages/notifcation.dart';
+import 'package:iconify_flutter/icons/ion.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/teenyicons.dart';
+import 'package:iconify_flutter/icons/material_symbols.dart';
+import 'package:iconify_flutter/icons/ci.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../controllers/chatController.dart';
 //import 'dart:math' as math;
 
 //import 'package:hair_main_street/widgets/cards.dart';
@@ -31,10 +37,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   ProductController productController = Get.put(ProductController());
+
   UserController userController = Get.find<UserController>();
 
   //var anotherController = Get.put(VendorController());
-  List tabs = [NewFeedPage(), CartPage(), MenuPage()];
+  List tabs = [NewFeedPage(), NotificationsPage(), CartPage(), MenuPage()];
   var _selectedTab = 0;
 
   CartController cartController = Get.put(CartController());
@@ -44,6 +51,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    Get.put(VendorController());
+    Get.put(RefundCancellationController());
+    Get.put(WishListController());
     super.initState();
   }
 
@@ -55,15 +65,23 @@ class _HomePageState extends State<HomePage> {
         userController.userState.value?.uid == null
             ? ""
             : userController.userState.value!.uid!;
-    return WillPopScope(
-      onWillPop: () async {
-        Get.back();
-        debugPrint("Back pressed");
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) async {
+        num backCount = 0;
+        if (didPop) {
+        } else {
+          userController.showMyToast("Press Back Again to Exit");
+          backCount += 1;
+          if (backCount == 2) {
+            Get.close(1);
+            didPop = true;
+          }
+        }
       },
       child: Scaffold(
-        extendBodyBehindAppBar: true,
-        extendBody: true,
+        //extendBodyBehindAppBar: true,
+        //extendBody: true,
         body: tabs.elementAt(_selectedTab),
         bottomNavigationBar: SafeArea(
           child: Obx(() {
@@ -82,129 +100,104 @@ class _HomePageState extends State<HomePage> {
                     "buyer", userController.userState.value!.uid!);
               }
             }
-            return Container(
-              //color: Colors.purple,
-              //margin: EdgeInsets.only(top: screenHeight * 0.7),
-              height:
-                  _selectedTab != 1 && checkOutController.checkoutList.isEmpty
-                      ? screenHeight * .16
-                      : screenHeight * 0.16,
-              //width: screenWidth * 1,
-              // constraints: BoxConstraints(
-              //     maxHeight: screenHeight * .45, maxWidth: screenWidth * 1),
-              //alignment: Alignment.bottomCenter,
-              //padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Visibility(
-                      visible: _selectedTab == 1 &&
-                          checkOutController.checkoutList.isNotEmpty,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        //height: screenHeight * .05,
-                        color: Colors.white,
-                        //padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Total:",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  "N${checkOutController.totalPriceAndQuantity["totalPrice"]}",
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 2,
-                                    horizontal: screenWidth * 0.04),
-                                //maximumSize: Size(screenWidth * 0.70, screenHeight * 0.10),
-                                shape: RoundedRectangleBorder(
-                                  side: const BorderSide(
-                                    width: 1.2,
-                                    color: Colors.black,
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: () {
-                                Get.to(() => CheckOutPage2(
-                                    products: checkOutController.checkoutList));
-                                // DataBaseService().addProduct();
-                              },
-                              child: GetX<CheckOutController>(
-                                builder: (_) {
-                                  return Text(
-                                    "Check Out(${checkOutController.totalPriceAndQuantity["totalQuantity"]})",
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      color: Colors.white,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+            return NavigationBar(
+              height: kToolbarHeight,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              // iconSize: 25,
+              // selectedLabelStyle: const TextStyle(
+              //     fontSize: 15,
+              //     fontFamily: 'Raleway',
+              //     fontWeight: FontWeight.w500,
+              //     color: Color(0xFF673AB7)),
+              // unselectedLabelStyle: const TextStyle(
+              //     fontSize: 15,
+              //     fontFamily: 'Raleway',
+              //     fontWeight: FontWeight.w500,
+              //     color: Colors.black),
+              // pad: 1,
+              // boxShadow: const [
+              //   BoxShadow(
+              //     color: Colors.black,
+              //     blurStyle: BlurStyle.outer,
+              //     offset: Offset.zero,
+              //     blurRadius: 1,
+              //   ),
+              // ],
+              // top: 2,
+              // paddingVertical: 8,
+              // bottom: 1,
+              // borderRadius: BorderRadius.all(
+              //   Radius.circular(16),
+              // ),
+              backgroundColor: Colors.white,
+              //blur: 1,
+              //unselectedItemColor: Colors.black,
+              //countStyle: const CountStyle(color: Colors.black),
+              indicatorColor: Colors.transparent,
+              destinations: [
+                GestureDetector(
+                  onDoubleTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    prefs.setBool("showHome", false);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: NavigationDestination(
+                      icon: Iconify(
+                        Teenyicons.home_alt_outline,
+                        size: 20,
+                        // color: Color(0xFF673AB7),
+                      ),
+                      label: "Home",
+                      selectedIcon: Iconify(
+                        Teenyicons.home_alt_solid,
+                        color: Color(0xFF673AB7),
+                        size: 20,
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: BottomBarDefault(
-                      iconSize: 24,
-                      titleStyle: TextStyle(fontSize: 14),
-                      pad: 1,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0xFF000000),
-                          blurStyle: BlurStyle.outer,
-                          offset: Offset.zero,
-                          blurRadius: 2,
-                        ),
-                      ],
-                      top: 2,
-                      //paddingVertical: 24,
-                      bottom: 2,
-                      // borderRadius: BorderRadius.all(
-                      //   Radius.circular(16),
-                      // ),
-                      backgroundColor: Colors.white,
-                      //blur: 1,
-                      color: Colors.grey.shade500,
-                      countStyle: CountStyle(color: Colors.black),
-                      colorSelected: Colors.black,
-                      items: const [
-                        TabItem(icon: Icons.home_rounded, title: "Home"),
-                        TabItem(
-                            icon: Icons.shopping_cart_rounded, title: "Cart"),
-                        TabItem(icon: Icons.person_2_rounded, title: "Me"),
-                      ],
-                      indexSelected: _selectedTab,
-                      onTap: (int index) {
-                        setState(() {
-                          _selectedTab = index;
-                        });
-                      },
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: NavigationDestination(
+                    icon: Iconify(Ion.md_notifications_outline),
+                    label: "Notifications",
+                    selectedIcon: Iconify(
+                      Ion.md_notifications,
+                      color: Color(0xFF673AB7),
                     ),
                   ),
-                ],
-              ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: NavigationDestination(
+                    icon:
+                        Iconify(MaterialSymbols.shopping_cart_outline_rounded),
+                    label: "Cart",
+                    selectedIcon: Iconify(
+                      MaterialSymbols.shopping_cart_rounded,
+                      color: Color(0xFF673AB7),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: NavigationDestination(
+                    icon: Iconify(Ci.user),
+                    label: "Profile",
+                    selectedIcon: Iconify(
+                      Ci.user,
+                      color: Color(0xFF673AB7),
+                    ),
+                  ),
+                ),
+              ],
+              selectedIndex: _selectedTab,
+              onDestinationSelected: (int index) {
+                setState(() {
+                  _selectedTab = index;
+                });
+              },
             );
           }),
           // bottomNavigationBar: Container(

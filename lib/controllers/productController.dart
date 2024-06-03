@@ -16,12 +16,15 @@ import 'package:hair_main_street/services/database.dart';
 import 'package:http/http.dart' as http;
 
 class ProductController extends GetxController {
+  var toggleSelection = <bool>[].obs;
+  Rx<ProductOption?> selectedProductOption = ProductOption().obs;
   RxList<Vendors?> vendorsList = RxList<Vendors?>();
   RxList<Vendors?> filteredVendorsList = RxList<Vendors?>();
   RxList<Product?> products = RxList<Product?>([]);
   Rx<List<Product?>> filteredProducts = Rx<List<Product?>>([]);
   RxList<Review?> reviews = RxList<Review?>([]);
-  RxMap productMap = RxMap();
+  RxMap<String, List<Product?>> productMap = RxMap<String, List<Product?>>();
+  var isOptionVisible = false.obs;
   // VendorController vendorController = Get.find<VendorController>();
   RxList<File> imageList = RxList<File>([]);
   var downloadUrls = [].obs;
@@ -115,6 +118,7 @@ class ProductController extends GetxController {
 
   increaseQuantity() {
     quantity.value++;
+    update();
   }
 
   decreaseQuantity() {
@@ -123,6 +127,7 @@ class ProductController extends GetxController {
     } else {
       quantity.value--;
     }
+    update();
   }
 
   //fetch products
@@ -133,11 +138,11 @@ class ProductController extends GetxController {
   //get single product
   Product? getSingleProduct(String id) {
     Product product = Product();
-    products.value.forEach((element) {
+    for (var element in products) {
       if (element!.productID.toString().toLowerCase() == id.toLowerCase()) {
         product = element;
       }
-    });
+    }
     return product;
   }
 
@@ -187,6 +192,7 @@ class ProductController extends GetxController {
     if (images.isNotEmpty) {
       for (File photo in images) {
         imageList.add(photo);
+        showMyToast("Image Added");
       }
     }
   }
@@ -206,12 +212,28 @@ class ProductController extends GetxController {
 
   //upload image
   uploadImage() async {
-    var result = await DataBaseService().uploadProductImage(imageList.value);
+    var result = await DataBaseService().uploadProductImage(imageList);
     if (result.isNotEmpty) {
       showMyToast("Photos uploaded successfully!");
       downloadUrls.value = result;
+      imageList.clear();
     } else {
       showMyToast("Problems Occured while Uploading Photos");
+    }
+  }
+
+  deleteProductImage(
+      String downloadUrl, collection, fieldName, id, int index) async {
+    var response = await DataBaseService()
+        .deleteImage(downloadUrl, collection, id, fieldName, index: index);
+    if (response == 'success') {
+      isLoading.value = false;
+      showMyToast("Image Deleted Successfully");
+      update();
+    } else {
+      isLoading.value = false;
+      showMyToast("Problem Deleting Image");
+      update();
     }
   }
 
@@ -231,9 +253,10 @@ class ProductController extends GetxController {
 
   //update a product
   updateProduct(Product product) async {
+    isLoading.value = true;
     var result = await DataBaseService().updateProduct(product: product);
     if (result == "success") {
-      isProductadded.value = true;
+      isLoading.value = false;
       Get.snackbar(
         "Successful",
         "Product Edited",
@@ -248,8 +271,9 @@ class ProductController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
-      Get.back();
+      Get.close(2);
     } else {
+      isLoading.value = false;
       Get.snackbar(
         "Error",
         "Product Edit Failed",
@@ -313,11 +337,22 @@ class ProductController extends GetxController {
   //get vendors list
   Vendors clientGetVendorName(String vendorID) {
     Vendors vendorDetails = Vendors();
-    vendorsList.forEach((vendor) {
+    for (var vendor in vendorsList) {
       if (vendor!.userID == vendorID) {
         vendorDetails = vendor;
       }
-    });
+    }
     return vendorDetails;
+  }
+
+  void toggleOption(int index, Product product) {
+    toggleSelection[index] = !toggleSelection[index];
+    selectedProductOption.value = product.options![index];
+    update(); // This will trigger a rebuild of the widgets that use this controller
+  }
+
+  void deleteLocalImage(int index) async {
+    await imageList[index].delete();
+    update();
   }
 }

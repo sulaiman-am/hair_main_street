@@ -5,9 +5,10 @@ Vendors vendorFromData(String str) => Vendors.fromdata(json.decode(str));
 String vendorsTodata(Vendors data) => json.encode(data.todata());
 
 class Vendors {
-  String? docID;
   String? userID;
+  String? shopPicture;
   String? shopName;
+  String? shopLink;
   Map? accountInfo;
   Map? contactInfo;
   bool? firstVerification;
@@ -18,11 +19,12 @@ class Vendors {
   Vendors(
       {this.accountInfo,
       this.createdAt,
+      this.shopPicture,
       this.contactInfo,
+      this.shopLink,
       this.secondVerification,
       this.firstVerification,
       this.shopName,
-      this.docID,
       this.userID,
       this.installmentDuration});
 
@@ -31,18 +33,20 @@ class Vendors {
         secondVerification: data['second verification'],
         firstVerification: data['first verification'],
         shopName: data['shop name'],
+        shopLink: data['shop link'],
         contactInfo: data['contact info'],
         accountInfo: data['account info'],
-        docID: data['docID'],
         createdAt: data['created at'],
+        shopPicture: data['shop picture'],
         installmentDuration: data['installment duration'] ?? 0,
       );
 
-  Map<String, dynamic> todata({String? docID}) => {
+  Map<String, dynamic> todata() => {
         "account info": accountInfo,
-        "docID": docID,
         "userID": userID,
         "contact info": contactInfo,
+        "shop picture": shopPicture,
+        "shop link": shopLink,
         "first verification": firstVerification,
         "second verification": secondVerification,
         "shop name": shopName,

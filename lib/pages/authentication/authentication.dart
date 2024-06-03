@@ -6,12 +6,11 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/referralController.dart';
 import 'package:hair_main_street/pages/authentication/forgotten_password.dart';
 import 'package:hair_main_street/controllers/userController.dart';
-import 'package:hair_main_street/models/userModel.dart';
-import 'package:hair_main_street/pages/homePage.dart';
-import 'package:hair_main_street/pages/menu.dart';
+import 'package:hair_main_street/widgets/loading.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:string_validator/string_validator.dart' as validator;
+import 'package:string_validator/string_validator.dart';
 
 class SignInUpPage extends StatefulWidget {
   final String? referralCode;
@@ -59,7 +58,9 @@ class _SignInPageState extends State<SignInUpPage>
     return GestureDetector(
       onTap: dismissKeyBoard,
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
+          elevation: 0,
           leading: IconButton(
             onPressed: () => Get.back(),
             icon: const Icon(Symbols.arrow_back_ios_new_rounded,
@@ -95,11 +96,6 @@ class _SignInPageState extends State<SignInUpPage>
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
                   "Sign Up",
-                  // style: TextStyle(
-                  //   fontSize: 18,
-                  //   fontWeight: FontWeight.w600,
-                  //   color: Colors.white,
-                  // ),
                 ),
               ),
               Padding(
@@ -110,7 +106,7 @@ class _SignInPageState extends State<SignInUpPage>
               ),
             ],
             indicatorColor: Colors.black,
-            indicatorWeight: 8,
+            indicatorWeight: 6,
           ),
           //backgroundColor: Colors.transparent,
         ),
@@ -133,6 +129,7 @@ class _SignInPageState extends State<SignInUpPage>
                           controller: emailController,
                           labelText: "Email",
                           hintText: "hello@gmail.com",
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: (val) {
                             if (!validator.isEmail(val!)) {
                               return "Enter a valid Email";
@@ -143,7 +140,6 @@ class _SignInPageState extends State<SignInUpPage>
                             setState(() {
                               email = value!;
                             });
-                            return null;
                           },
                         ),
                         const SizedBox(
@@ -151,39 +147,92 @@ class _SignInPageState extends State<SignInUpPage>
                         ),
                         GetX<UserController>(builder: (controller) {
                           return TextInputWidget(
-                            controller: passwordController,
-                            obscureText: controller.isObscure.value,
-                            visibilityIcon: IconButton(
-                              onPressed: () => controller.toggle(),
-                              icon: controller.isObscure.value
-                                  ? Icon(
-                                      Icons.visibility_off_rounded,
-                                      size: 20,
-                                    )
-                                  : Icon(
-                                      Icons.visibility_rounded,
-                                      size: 20,
-                                    ),
-                            ),
-                            labelText: "Password",
-                            hintText:
-                                "Password must be at least 6 characters long",
-                            validator: (val) {
-                              if (val!.isEmpty) {
-                                return "Enter Password";
-                              } else if (val.length < 6) {
-                                return "Password must be at least 6 characters long";
-                              }
-                              return null;
-                            },
-                            onChanged: (value) {
-                              setState(() {
-                                password = value!;
-                                //return null;
+                              controller: passwordController,
+                              obscureText: controller.isObscure.value,
+                              visibilityIcon: IconButton(
+                                onPressed: () => controller.toggle(),
+                                icon: controller.isObscure.value
+                                    ? Icon(
+                                        Icons.visibility_off_rounded,
+                                        size: 20,
+                                      )
+                                    : Icon(
+                                        Icons.visibility_rounded,
+                                        size: 20,
+                                      ),
+                              ),
+                              labelText: "Password",
+                              hintText:
+                                  "Password must be at least 6 characters long",
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Password cannot be empty';
+                                }
+
+                                // Check if password length is greater than 6
+                                if (!isLength(value, 6)) {
+                                  return 'Password must be at least 6 characters long';
+                                }
+
+                                // Check if password contains at least one uppercase letter
+                                if (!validator.isUppercase(value)) {
+                                  return 'Password must contain at least one uppercase letter';
+                                }
+
+                                // Check if password contains at least one lowercase letter
+                                if (!validator.isLowercase(value)) {
+                                  return 'Password must contain at least one lowercase letter';
+                                }
+
+                                // Check if password contains at least one digit
+                                if (!validator.isNumeric(value)) {
+                                  return 'Password must contain at least one digit';
+                                }
+
+                                // Check if password contains at least one special character
+                                if (!validator.isIn(value, [
+                                  r'!',
+                                  r'@',
+                                  r'#',
+                                  r'$',
+                                  r'%',
+                                  r'^',
+                                  r'&',
+                                  r'*',
+                                  r'(',
+                                  r')',
+                                  r'-',
+                                  r'_',
+                                  r'+',
+                                  r'=',
+                                  r'{',
+                                  r'}',
+                                  r'[',
+                                  r']',
+                                  r'|',
+                                  r'\',
+                                  r';',
+                                  r':',
+                                  r'<',
+                                  r'>',
+                                  r',',
+                                  r'.',
+                                  r'?',
+                                  r'/'
+                                ])) {
+                                  return 'Password must contain at least one special character';
+                                }
+
+                                return null;
+                              },
+                              onChanged: (value) {
+                                setState(() {
+                                  password = value!;
+                                  //return null;
+                                });
                               });
-                              return null;
-                            },
-                          );
                         }),
                         const SizedBox(
                           height: 20,
@@ -194,8 +243,8 @@ class _SignInPageState extends State<SignInUpPage>
                             obscureText: true,
                             labelText: "Confirm Password",
                             visibilityIcon: IconButton(
-                              onPressed: () => controller.toggle(),
-                              icon: controller.isObscure.value
+                              onPressed: () => controller.toggle1(),
+                              icon: controller.isObscure1.value
                                   ? Icon(
                                       Icons.visibility_off_rounded,
                                       size: 20,
@@ -205,10 +254,10 @@ class _SignInPageState extends State<SignInUpPage>
                                       size: 20,
                                     ),
                             ),
+                            autovalidateMode:
+                                AutovalidateMode.onUserInteraction,
                             //hintText: "Password must be at least 6 characters long",
                             validator: (value) {
-                              debugPrint(password);
-                              debugPrint(email);
                               if (value != password) {
                                 return "Password does not match";
                               }
@@ -219,34 +268,41 @@ class _SignInPageState extends State<SignInUpPage>
                         const SizedBox(
                           height: 20,
                         ),
-                        TextButton(
-                          onPressed: () async {
-                            bool validated = formKey.currentState!.validate();
-                            if (validated) {
-                              formKey.currentState!.save();
-                              userController.isLoading.value = true;
-                              var usercreation = await userController
-                                  .createUser(email, password);
-                              if (usercreation == "success" &&
-                                  referralCode != null) {
-                                referralController.handleReferrals(
-                                    referralCode!,
-                                    userController.myUser.value.uid!);
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () async {
+                              bool validated = formKey.currentState!.validate();
+                              if (validated) {
+                                formKey.currentState!.save();
+                                userController.isLoading.value = true;
+                                if (userController.isLoading.isTrue) {
+                                  Get.dialog(const LoadingWidget(),
+                                      barrierDismissible: false);
+                                }
+                                var usercreation = await userController
+                                    .createUser(email, password);
+                                if (usercreation == "success" &&
+                                    referralCode != null) {
+                                  referralController.handleReferrals(
+                                      referralCode!,
+                                      userController.myUser.value.uid!);
+                                }
                               }
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.all(12),
-                            backgroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.all(10),
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            "Sign Up",
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
+                            child: Text(
+                              "Sign Up",
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -283,6 +339,7 @@ class _SignInPageState extends State<SignInUpPage>
                           controller: emailController,
                           labelText: "Email",
                           hintText: "hello@gmail.com",
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: (val) {
                             if (!validator.isEmail(val!)) {
                               return "Enter a valid Email";
@@ -293,7 +350,6 @@ class _SignInPageState extends State<SignInUpPage>
                             setState(() {
                               email = value!;
                             });
-                            return null;
                           },
                         ),
                         const SizedBox(
@@ -316,8 +372,8 @@ class _SignInPageState extends State<SignInUpPage>
                                       size: 20,
                                     ),
                             ),
-                            hintText:
-                                "Password must be at least 6 characters long",
+                            // hintText:
+                            //     "Password must be at least 6 characters long",
                             validator: (val) {
                               if (val!.isEmpty) {
                                 return "Enter Password";
@@ -330,7 +386,6 @@ class _SignInPageState extends State<SignInUpPage>
                               setState(() {
                                 password = value!;
                               });
-                              return null;
                             },
                           );
                         }),
@@ -360,29 +415,37 @@ class _SignInPageState extends State<SignInUpPage>
                         const SizedBox(
                           height: 4,
                         ),
-                        TextButton(
-                          onPressed: () {
-                            bool validated = formKey.currentState!.validate();
-                            if (validated) {
-                              userController.isLoading.value = true;
-                              //debugPrint("${userController.isLoading.value}");
-                              formKey.currentState!.save();
-                              //debugPrint(email!);
-                              userController.signIn(email, password);
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.all(12),
-                            backgroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () async {
+                              bool validated = formKey.currentState!.validate();
+                              if (validated) {
+                                userController.isLoading.value = true;
+                                if (userController.isLoading.isTrue) {
+                                  Get.dialog(const LoadingWidget(),
+                                      barrierDismissible: false);
+                                } else {
+                                  //debugPrint("${userController.isLoading.value}");
+                                }
+                                formKey.currentState!.save();
+                                //debugPrint(email!);
+                                await userController.signIn(email, password);
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.all(10),
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          child: const Text(
-                            "Sign In",
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
+                            child: const Text(
+                              "Sign In",
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -409,16 +472,6 @@ class _SignInPageState extends State<SignInUpPage>
                         ),
                         SizedBox(
                           height: 20,
-                        ),
-                        Obx(
-                          () => userController.isLoading.isFalse
-                              ? SizedBox.shrink()
-                              : Center(
-                                  child: CircularProgressIndicator(
-                                    color: Color(0xFF392F5A),
-                                    strokeWidth: 4,
-                                  ),
-                                ),
                         ),
                       ],
                     ),

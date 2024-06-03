@@ -1,9 +1,11 @@
+// ignore_for_file: file_names
+
 class MyUser {
   String? uid;
   String? fullname;
   String? email;
   String? phoneNumber;
-  String? address;
+  Address? address;
   bool? isBuyer = true;
   bool? isVendor;
   bool? isAdmin;
@@ -34,8 +36,21 @@ class MyUser {
         isBuyer: json["isBuyer"],
         isVendor: json["isVendor"],
         profilePhoto: json["profile photo"],
-        address: json["address"],
+        address:
+            json["address"] != null ? Address.fromJson(json["address"]) : null,
         referralCode: json["referral code"],
         referralLink: json["referral link"],
+      );
+}
+
+class Address {
+  String? addressID;
+  String? address;
+
+  Address({this.address, this.addressID});
+
+  factory Address.fromJson(Map<String, dynamic> json) => Address(
+        address: json['address'],
+        addressID: json['addressID'],
       );
 }

@@ -98,8 +98,7 @@ class _WithdrawalPageState extends State<WithdrawalPage> {
                       return "Must Be a Number";
                     }
                     if (num.parse(val) >
-                        num.parse(walletController
-                            .wallet.value.withdrawableBalance!)) {
+                        walletController.wallet.value.withdrawableBalance!) {
                       return "Amount must be less or equal to withdrawable balance";
                     }
                     return null;
@@ -341,7 +340,7 @@ class _WithdrawalPageState extends State<WithdrawalPage> {
                         //     "${bankNameController.text} + ${accountNameController.text} + ${accountNumberController.text},");
                         if (checkboxValue == true) {
                           walletController.withdrawalRequest(
-                              withdrawalAmountController.text,
+                              num.parse(withdrawalAmountController.text),
                               {
                                 "account name": vendorController
                                     .vendor.value!.accountInfo?["account name"],
@@ -353,7 +352,7 @@ class _WithdrawalPageState extends State<WithdrawalPage> {
                               vendorController.vendor.value!.userID!);
                         } else {
                           walletController.withdrawalRequest(
-                              withdrawalAmountController.text,
+                              num.parse(withdrawalAmountController.text),
                               {
                                 "account name": accountNameController.text,
                                 "account number": accountNumberController.text,

@@ -31,7 +31,7 @@ class WalletController extends GetxController {
   }
 
   Future withdrawalRequest(
-      String withdrawalAmount, Map accountDetails, String userId) async {
+      num withdrawalAmount, Map accountDetails, String userId) async {
     var result = await DataBaseService()
         .requestWithdrawal(withdrawalAmount, accountDetails, userId);
     isLoading.value = true;

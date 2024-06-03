@@ -18,19 +18,22 @@ import 'package:hair_main_street/pages/vendor_dashboard/payment_settings.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/vendor_orders.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/wallet.dart';
 import 'package:hair_main_street/pages/menu/wishlist.dart';
+import 'package:hair_main_street/services/database.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class VendorPage extends StatelessWidget {
   VendorPage({super.key});
 
   UserController userController = Get.find<UserController>();
-  VendorController vendorController = Get.put(VendorController());
+  VendorController vendorController = Get.find<VendorController>();
   CheckOutController checkOutController = Get.find<CheckOutController>();
 
   @override
   Widget build(BuildContext context) {
     vendorController.vendorUID.value = userController.userState.value!.uid!;
     checkOutController.userUID.value = userController.userState.value!.uid!;
+    vendorController.getVendorDetails(userController.userState.value!.uid!);
+    vendorController.getVendorsProducts(userController.userState.value!.uid!);
     //print(vendorController.vendorUID.value);
     List<String> vendorButtonsText = [
       "Shop Page",
@@ -84,19 +87,40 @@ class VendorPage extends StatelessWidget {
       //transform: GradientRotation(math.pi / 4),
     );
     return StreamBuilder(
-      stream: vendorController.getVendorDetails(),
+      stream: DataBaseService()
+          .getVendorDetails(userID: userController.userState.value!.uid!),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          print("hello");
           return Obx(
-            () => !vendorController.vendor.value!.firstVerification!
+            () => vendorController.vendor.value!.firstVerification == false
                 ? BlankPage(
-                    textStyle: const TextStyle(
+                    pageIcon: const Icon(
+                      Icons.cancel,
+                      size: 86,
                       color: Colors.black,
-                      fontSize: 40,
+                    ),
+                    textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
                       fontWeight: FontWeight.w800,
                     ),
-                    interactionText:
-                        "You Have not been Verified Yet \nKindly Wait...",
+                    buttonStyle: TextButton.styleFrom(
+                      // padding: EdgeInsets.symmetric(
+                      //     horizontal: screenWidth * 0.24),
+                      backgroundColor: Colors.black,
+                      side: const BorderSide(color: Colors.white, width: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    text: "You Have not been Verified Yet \nKindly Wait...",
+                    interactionIcon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                    ),
+                    interactionText: "Back",
+                    interactionFunction: () => Get.back(),
                   )
                 : Scaffold(
                     appBar: AppBar(
@@ -168,7 +192,7 @@ class DashboardButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.grey[200],
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(color: Colors.black, width: 2),

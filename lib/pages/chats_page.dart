@@ -1,19 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/chatController.dart';
-import 'package:hair_main_street/controllers/review_controller.dart';
 import 'package:hair_main_street/controllers/userController.dart';
-import 'package:hair_main_street/models/messageModel.dart';
-import 'package:hair_main_street/models/review.dart';
-import 'package:hair_main_street/models/vendorsModel.dart';
+import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/cards.dart';
+import 'package:hair_main_street/widgets/loading.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class ChatPage extends StatefulWidget {
-  ChatPage({super.key});
+  const ChatPage({super.key});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -28,6 +25,17 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     chatController.getUserChats(userController.userState.value!.uid!);
     super.initState();
+  }
+
+  //check which member the person is
+  String? whoToDisplay(int index) {
+    String? currentUserUid = userController.userState.value!.uid!;
+    if (currentUserUid == chatController.myChats[index]!.member1) {
+      return chatController.myChats[index]!.member2;
+    } else if (currentUserUid == chatController.myChats[index]!.member2) {
+      return chatController.myChats[index]!.member1;
+    }
+    return null;
   }
 
   @override
@@ -99,25 +107,39 @@ class _ChatPageState extends State<ChatPage> {
                 );
               } else {
                 return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     shrinkWrap: true,
                     itemCount: chatController.myChats.length,
                     itemBuilder: (context, index) {
-                      userController.getVendorDetails(
-                          chatController.myChats[index]!.member2!);
-                      return ChatsCard(
-                        index: index,
-                        vendorDetails: userController.vendorDetails.value,
-                      );
+                      var displayID = whoToDisplay(index);
+                      String? nameToDisplay = "";
+                      someFunction() async {
+                        MyUser? userDetails =
+                            await userController.getUserDetails(displayID!);
+                        if (userDetails!.isVendor!) {
+                          var vendorData = await userController
+                              .getVendorDetailsFuture(userDetails.uid!);
+                          nameToDisplay = vendorData!.shopName;
+                        } else {
+                          nameToDisplay = userDetails.fullname;
+                        }
+                      }
+
+                      someFunction();
+
+                      return FutureBuilder(
+                          future: someFunction(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {}
+                            return ChatsCard(
+                              index: index,
+                              nameToDisplay: nameToDisplay,
+                            );
+                          });
                     });
               }
             } else {
-              return const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.black,
-                  strokeWidth: 2,
-                ),
-              );
+              return const LoadingWidget();
             }
           },
         ),

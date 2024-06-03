@@ -198,8 +198,8 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                         sliver: SliverGrid(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) => ProductCard(
-                              id: productController
-                                  .products.value[index]!.productID,
+                              // id: productController
+                              //     .products.value[index]!.productID,
                               index: index,
                             ),
                             childCount: 2,
@@ -329,7 +329,7 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                                 crossAxisSpacing: 12,
                               ),
                               itemBuilder: (_, index) => ProductCard(
-                                id: controller.products[index]!.productID,
+                                // id: controller.products[index]!.productID,
                                 index: index,
                               ),
                               itemCount: controller.products.length,

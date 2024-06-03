@@ -3,8 +3,9 @@ import 'package:get/get.dart';
 
 class BlankPage extends StatelessWidget {
   bool isVisible;
+  bool? haveAppBar;
   final String? appBarText;
-  final Icon? pageIcon;
+  final Widget? pageIcon;
   final String? text;
   final String? interactionText;
   final Function? interactionFunction;
@@ -12,6 +13,7 @@ class BlankPage extends StatelessWidget {
   final ButtonStyle? buttonStyle;
   final TextStyle? textStyle;
   BlankPage({
+    this.haveAppBar,
     super.key,
     this.buttonStyle,
     this.textStyle,
@@ -40,70 +42,68 @@ class BlankPage extends StatelessWidget {
       //transform: GradientRotation(math.pi / 4),
     );
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Color(0xFF293D38),
-      //   centerTitle: true,
-      //   title: Text(
-      //     appBarText ?? "Stuff",
-      //     style: TextStyle(
-      //       fontFamily: 'Manrope',
-      //       fontSize: 28,
-      //       color: Color(0xFFE9E9E9),
-      //       fontWeight: FontWeight.bold,
-      //     ),
-      //   ),
-      //   leading: IconButton(
-      //     onPressed: () => Get.back(),
-      //     icon: Icon(
-      //       Icons.arrow_back_ios_rounded,
-      //       size: 24,
-      //     ),
-      //   ),
-      // ),
-      backgroundColor: Colors.grey[100],
-      body: Container(
-        //decoration: BoxDecoration(gradient: myGradient),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                pageIcon!,
-                const SizedBox(
-                  height: 32,
+      // appBar: haveAppBar == true
+      //     ? AppBar(
+      //         elevation: 0,
+      //         leading: IconButton(
+      //           onPressed: () => Get.back(),
+      //           icon: const Icon(
+      //             Icons.arrow_back_ios_rounded,
+      //             size: 24,
+      //           ),
+      //         ),
+      //       )
+      //     : AppBar(
+      //         leading: IconButton(
+      //           onPressed: () => Get.back(),
+      //           icon: const Icon(
+      //             Icons.arrow_back_ios_rounded,
+      //             size: 24,
+      //           ),
+      //         ),
+      //         elevation: 0,
+      //       ),
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              pageIcon ?? Icon(Icons.cancel),
+              const SizedBox(
+                height: 32,
+              ),
+              Text(
+                text ?? "text goes here",
+                //overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  //fontFamily: 'Manrope',
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
                 ),
-                Text(
-                  text ?? "text goes here",
-                  //overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    //fontFamily: 'Manrope',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                interactionIcon == null
-                    ? const SizedBox.shrink()
-                    : Visibility(
-                        visible: isVisible,
-                        child: ElevatedButton.icon(
-                          style: buttonStyle ?? ElevatedButton.styleFrom(),
-                          onPressed: () => interactionFunction!(),
-                          icon: interactionIcon!,
-                          label: Text(
-                            interactionText!,
-                            style: textStyle ?? TextStyle(),
-                          ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              interactionIcon == null
+                  ? const SizedBox.shrink()
+                  : Visibility(
+                      visible: isVisible,
+                      child: ElevatedButton.icon(
+                        style: buttonStyle ?? ElevatedButton.styleFrom(),
+                        onPressed: () => interactionFunction!(),
+                        icon: interactionIcon!,
+                        label: Text(
+                          interactionText!,
+                          style: textStyle ?? TextStyle(),
                         ),
-                      )
-              ],
-            ),
+                      ),
+                    )
+            ],
           ),
         ),
       ),

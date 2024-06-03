@@ -24,10 +24,10 @@ class SplashScreen extends StatelessWidget {
       childWidget: SizedBox(
         height: 200,
         width: 200,
-        child: Image.asset("assets/app_Icons/whitee.png"),
+        child: Image.asset("assets/app_Icons/file(1).png"),
       ),
-      duration: const Duration(milliseconds: 1500),
-      animationDuration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1000),
+      animationDuration: const Duration(milliseconds: 800),
       onAnimationEnd: () => debugPrint("On Scale End"),
       nextScreen: const HomePage(),
     );

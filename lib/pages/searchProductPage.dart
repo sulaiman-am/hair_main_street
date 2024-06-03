@@ -173,7 +173,7 @@ class _SearchProductPageState extends State<SearchProductPage> {
               height: 8,
             ),
             Visibility(
-              visible: product.hasOption! == true,
+              visible: product.hasOptions! == true,
               child: Column(
                 children: [
                   Row(

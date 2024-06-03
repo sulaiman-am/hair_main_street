@@ -6,7 +6,9 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/extras/country_state.dart';
 import 'package:hair_main_street/pages/homePage.dart';
+import 'package:hair_main_street/widgets/loading.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -210,7 +212,22 @@ class ProfilePage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        onPressed: () async {},
+                        onPressed: () async {
+                          if (userController.userState.value!.profilePhoto !=
+                              null) {
+                            userController.isLoading.value = true;
+                            if (userController.isLoading.value) {
+                              Get.dialog(const LoadingWidget());
+                            }
+                            await userController.deleteProfilePicture(
+                                userController.userState.value!.profilePhoto!,
+                                "userProfile",
+                                "profile photo",
+                                userController.userState.value!.uid);
+                          } else {
+                            userController.showMyToast("No Profile Image");
+                          }
+                        },
                         child: const Text(
                           "Delete Photo",
                           style: TextStyle(
@@ -321,7 +338,8 @@ class ProfilePage extends StatelessWidget {
                 child: Stack(
                   //alignment: AlignmentDirectional.bottomEnd,
                   children: [
-                    userController.userState.value!.profilePhoto == null
+                    userController.userState.value == null ||
+                            userController.userState.value!.profilePhoto == null
                         ? CircleAvatar(
                             radius: screenWidth * 0.28,
                             backgroundColor: Colors.blue,
@@ -364,7 +382,7 @@ class ProfilePage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: ProfileLabel(
-                hintText: "${userController.userState.value!.fullname}",
+                hintText: "${userController.userState.value?.fullname}",
                 isVisible: true,
                 labelText: "Full Name",
                 //onPressed: () => showCancelDialog("Full Name"),
@@ -376,7 +394,9 @@ class ProfilePage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: ProfileLabel(
-                hintText: "${userController.userState.value!.address}",
+                hintText: userController.userState.value!.address == null
+                    ? ""
+                    : "${userController.userState.value?.address!.address!}",
                 isVisible: true,
                 labelText: "Address",
               ),
@@ -387,7 +407,7 @@ class ProfilePage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: ProfileLabel(
-                hintText: "${userController.userState.value!.email}",
+                hintText: "${userController.userState.value?.email}",
                 isVisible: false,
                 labelText: "Email",
               ),
@@ -398,7 +418,7 @@ class ProfilePage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: ProfileLabel(
-                hintText: "${userController.userState.value!.phoneNumber}",
+                hintText: "${userController.userState.value?.phoneNumber}",
                 isVisible: true,
                 labelText: "Phone Number",
               ),
@@ -409,20 +429,21 @@ class ProfilePage extends StatelessWidget {
           ],
         ),
         bottomNavigationBar: SafeArea(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            height: screenHeight * 0.14,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          child: BottomAppBar(
+            height: kToolbarHeight,
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+            //height: screenHeight * 0.14,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  width: double.infinity,
+                Expanded(
                   child: TextButton.icon(
                     style: TextButton.styleFrom(
+                      padding: EdgeInsets.all(6),
                       //alignment: Alignment.centerLeft,
-                      backgroundColor: Colors.black,
+                      backgroundColor: Color(0xFF673AB7),
                       shape: const RoundedRectangleBorder(
-                        side: BorderSide(color: Colors.white, width: 2),
+                        side: BorderSide(color: Color(0xFF673AB7), width: 2),
                         borderRadius: BorderRadius.all(
                           Radius.circular(12),
                         ),
@@ -463,7 +484,6 @@ class ProfilePage extends StatelessWidget {
                                   },
                                   onChanged: (val) {
                                     oldPasswordController!.text = val!;
-                                    return null;
                                   },
                                 ),
                                 TextInputWidget(
@@ -491,7 +511,6 @@ class ProfilePage extends StatelessWidget {
                                   },
                                   onChanged: (val) {
                                     newPasswordController.text = val!;
-                                    return null;
                                   },
                                 ),
                                 const SizedBox(
@@ -499,14 +518,15 @@ class ProfilePage extends StatelessWidget {
                                 ),
                                 TextButton(
                                   style: TextButton.styleFrom(
-                                    backgroundColor: Colors.red.shade300,
+                                    backgroundColor: Color(0xFF673AB7),
+                                    padding: EdgeInsets.all(6),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(
                                         12,
                                       ),
                                       side: const BorderSide(
                                         width: 2,
-                                        color: Colors.black,
+                                        color: Color(0xFF673AB7),
                                       ),
                                     ),
                                   ),
@@ -524,8 +544,10 @@ class ProfilePage extends StatelessWidget {
                                   child: const Text(
                                     "Confirm Change",
                                     style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 18,
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontFamily: 'Lato',
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ),
@@ -541,40 +563,46 @@ class ProfilePage extends StatelessWidget {
                       color: Colors.white,
                     ),
                     label: const Text(
-                      "Change Password",
+                      "Change \nPassword",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 15,
                         fontWeight: FontWeight.w400,
+                        fontFamily: 'Lato',
                       ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  width: double.infinity,
+                const SizedBox(
+                  width: 4,
+                ),
+                Expanded(
                   child: TextButton(
                     style: TextButton.styleFrom(
+                      padding: EdgeInsets.all(6),
                       //alignment: Alignment.centerLeft,
-                      backgroundColor: Colors.red[400],
+                      backgroundColor: Color(0xFF673AB7),
                       shape: const RoundedRectangleBorder(
-                        side: BorderSide(color: Colors.white, width: 2),
+                        side: BorderSide(color: Color(0xFF673AB7), width: 2),
                         borderRadius: BorderRadius.all(
                           Radius.circular(12),
                         ),
                       ),
                     ),
                     onPressed: () {
-                      userController.signOut();
-                      checkOutController.checkoutList.clear();
-                      Get.offAll(() => HomePage());
+                      // userController.signOut();
+                      // checkOutController.checkoutList.clear();
+                      // Get.offAll(() => HomePage());
                     },
                     child: const Text(
-                      "Sign Out",
+                      "Manage Delivery\nAddresses",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 15,
                         fontWeight: FontWeight.w400,
+                        fontFamily: 'Lato',
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
@@ -605,130 +633,209 @@ class ProfileLabel extends StatelessWidget {
     num screenWidth = MediaQuery.of(context).size.width;
     var screenHeight = Get.height;
     TextEditingController textController = TextEditingController();
-    TextEditingController stateController = TextEditingController();
-    showCancelDialog(String text, {String? label}) {
-      return Get.dialog(
-        Form(
-          key: formKey,
-          child: Center(
-            child: Container(
-              height:
-                  label == "Address" ? screenHeight * .36 : screenHeight * .24,
-              width: screenWidth * .64,
-              padding: EdgeInsets.all(12),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(12),
+    TextEditingController streetAddressController = TextEditingController();
+    String? country, state, localGovernment, streetAddress;
+    CountryAndStatesAndLocalGovernment countryAndStatesAndLocalGovernment =
+        CountryAndStatesAndLocalGovernment();
+    Widget buildPicker(String label, List<String> items, String? selectedValue,
+        Function(String?) onChanged) {
+      return Card(
+        color: Colors.white,
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: label,
+              labelStyle: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Edit $text",
-                    style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.black,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                  label == "Address"
-                      ? Column(
-                          children: [
-                            TextInputWidgetWithoutLabelForDialog(
-                              controller: textController,
-                              hintText: "Street Name",
-                              validator: (val) {
-                                if (val!.isEmpty) {
-                                  return "Cannot be Empty";
-                                }
-                                return null;
-                              },
-                              onChanged: (val) {
-                                textController.text = val!;
-                                return null;
-                              },
-                            ),
-                            TextInputWidgetWithoutLabelForDialog(
-                              controller: stateController,
-                              hintText: "State",
-                              validator: (val) {
-                                if (val!.isEmpty) {
-                                  return "Cannot be Empty";
-                                }
-                                return null;
-                              },
-                              onChanged: (val) {
-                                stateController.text = val!;
-                                return null;
-                              },
-                            ),
-                          ],
-                        )
-                      : TextInputWidgetWithoutLabelForDialog(
-                          controller: textController,
-                          hintText: text,
-                          validator: (val) {
-                            if (val!.isEmpty) {
-                              return "Cannot be Empty";
-                            }
-                            return null;
-                          },
-                          textInputType: label == "Phone Number"
-                              ? TextInputType.phone
-                              : TextInputType.text,
-                          onChanged: (val) {
-                            textController.text = val!;
-                            return null;
-                          },
-                        ),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.red.shade300,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          12,
-                        ),
-                        side: const BorderSide(
-                          width: 2,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                    onPressed: () {
-                      var validated = formKey.currentState!.validate();
-                      if (validated) {
-                        String? string;
-                        formKey.currentState!.save();
-                        if (label == "Address") {
-                          string =
-                              "${textController.text} ${stateController.text}";
-                        } else {
-                          string = textController.text;
-                        }
-                        //print(text.split(" ").join("").toLowerCase());
-                        userController.editUserProfile(
-                            text.split(" ").join("").toLowerCase(),
-                            string.capitalizeFirst);
-                        // print(stateController.text);
-                        // print("text:${textController.text}");
-                        Get.back();
-                      }
-                    },
-                    child: const Text(
-                      "Confirm Edit",
+              border: const OutlineInputBorder(),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedValue,
+                isDense: true,
+                onChanged: onChanged,
+                items: [
+                  const DropdownMenuItem(
+                    value: 'select',
+                    child: Text(
+                      'Select',
                       style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
+                  ...items.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
           ),
         ),
+      );
+    }
+
+    showCancelDialog(String text, {String? label}) {
+      return Get.dialog(
+        StatefulBuilder(builder: (context, StateSetter setState) {
+          return AlertDialog(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            elevation: 0,
+            backgroundColor: Colors.white,
+            scrollable: true,
+            content: SizedBox(
+              height: label == "Address"
+                  ? screenHeight * 0.60
+                  : screenHeight * 0.24,
+              width: screenWidth * 0.64,
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Edit $text",
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.black,
+                        decoration: TextDecoration.none,
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    label == "Address"
+                        ? Column(
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: buildPicker(
+                                    "Country",
+                                    countryAndStatesAndLocalGovernment
+                                        .countryList,
+                                    country, (val) {
+                                  setState(() {
+                                    country = val;
+                                  });
+                                }),
+                              ),
+                              buildPicker(
+                                  "State",
+                                  countryAndStatesAndLocalGovernment.statesList,
+                                  state, (val) {
+                                setState(() {
+                                  state = val;
+                                  localGovernment = null;
+                                });
+                              }),
+                              buildPicker(
+                                  "Local Government",
+                                  countryAndStatesAndLocalGovernment
+                                          .stateAndLocalGovernments[state] ??
+                                      [],
+                                  localGovernment ?? "select", (val) {
+                                setState(() {
+                                  localGovernment = val;
+                                });
+                              }),
+                              TextInputWidgetWithoutLabelForDialog(
+                                controller: streetAddressController,
+                                // initialValue: vendorController
+                                //         .vendor.value!.contactInfo!["street address"] ??
+                                //     "",
+                                hintText: "Street Address",
+                                validator: (val) {
+                                  if (val!.isEmpty) {
+                                    return "Cannot be Empty";
+                                  }
+                                  return null;
+                                },
+                                onChanged: (val) {
+                                  streetAddressController.text = val!;
+                                  streetAddress = streetAddressController.text;
+                                  return null;
+                                },
+                              ),
+                            ],
+                          )
+                        : TextInputWidgetWithoutLabelForDialog(
+                            controller: textController,
+                            hintText: text,
+                            validator: (val) {
+                              if (val!.isEmpty) {
+                                return "Cannot be Empty";
+                              }
+                              return null;
+                            },
+                            textInputType: label == "Phone Number"
+                                ? TextInputType.phone
+                                : TextInputType.text,
+                            onChanged: (val) {
+                              textController.text = val!;
+                              return null;
+                            },
+                          ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color(0xFF673AB7),
+                        padding: EdgeInsets.all(6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            12,
+                          ),
+                          side: const BorderSide(
+                            width: 2,
+                            color: Color(0xFF673AB7),
+                          ),
+                        ),
+                      ),
+                      onPressed: () {
+                        var validated = formKey.currentState!.validate();
+                        if (validated) {
+                          String? string;
+                          formKey.currentState!.save();
+                          if (label == "Address") {
+                            string =
+                                "$streetAddress ${localGovernment}LGA $state $country";
+                          } else {
+                            string = textController.text;
+                          }
+                          userController.editUserProfile(
+                              text.split(" ").join("").toLowerCase(),
+                              string.capitalizeFirst);
+                          Get.back();
+                        }
+                      },
+                      child: const Text(
+                        "Confirm Edit",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontFamily: 'Lato',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
       );
     }
 
@@ -743,7 +850,7 @@ class ProfileLabel extends StatelessWidget {
               labelText == null ? "label" : labelText!,
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -751,9 +858,11 @@ class ProfileLabel extends StatelessWidget {
               visible: isVisible ?? true,
               child: TextButton.icon(
                 style: TextButton.styleFrom(
-                    backgroundColor: Color(0xFF392F5A),
+                    backgroundColor: const Color(0xFF673AB7),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
                     shape: const RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.white, width: 2),
+                      side: BorderSide(color: Color(0xFF673AB7), width: 1.5),
                       borderRadius: BorderRadius.all(
                         Radius.circular(12),
                       ),
@@ -773,14 +882,14 @@ class ProfileLabel extends StatelessWidget {
                 },
                 icon: const Icon(
                   Symbols.edit_rounded,
-                  size: 20,
+                  size: 18,
                   color: Colors.white,
                 ),
                 label: const Text(
                   "edit",
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -815,9 +924,10 @@ class ProfileLabel extends StatelessWidget {
               return Text(
                 hintText == null ? "hint" : newHint.value!,
                 style: const TextStyle(
-                  color: Colors.black26,
-                  fontSize: 20,
+                  color: Colors.black,
+                  fontSize: 18,
                   fontWeight: FontWeight.w400,
+                  fontFamily: 'Lato',
                 ),
               );
             },

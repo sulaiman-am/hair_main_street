@@ -7,7 +7,7 @@ String walletToJson(Wallet data) => json.encode(data.toJson());
 class Wallet {
   String? userId;
   int? balance;
-  String? withdrawableBalance;
+  num? withdrawableBalance;
 
   Wallet({
     this.userId,
@@ -73,7 +73,7 @@ String dataBaseWalletResponsetoJson(Wallet data) => json.encode(data.toJson());
 class DataBaseWalletResponse {
   String? userId;
   String? balance;
-  String? withdrawableBalance;
+  num? withdrawableBalance;
   String? transactionId;
   num? amount;
   dynamic timestamp;
@@ -117,7 +117,7 @@ class DataBaseWalletResponse {
 
 class WithdrawalRequest {
   String? userId;
-  String? withdrawalAmount;
+  num? withdrawalAmount;
   String? accountNumber;
   String? accountName;
   String? bankName;
@@ -134,14 +134,24 @@ class WithdrawalRequest {
     this.userId,
   });
 
-  factory WithdrawalRequest.fromJson(Map<String, dynamic> json) =>
-      WithdrawalRequest(
-        accountName: json["account name"],
-        accountNumber: json["account number"],
-        timestamp: json["timestamp"],
-        bankName: json["bank name"],
-        status: json["status"],
-        userId: json['userID'],
-        withdrawalAmount: json['withdrawal amount'],
-      );
+  factory WithdrawalRequest.fromJson(Map<String, dynamic> json) {
+    final withdrawalAmountValue = json['withdrawal amount'] ?? '';
+    num? withdrawalAmount;
+
+    if (withdrawalAmountValue.isNotEmpty) {
+      withdrawalAmount = num.tryParse(withdrawalAmountValue.toString()) ?? 0;
+    } else {
+      withdrawalAmount = 0;
+    }
+
+    return WithdrawalRequest(
+      accountName: json["account name"],
+      accountNumber: json["account number"],
+      timestamp: json["timestamp"],
+      bankName: json["bank name"],
+      status: json["status"],
+      userId: json['userID'],
+      withdrawalAmount: withdrawalAmount,
+    );
+  }
 }

@@ -1,26 +1,55 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/chatController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/models/auxModels.dart';
 import 'package:hair_main_street/models/messageModel.dart';
 import 'package:hair_main_street/models/userModel.dart';
-import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 
-class MessagesPage extends StatelessWidget {
+class MessagesPage extends StatefulWidget {
   String? senderID;
   String? receiverID;
   MessagesPage({this.receiverID, this.senderID, super.key});
 
+  @override
+  State<MessagesPage> createState() => _MessagesPageState();
+}
+
+class _MessagesPageState extends State<MessagesPage> {
+  final ScrollController scrollController = ScrollController();
   ChatController chatController = Get.find<ChatController>();
+
   UserController userController = Get.find<UserController>();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // SchedulerBinding.instance.addPostFrameCallback((_) {
+    //   if (scrollController.hasClients) {
+    //     scrollController.jumpTo(scrollController.position.maxScrollExtent);
+    //   }
+    // });
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  void scrollToEnd() {
+    scrollController.animateTo(scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 800), curve: Curves.decelerate);
+  }
+
   @override
   Widget build(BuildContext context) {
-    chatController.getMessages(senderID!, receiverID!);
-    // chatController.member1UID.value = senderID!;
-    // chatController.member2UID.value = receiverID!;
+    chatController.getMessages(widget.senderID!, widget.receiverID!);
     GlobalKey<FormState> formKey = GlobalKey();
     TextEditingController messageController = TextEditingController();
     Chat chat = Chat(member1: "", member2: "");
@@ -31,6 +60,7 @@ class MessagesPage extends StatelessWidget {
     //   Message(sender: 'You', text: 'I\'m good, thanks!'),
     //   // Add more messages here
     // ];
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -57,7 +87,8 @@ class MessagesPage extends StatelessWidget {
           Expanded(
             flex: 9,
             child: StreamBuilder(
-                stream: DataBaseService().getChats(senderID!, receiverID!),
+                stream: DataBaseService()
+                    .getChats(widget.senderID!, widget.receiverID!),
                 builder: (context, snapshot) {
                   //print(snapshot.data);
                   if (snapshot.hasData) {
@@ -71,6 +102,7 @@ class MessagesPage extends StatelessWidget {
                                 ),
                               )
                             : ListView.builder(
+                                controller: scrollController,
                                 shrinkWrap: true,
                                 padding:
                                     const EdgeInsets.fromLTRB(12, 12, 12, 8),
@@ -79,10 +111,11 @@ class MessagesPage extends StatelessWidget {
                                 itemCount:
                                     controller.messagesList.value!.length,
                                 itemBuilder: (context, index) {
-                                  userController.getBuyerDetails(controller
-                                      .messagesList.value![index]!.idFrom!);
-                                  userController.getVendorDetails(controller
-                                      .messagesList.value![index]!.idTo!);
+                                  // scrollToEnd();
+                                  // userController.getBuyerDetails(controller
+                                  //     .messagesList.value![index]!.idFrom!);
+                                  // userController.getVendorDetails(controller
+                                  //     .messagesList.value![index]!.idTo!);
                                   return ChatMessage(
                                       message: controller
                                           .messagesList.value![index]!);
@@ -146,17 +179,18 @@ class MessagesPage extends StatelessWidget {
                           onPressed: chatController.isButtonEnabled.value
                               ? () {
                                   formKey.currentState!.save();
-                                  chatMessages.idFrom = senderID;
-                                  chatMessages.idTo = receiverID;
-                                  chat.member1 = senderID;
-                                  chat.member2 = receiverID;
-                                  chat.recentMessageSentBy = senderID;
+                                  chatMessages.idFrom = widget.senderID;
+                                  chatMessages.idTo = widget.receiverID;
+                                  chat.member1 = widget.senderID;
+                                  chat.member2 = widget.receiverID;
+                                  chat.recentMessageSentBy = widget.senderID;
                                   chatMessages.content = messageController.text;
                                   chat.recentMessageText =
                                       messageController.text;
                                   chatController.startChat(chat, chatMessages);
                                   debugPrint(
                                       "hellow:${messageController.text}");
+                                  scrollToEnd();
 
                                   messageController.clear();
                                   formKey.currentState!.reset();
@@ -235,18 +269,37 @@ class ChatMessage extends StatefulWidget {
 
 class _ChatMessageState extends State<ChatMessage> {
   UserController userController = Get.find<UserController>();
-  // var buyerDetails;
+  ChatController chatController = Get.find<ChatController>();
 
-  // getUserDetails() async {
-  //   buyerDetails = await userController.getUserDetails(widget.message.idFrom!);
+  @override
+  void initState() {
+    super.initState();
+    chatController.resolveTheNames(widget.message);
+  }
+
+  // void resolveTheNames() async {
+  //   idTo = await resolveNameToDisplay(widget.message.idTo!);
+  //   idFrom = await resolveNameToDisplay(widget.message.idFrom!);
+  //   setState(() {}); // Update the UI after fetching the data
   // }
 
-  // @override
-  // void initState() {
-  //   getUserDetails();
-  //   userController.getVendorDetails(widget.message.idTo!);
-  //   // TODO: implement initState
-  //   super.initState();
+  // Future<MessagePageData> resolveNameToDisplay(String displayID) async {
+  //   MessagePageData nameToDisplay = MessagePageData();
+  //   MyUser? userDetails = await userController.getUserDetails(displayID);
+
+  //   if (userDetails!.isVendor!) {
+  //     var vendorData =
+  //         await userController.getVendorDetailsFuture(userDetails.uid!);
+  //     nameToDisplay.id = vendorData!.userID!;
+  //     nameToDisplay.name = vendorData.shopName!;
+  //     //nameToDisplay.imageUrl = vendorData.shopPicture!;
+  //   } else {
+  //     nameToDisplay.id = userDetails.uid!;
+  //     nameToDisplay.name = userDetails.fullname!;
+  //     nameToDisplay.imageUrl = userDetails.profilePhoto!;
+  //   }
+
+  //   return nameToDisplay;
   // }
 
   @override
@@ -255,112 +308,106 @@ class _ChatMessageState extends State<ChatMessage> {
     DateTime resolveTimestampWithoutAdding(Timestamp timestamp) {
       final timestampDateTime = timestamp.toDate();
 
-      // Return only the time component (hour, minute, second)
       return DateTime(
-        0, // Year
-        0, // Month
-        0, // Day
+        0,
+        0,
+        0,
         timestampDateTime.hour,
         timestampDateTime.minute,
         timestampDateTime.second,
       );
     }
 
-    return Container(
-      padding: EdgeInsets.all(8.0),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        //borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              // boxShadow: [
-              //   BoxShadow(
-              //     color: Colors.black,
-              //     blurStyle: BlurStyle.normal,
-              //     offset: Offset.fromDirection(-4.0),
-              //     blurRadius: 0.5,
-              //   ),
-              // ],
-            ),
-            child: CircleAvatar(
-              radius: screenWidth * 0.08,
-              backgroundColor: Colors.black,
-            ),
-          ),
-          const SizedBox(
-            width: 20,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 5,
-                      child: widget.message.idFrom ==
-                              userController.buyerDetails.value!.uid
-                          ? Text(
-                              userController.buyerDetails.value!.fullname!,
+    return Obx(() {
+      if (chatController.idTo.value == null ||
+          chatController.idFrom.value == null ||
+          widget.message.timestamp == null) {
+        return const Center(child: Text("..."));
+      }
+
+      return FutureBuilder(
+          future: chatController.resolveNameToDisplay(widget.message.idTo!),
+          builder: (context, snapshot) {
+            return Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircleAvatar(
+                      radius: screenWidth * 0.08,
+                      backgroundColor: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 5,
+                              child: widget.message.idFrom ==
+                                      chatController.idFrom.value!.id
+                                  ? Text(
+                                      chatController.idFrom.value!.name!,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                  : Text(
+                                      chatController.idTo.value!.name ?? "",
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                            Text(
+                              resolveTimestampWithoutAdding(
+                                      widget.message.timestamp!)
+                                  .toString()
+                                  .split(" ")[1],
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            )
-                          : Text(
-                              userController.vendorDetails.value!.shopName!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Text(
+                          widget.message.content ?? "hello",
+                          maxLines: 5,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      "${resolveTimestampWithoutAdding(widget.message.timestamp!).toString().split(" ")[1]}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                Text(
-                  widget.message.content ?? "hello",
-                  maxLines: 5,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
                   ),
-                ),
-                // Row(
-                //   children: [
-                //     Icon(
-                //       Icons.star_half_rounded,
-                //       color: Colors.yellow[700],
-                //     ),
-                //     Text(
-                //       "${review.stars}",
-                //       style: const TextStyle(fontSize: 14),
-                //     ),
-                //   ],
-                // ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+                ],
+              ),
+            );
+          });
+    });
+    // Check if idTo and idFrom are not null before building the widget
   }
 }

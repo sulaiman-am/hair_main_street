@@ -2,8 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/review_controller.dart';
+import 'package:hair_main_street/pages/authentication/sign_in.dart';
 import 'package:hair_main_street/pages/chats_page.dart';
+import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/pages/notifcation.dart';
 import 'package:hair_main_street/pages/review_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/Shop_page.dart';
@@ -27,6 +30,7 @@ class MenuPage extends StatelessWidget {
   Widget build(BuildContext context) {
     UserController userController = Get.find<UserController>();
     ReviewController reviewController = Get.find<ReviewController>();
+    CheckOutController checkOutController = Get.find<CheckOutController>();
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -58,32 +62,32 @@ class MenuPage extends StatelessWidget {
     return Obx(
       () => userController.userState.value == null
           ? BlankPage(
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
               ),
               buttonStyle: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF392F5A),
+                backgroundColor: const Color(0xFF673AB7),
                 shape: RoundedRectangleBorder(
                   side: const BorderSide(
                     width: 1.2,
                     color: Colors.black,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              pageIcon: Icon(
+              pageIcon: const Icon(
                 Icons.person_off_outlined,
                 size: 48,
               ),
               text: "Your are not Logged In",
-              interactionText: "Register or Sign In",
-              interactionIcon: Icon(
+              interactionText: "Sign In or Register",
+              interactionIcon: const Icon(
                 Icons.person_2_outlined,
                 size: 24,
                 color: Colors.white,
               ),
-              interactionFunction: () => Get.to(() => SignInUpPage()),
+              interactionFunction: () => Get.to(() => const SignIn()),
             )
           : Scaffold(
               appBar: AppBar(
@@ -190,9 +194,7 @@ class MenuPage extends StatelessWidget {
                         text: "Become a Vendor",
                         iconData: Icons.shopping_bag_outlined,
                         onPressed: () {
-                          Get.to(() => BecomeAVendorPage());
-                          print(userController.userState.value!.isVendor);
-                          print(userController.userState.value!.email);
+                          Get.to(() => const BecomeAVendorPage());
                         },
                       ),
                     //  MenuButton(
@@ -204,6 +206,38 @@ class MenuPage extends StatelessWidget {
                       height: 12,
                     ),
                   ],
+                ),
+              ),
+              bottomNavigationBar: BottomAppBar(
+                elevation: 0,
+                color: Colors.white,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      //alignment: Alignment.centerLeft,
+                      backgroundColor: Colors.red[400],
+                      shape: const RoundedRectangleBorder(
+                        side: BorderSide(color: Colors.white, width: 2),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(10),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      userController.signOut();
+                      checkOutController.checkoutList.clear();
+                      Get.offAll(() => const HomePage());
+                    },
+                    child: const Text(
+                      "Sign Out",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -287,10 +321,10 @@ class MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        shadowColor: const Color(0xFF0E4D92),
+        shadowColor: Colors.black,
         //side: BorderSide(width: 0.5),
       ),
       onPressed: onPressed == null ? () {} : () => onPressed!(),

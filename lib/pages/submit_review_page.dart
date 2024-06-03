@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -5,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/review_controller.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/models/review.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class SubmitReviewPage extends StatefulWidget {
@@ -18,31 +21,28 @@ class SubmitReviewPage extends StatefulWidget {
 class _SubmitReviewPageState extends State<SubmitReviewPage> {
   UserController userController = Get.find<UserController>();
   ReviewController reviewController = Get.find<ReviewController>();
+  TextEditingController commentController = TextEditingController();
+  TextEditingController displayNameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   Review review = Review(comment: "", stars: 0.0);
-  String displa = '';
-  String comment = '';
   double _rating = 0.0;
-  List selectedImages = List.filled(3, null);
-  TextEditingController displayNameController = TextEditingController();
-  TextEditingController commentController = TextEditingController();
+  List<File?> selectedImages =
+      List.filled(3, null); // Changed to File? to match image_picker
 
   void _selectImage(int index) async {
-    reviewController.selectImage();
-    // You can implement image selection logic here
-    // For example, you can use image_picker package
-    // For simplicity, we'll just use placeholder URLs
-    // String? imageUrl = "https://via.placeholder.com/150";
-    // setState(() {
-    //   selectedImages[index] = imageUrl;
-    // });
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        selectedImages[index] = File(pickedFile.path);
+      });
+    }
   }
 
-  // Function to remove an image
   void _removeImage(int index) {
-    // setState(() {
-    //   selectedImages[index] = null;
-    // });
+    setState(() {
+      selectedImages[index] = null;
+    });
   }
 
   @override
@@ -64,7 +64,6 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
         centerTitle: true,
       ),
       body: Container(
-        //alignment: Alignment.center,
         color: Colors.white,
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         child: SingleChildScrollView(
@@ -172,7 +171,7 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
                             child: selectedImages[index] != null
                                 ? Stack(
                                     children: [
-                                      Image.network(selectedImages[index]!),
+                                      Image.file(selectedImages[index]!),
                                       Positioned(
                                         top: 0,
                                         right: 0,
@@ -196,7 +195,6 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
                 const Text(
                   'Rate this product',
                   style: TextStyle(
@@ -244,6 +242,7 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
                         //review.productID = widget.productID;
+
                         review.userID = userController.userState.value!.uid!;
                         await reviewController.addAReview(
                             review, widget.productID!);
@@ -262,6 +261,8 @@ class _SubmitReviewPageState extends State<SubmitReviewPage> {
                     ),
                   ),
                 ),
+                // Rating Bar and Submit Button remain unchanged
+                // ...
               ],
             ),
           ),

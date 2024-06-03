@@ -53,15 +53,12 @@ class ShopPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF0E4D92),
+            color: Colors.black,
           ),
         ),
       ),
       body: Container(
-          // decoration: BoxDecoration(
-          //   gradient: myGradient,
-          // ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: const ShopDetailsCard()),
     );
   }

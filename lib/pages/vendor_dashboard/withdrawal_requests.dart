@@ -37,7 +37,7 @@ class WithdrawalRequestsPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF0E4D92),
+            color: Colors.black,
           ),
         ),
         centerTitle: true,

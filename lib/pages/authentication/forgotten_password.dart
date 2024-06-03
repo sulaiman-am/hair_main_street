@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:string_validator/string_validator.dart' as validator;
 
-class ForgottenPassword extends StatelessWidget {
+class ForgottenPassword extends StatefulWidget {
   const ForgottenPassword({super.key});
 
   @override
+  State<ForgottenPassword> createState() => _ForgottenPasswordState();
+}
+
+class _ForgottenPasswordState extends State<ForgottenPassword> {
+  GlobalKey<FormState>? formKey = GlobalKey();
+
+  TextEditingController? emailController = TextEditingController();
+  String email = "";
+  @override
   Widget build(BuildContext context) {
-    GlobalKey<FormState>? formKey = GlobalKey();
-    TextEditingController? installmentController = TextEditingController();
-    String? installment;
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
     Gradient myGradient = const LinearGradient(
@@ -39,61 +48,73 @@ class ForgottenPassword extends StatelessWidget {
     );
     return Scaffold(
       appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: appBarGradient,
-          ),
+        leading: IconButton(
+          onPressed: () => Get.back(),
+          icon: const Icon(Symbols.arrow_back_ios_new_rounded,
+              size: 24, color: Colors.black),
         ),
         title: const Text(
-          'Forgotten password',
+          'Forgotten Password',
           style: TextStyle(
             fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color: Color(
-              0xFFFF8811,
-            ),
+            fontWeight: FontWeight.w900,
+            color: Colors.black,
           ),
         ),
+        centerTitle: true,
       ),
+      backgroundColor: Colors.white,
       body: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          gradient: myGradient,
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.grey[200],
-              ),
-              child: Text.rich(
-                TextSpan(
-                  text:
-                      "You can request a password reset below. We will send a security code to the email address, make sure it is correct",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                    leadingDistribution: TextLeadingDistribution.proportional,
-                    letterSpacing: 3,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey[200],
+                ),
+                child: const Text.rich(
+                  TextSpan(
+                    text:
+                        "You can request a password reset below. We will send a security code to the email address, make sure it is correct",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      leadingDistribution: TextLeadingDistribution.proportional,
+                      letterSpacing: 1,
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(
-              height: 30,
-            ),
-            Form(
+              const SizedBox(
+                height: 30,
+              ),
+              Form(
                 key: formKey,
                 child: Column(
                   //mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     TextInputWidget(
-                      textInputType: TextInputType.number,
-                      controller: installmentController,
+                      textInputType: TextInputType.emailAddress,
+                      controller: emailController,
                       labelText: "Email address",
                       hintText: "user@example.com",
+                      validator: (val) {
+                        if (val!.isEmpty) {
+                          return "Please enter an email address";
+                        } else if (!validator.isEmail(val)) {
+                          return "Please enter a valid email";
+                        }
+                        return null;
+                      },
+                      onChanged: (val) {
+                        if (val!.isNotEmpty) {
+                          emailController!.text = val;
+                          email = emailController!.text;
+                        } else {}
+                      },
                     ),
                     SizedBox(
                       height: screenHeight * .02,
@@ -104,33 +125,39 @@ class ForgottenPassword extends StatelessWidget {
                           child: TextButton(
                             onPressed: () {
                               bool? validate =
-                                  formKey?.currentState!.validate();
-                              if (validate!) {
-                                formKey?.currentState!.save();
+                                  formKey!.currentState!.validate();
+                              if (validate) {
+                                formKey!.currentState!.save();
+                                print(email);
                               }
                             },
                             style: TextButton.styleFrom(
                               // padding: EdgeInsets.symmetric(
                               //     horizontal: screenWidth * 0.24),
-                              backgroundColor: Color(0xFF392F5A),
-                              side: BorderSide(color: Colors.white, width: 2),
+                              backgroundColor: Colors.black,
+                              side: const BorderSide(
+                                  color: Colors.white, width: 2),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                             child: const Text(
                               "Reset",
                               textAlign: TextAlign.center,
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 20),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ],
-                )),
-          ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

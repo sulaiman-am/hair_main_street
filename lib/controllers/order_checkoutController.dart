@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_rx/get_rx.dart';
 import 'package:hair_main_street/controllers/cartController.dart';
+import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/models/auxModels.dart';
 import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/orderModel.dart';
@@ -23,6 +24,8 @@ class CheckOutController extends GetxController {
   Rx<OrderItem?> orderItem = Rx<OrderItem?>(null);
   RxMap<String, List<DatabaseOrderResponse>> buyerOrderMap =
       RxMap<String, List<DatabaseOrderResponse>>({});
+  RxMap<String, List<DatabaseOrderResponse>> vendorOrdersMap =
+      RxMap<String, List<DatabaseOrderResponse>>({});
   var orderUpdateStatus = "".obs;
   num screenHeight = Get.height;
   RxString userUID = "".obs;
@@ -31,9 +34,10 @@ class CheckOutController extends GetxController {
   var checkOutTickBoxModel = CheckOutTickBoxModel().obs;
 // Map to store the checkbox state for each productID
   final Map<String, RxBool> itemCheckboxState = {};
+  RxList<String> deletableCartItems = <String>[].obs;
 
   // List to store selected items
-  List<CheckOutTickBoxModel> checkoutList = <CheckOutTickBoxModel>[].obs;
+  RxList<CheckOutTickBoxModel> checkoutList = <CheckOutTickBoxModel>[].obs;
 
   // RxBool for the master checkbox
   final RxBool isMasterCheckboxChecked = false.obs;
@@ -96,6 +100,56 @@ class CheckOutController extends GetxController {
     buyerOrderMap.refresh();
   }
 
+  //filter vendor orders
+  void filterVendorOrdersList(List<DatabaseOrderResponse> vendorOrders) {
+    // No filter
+
+    // Filter the once only payment method
+    vendorOrdersMap["Active"] = vendorOrders
+        .where((order) =>
+            order.orderStatus != null && order.orderStatus != "expired")
+        .toList();
+
+    // Filter the installment only payment method
+    vendorOrdersMap["Expired"] = vendorOrders
+        .where((order) =>
+            order.orderStatus != null && order.orderStatus == "expired")
+        .toList();
+
+    vendorOrdersMap["Cancelled"] = vendorOrders
+        .where((order) =>
+            order.orderStatus != null && order.orderStatus == "cancelled")
+        .toList();
+
+    vendorOrdersMap.refresh();
+  }
+
+  //update checkoutlist
+  updateCheckoutList(CartItem cartitem) {
+    //fetchCart();
+    UserController userController = Get.find<UserController>();
+    MyUser user = userController.myUser.value;
+
+    var index = checkoutList
+        .indexWhere((element) => element.productID == cartitem.productID);
+
+    if (index != -1) {
+      print("after executing function: ${cartitem.price}");
+      checkoutList[index] = CheckOutTickBoxModel(
+        price: cartitem.price,
+        quantity: cartitem.quantity,
+        productID: cartitem.productID,
+        user: user,
+      );
+      print("checkoutlist data: ${checkoutList[index].price}");
+      update();
+      //getTotalPriceAndTotalQuantity();
+      //checkOutController.checkoutList.refresh();
+    } else {
+      print("cannot update");
+    }
+  }
+
   //get total price and quantity in a checkout list
   void getTotalPriceAndTotalQuantity() {
     num totalPrice = 0.0;
@@ -121,21 +175,24 @@ class CheckOutController extends GetxController {
   void toggleMasterCheckbox() {
     isMasterCheckboxChecked.value = !isMasterCheckboxChecked.value;
 
+    CartItem? item;
     // Toggle the state of all other checkboxes
     itemCheckboxState.forEach((productID, checkboxState) {
       checkboxState.value = isMasterCheckboxChecked.value;
-      var item;
       for (var cartItem in cartController.cartItems) {
         if (cartItem.productID == productID) {
-          //print("ding ding");'
+          //print("ding ding");
           item = cartItem;
         }
       }
+      //print(cartController.cartItems);
       toggleCheckbox(
-          productID: productID,
-          value: isMasterCheckboxChecked.value,
-          quantity: item.quantity,
-          price: item.price);
+        productID: productID,
+        value: isMasterCheckboxChecked.value,
+        quantity: item!.quantity,
+        price: item!.price,
+        cartID: item!.cartItemID,
+      );
     });
   }
 
@@ -165,20 +222,66 @@ class CheckOutController extends GetxController {
   //   update();
   // }
 
+  removeFromCart() async {
+    isLoading.value = true;
+    //print(deletableItems.length);
+    var result = await DataBaseService().removeFromCart(deletableCartItems);
+    if (result == 'success') {
+      isLoading.value = false;
+      Get.snackbar(
+        "Deleted",
+        "Successfully Deleted Items from Wishlist",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return "success";
+    } else {
+      isLoading.value = false;
+      Get.snackbar(
+        "Error",
+        "Error Deleting Items from Wishlist",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[300],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    }
+    itemCheckboxState.clear();
+    checkoutList.clear();
+    totalPriceAndQuantity.clear();
+    update();
+  }
+
   void toggleCheckbox({
     String? productID,
     bool? value,
     quantity,
     price,
     user,
+    String? cartID,
   }) {
     itemCheckboxState[productID]?.value = value!;
     if (value!) {
       // Check if the item already exists in the checkout list
       bool itemExists = checkoutList.any((item) => item.productID == productID);
-
+      bool itemExists2 = deletableCartItems.any((item) => item == cartID);
       // If the item doesn't exist, add it to the checkout list
-      if (!itemExists) {
+      if (!itemExists && !itemExists2) {
+        deletableCartItems.add(cartID!);
         checkoutList.add(
           CheckOutTickBoxModel(
             productID: productID,
@@ -192,10 +295,12 @@ class CheckOutController extends GetxController {
     } else {
       // Remove the item from the checkoutList if it exists
       checkoutList.removeWhere((item) => item.productID == productID);
+      deletableCartItems.removeWhere((item) => item == cartID);
     }
+    //print(deletableCartItems);
 
     // Update the state
-    update();
+    // update();
   }
 
   createCheckOutItem(
@@ -235,6 +340,7 @@ class CheckOutController extends GetxController {
   //create order
   createOrder(
       {String? paymentMethod,
+      String? transactionID,
       String? productPrice,
       String? orderQuantity,
       String? productID,
@@ -246,17 +352,17 @@ class CheckOutController extends GetxController {
       int? installmentNumber,
       int? installmentPaid}) async {
     order.value = Orders(
-      buyerId: user!.uid,
-      vendorId: vendorID,
-      installmentNumber: installmentNumber,
-      paymentPrice: paymentPrice,
-      installmentPaid: installmentPaid,
-      shippingAddress: shippingAddress,
-      totalPrice: totalPrice,
-      paymentMethod: paymentMethod,
-      paymentStatus: "paid",
-      orderStatus: "created",
-    );
+        buyerId: user!.uid,
+        vendorId: vendorID,
+        installmentNumber: installmentNumber,
+        paymentPrice: paymentPrice,
+        installmentPaid: installmentPaid,
+        shippingAddress: shippingAddress,
+        totalPrice: totalPrice,
+        paymentMethod: paymentMethod,
+        paymentStatus: "paid",
+        orderStatus: "created",
+        transactionID: [transactionID]);
     orderItem.value = OrderItem(
         productId: productID, quantity: orderQuantity, price: productPrice);
 
@@ -269,7 +375,7 @@ class CheckOutController extends GetxController {
         "Success",
         "Order has been placed",
         snackPosition: SnackPosition.BOTTOM,
-        duration: Duration(seconds: 1, milliseconds: 800),
+        duration: const Duration(seconds: 1, milliseconds: 800),
         forwardAnimationCurve: Curves.decelerate,
         reverseAnimationCurve: Curves.easeOut,
         backgroundColor: Colors.green[200],
@@ -353,9 +459,13 @@ class CheckOutController extends GetxController {
   }
 
   //get sellers orders
-  void getSellerOrders(String userID) {
-    var result = DataBaseService().getVendorsOrders(userID);
-    vendorOrderList.bindStream(result);
+  Stream<List<DatabaseOrderResponse>> getSellerOrders(String userID) {
+    var resultStream = DataBaseService().getVendorsOrders(userID);
+    resultStream.listen((buyerOrders) {
+      vendorOrderList.assignAll(buyerOrders);
+      filterVendorOrdersList(buyerOrders);
+    });
+    return resultStream;
   }
 
   //get single order irrespective of user

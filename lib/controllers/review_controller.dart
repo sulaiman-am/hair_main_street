@@ -5,11 +5,16 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/models/review.dart';
 import 'package:hair_main_street/services/database.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ReviewController extends GetxController {
   RxList<File> imageList = RxList<File>([]);
   var myReviews = [].obs;
   num screenHeight = Get.height;
+  RxList<String> selectedImageList = RxList([]);
+  var isImageSelected = false.obs;
+  var downloadUrls = <String>[].obs;
+  var isLoading = false.obs;
 
   void showMyToast(String message) {
     Fluttertoast.showToast(
@@ -24,22 +29,22 @@ class ReviewController extends GetxController {
   }
 
   //select image from file system
-  selectImage() async {
-    var images = await DataBaseService().createLocalImages();
-    if (images.isNotEmpty) {
-      for (File photo in images) {
-        imageList.add(photo);
-      }
+  selectImage(ImageSource source, String imagePath) async {
+    String? image = await DataBaseService().pickAndSaveImage(source, imagePath);
+    if (image != null) {
+      isImageSelected.value = true;
+      imageList.add(File(image));
+      print(imageList);
     }
   }
 
   //upload image
-  uploadImage() async {
-    var result =
-        await DataBaseService().imageUpload(imageList, "review images");
+  uploadImage(List<File?> reviewImageList) async {
+    var result = await DataBaseService()
+        .imageUpload(reviewImageList.cast<File>(), "review images");
     if (result.isNotEmpty) {
-      showMyToast("Photos Added!");
-      //downloadUrls.value = result;
+      showMyToast("Review Photos Added!");
+      downloadUrls.addAll(result);
     } else {
       showMyToast("Problems Occured while Uploading Photos");
     }
@@ -82,7 +87,99 @@ class ReviewController extends GetxController {
     }
   }
 
+  //edit
+  editReview(Review review) async {
+    var response = await DataBaseService().editReview(review);
+    print("response $response");
+    if (response == "success") {
+      isLoading.value = false;
+      Get.snackbar(
+        "Successful",
+        "Review Edited",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      Get.close(2);
+      downloadUrls.clear();
+    } else {
+      isLoading.value = false;
+      Get.snackbar(
+        "Error",
+        "Failed to Edit Review",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: const Color.fromARGB(255, 221, 179, 178),
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    }
+  }
+
+  //delete review
+  deleteReview(String reviewID) async {
+    var response = await DataBaseService().deleteReview(reviewID);
+    update();
+    if (response == "success") {
+      isLoading.value = false;
+      Get.snackbar(
+        "Successful",
+        "Review Deleted",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      Get.back();
+    } else {
+      isLoading.value = false;
+      Get.snackbar(
+        "Error",
+        "Failed to Delete Review",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: const Color.fromARGB(255, 221, 179, 178),
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+    }
+  }
+
   getMyReviews(String userId) {
     myReviews.bindStream(DataBaseService().getUserReviews(userId));
+  }
+
+  Review? getSingleReview(String reviewID) {
+    Review review = Review(comment: "", stars: 0);
+    for (var element in myReviews) {
+      if (element!.reviewID.toString().toLowerCase() ==
+          reviewID.toLowerCase()) {
+        review = element;
+      }
+    }
+    return review;
   }
 }

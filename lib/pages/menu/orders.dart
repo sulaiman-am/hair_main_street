@@ -26,7 +26,7 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     checkOutController.getBuyerOrders(userController.userState.value!.uid!);
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         showContent = true;
       });

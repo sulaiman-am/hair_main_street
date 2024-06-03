@@ -15,10 +15,12 @@ class UserController extends GetxController {
   var isLoading = false.obs;
   var myUser = MyUser().obs;
   var isObscure = true.obs;
+  var isObscure1 = true.obs;
   var isImageSelected = false.obs;
   var selectedImage = "".obs;
   Rx<MyUser?> buyerDetails = Rx<MyUser?>(null);
   Rx<Vendors?> vendorDetails = Rx<Vendors?>(null);
+  RxList<Address?> deliveryAddresses = RxList<Address?>([null]);
 
   get screenHeight => Get.height;
 
@@ -36,6 +38,56 @@ class UserController extends GetxController {
         getRoleDynamically;
       }
     });
+  }
+
+  //get delivery addresses
+  getDeliveryAddresses(String userID) {
+    deliveryAddresses
+        .bindStream(DataBaseService().getDeliveryAddresses(userID));
+    update();
+  }
+
+  //add delivery address
+  Future<String?> addDeliveryAddress(String userID, String address) async {
+    isLoading.value = true;
+    var response =
+        await DataBaseService().addDeliveryAddresses(userID, address);
+
+    if (response == 'success') {
+      isLoading.value = false;
+      Get.snackbar(
+        "Success",
+        "Delivery Address Added",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return 'success';
+    } else {
+      isLoading.value = false;
+      Get.snackbar(
+        "Error",
+        "A problem occured while adding delivery address",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[400],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return 'failed';
+    }
   }
 
   // @override
@@ -56,6 +108,14 @@ class UserController extends GetxController {
       isObscure.value = false;
     } else {
       isObscure.value = true;
+    }
+  }
+
+  toggle1() {
+    if (isObscure1.value) {
+      isObscure1.value = false;
+    } else {
+      isObscure1.value = true;
     }
   }
 
@@ -138,6 +198,42 @@ class UserController extends GetxController {
           ),
         );
       }
+      if (response is MyUser) {
+        myUser.value = response;
+        isLoading.value = false;
+        Get.snackbar(
+          "Success",
+          "User Created and Signed In",
+          snackPosition: SnackPosition.BOTTOM,
+          duration: Duration(seconds: 1, milliseconds: 800),
+          forwardAnimationCurve: Curves.decelerate,
+          reverseAnimationCurve: Curves.easeOut,
+          backgroundColor: Colors.green[200],
+          margin: EdgeInsets.only(
+            left: 12,
+            right: 12,
+            bottom: screenHeight * 0.08,
+          ),
+        );
+        Get.offAll(() => HomePage());
+        return "success";
+      } else {
+        isLoading.value = false;
+        Get.snackbar(
+          "Error",
+          response.code.toString().split("_").join(" "),
+          snackPosition: SnackPosition.BOTTOM,
+          duration: Duration(seconds: 1, milliseconds: 800),
+          forwardAnimationCurve: Curves.decelerate,
+          reverseAnimationCurve: Curves.easeOut,
+          backgroundColor: Colors.red[400],
+          margin: EdgeInsets.only(
+            left: 12,
+            right: 12,
+            bottom: screenHeight * 0.08,
+          ),
+        );
+      }
     } catch (e) {
       isLoading.value = false;
       print(e);
@@ -147,9 +243,11 @@ class UserController extends GetxController {
   // signIn
   dynamic signIn(String? email, String? password) async {
     try {
+      print("on Init");
       var response =
           await AuthService().signInWithEmailandPassword(email, password);
       if (response is MyUser) {
+        print("e don happen");
         myUser.value = response;
         isLoading.value = false;
         Get.snackbar(
@@ -217,7 +315,7 @@ class UserController extends GetxController {
     var result = await DataBaseService().updateUserProfile(fieldName, value);
     userState.update((myUser) {
       myUser!.fullname = result['fullname'];
-      myUser.address = result['address'];
+      myUser.address = Address.fromJson(result['address']);
       myUser.phoneNumber = result['phoneNumber'];
       myUser.profilePhoto = result['profile photo'];
       // Update other fields if necessary
@@ -279,15 +377,21 @@ class UserController extends GetxController {
 
   void getBuyerDetails(String userID) async {
     buyerDetails.value = await DataBaseService().getBuyerDetails(userID);
+    update();
   }
 
   Future<MyUser?> getUserDetails(String userID) async {
     return await DataBaseService().getBuyerDetails(userID);
   }
 
-  getVendorDetails(String vendorID) {
+  void getVendorDetails(String vendorID) {
     vendorDetails
         .bindStream(DataBaseService().getVendorDetails(userID: vendorID));
+    //print(vendorDetails.value);
+  }
+
+  Future<Vendors?> getVendorDetailsFuture(String vendorID) async {
+    return await DataBaseService().getVendorDetailsFuture(userID: vendorID);
     //print(vendorDetails.value);
   }
 
@@ -301,6 +405,20 @@ class UserController extends GetxController {
       textColor: Colors.black, // Optional: Set text color
       fontSize: 14.0, // Optional: Set font size
     );
+  }
+
+  deleteProfilePicture(String downloadUrl, collection, fieldName, id) async {
+    var response = await DataBaseService()
+        .deleteImage(downloadUrl, collection, id, fieldName);
+    if (response == 'success') {
+      isLoading.value = false;
+      showMyToast("Image Deleted Successfully");
+      Get.close(2);
+    } else {
+      isLoading.value = false;
+      showMyToast("Problem Deleting Image");
+      Get.close(1);
+    }
   }
 
   selectProfileImage(ImageSource source, String imagePath) async {
@@ -319,8 +437,51 @@ class UserController extends GetxController {
     if (response == "success") {
       Get.back();
       showMyToast("Image Upload Successful");
+      selectedImage.value = "";
+      isImageSelected.value = false;
     } else {
       showMyToast("Error Uploading\nProfile Image\nTry Again");
+    }
+  }
+
+  //become a seller
+  becomeASeller(Vendors vendor) async {
+    isLoading.value = true;
+    var result = await DataBaseService().becomeASeller(vendor);
+    if (result == 'success') {
+      isLoading.value = false;
+      Get.snackbar(
+        "Success",
+        "",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      Get.close(2);
+    } else {
+      isLoading.value = false;
+      Get.snackbar(
+        "Error",
+        "A problem occured",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      Get.close(2);
     }
   }
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/blankPage.dart';
+import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/add_product.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/edit_product.dart';
+import 'package:hair_main_street/services/database.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../widgets/cards.dart';
@@ -14,6 +16,7 @@ class InventoryPage extends StatelessWidget {
   InventoryPage({super.key});
 
   VendorController vendorController = Get.find<VendorController>();
+  UserController userController = Get.find<UserController>();
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +80,7 @@ class InventoryPage extends StatelessWidget {
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E4D92),
+              color: Colors.black,
             ),
           ),
           centerTitle: true,
@@ -85,10 +88,10 @@ class InventoryPage extends StatelessWidget {
           //   decoration: BoxDecoration(gradient: appBarGradient),
           // ),
         ),
-        backgroundColor: Colors.grey[200],
+        backgroundColor: Colors.white,
         body: StreamBuilder(
-            stream: vendorController
-                .getVendorsProducts(vendorController.vendorUID.value),
+            stream: DataBaseService()
+                .getVendorProducts(userController.userState.value!.uid!),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 //print(snapshot.data);
@@ -105,7 +108,7 @@ class InventoryPage extends StatelessWidget {
                               width: 1.2,
                               color: Colors.black,
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         pageIcon: const Icon(
@@ -127,9 +130,12 @@ class InventoryPage extends StatelessWidget {
                         itemBuilder: (BuildContext context, int index) {
                           return InventoryCard(
                             // ignore: invalid_use_of_protected_member
-                            imageUrl: productList.value[index].image!.first,
-                            productName: productList.value[index].name!,
-                            stock: productList.value[index].quantity!,
+                            imageUrl: productList[index].image?.isNotEmpty ==
+                                    true
+                                ? productList[index].image!.first
+                                : 'https://firebasestorage.googleapis.com/v0/b/hairmainstreet.appspot.com/o/productImage%2FImage%20Not%20Available.jpg?alt=media&token=0104c2d8-35d3-4e4f-a1fc-d5244abfeb3f',
+                            productName: productList[index].name!,
+                            stock: productList[index].quantity!,
                             onEdit: () {
                               // Implement the edit action
                               Get.to(() => EditProductPage(

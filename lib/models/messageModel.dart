@@ -111,9 +111,12 @@ class DatabaseChatResponse {
         recentMessageSentBy: json['recent message sent by'],
         recentMessageText: json['recent message text'],
         member2: json["member2"],
-        messages: json['messages']
-            ?.map((message) => ChatMessages.fromJson(message))
-            .toList(), // Added message parsing
+        messages: json["messages"] != null
+            ? List<ChatMessages>.from(
+                json["messages"]
+                    .map((message) => ChatMessages.fromJson(message)),
+              )
+            : null, // Added message parsing
       );
 
   Map<String, dynamic> toJson() => {

@@ -1,14 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/models/auxModels.dart';
 import 'package:hair_main_street/models/messageModel.dart';
+import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/services/database.dart';
 
 class ChatController extends GetxController {
+  UserController userController = Get.find<UserController>();
   Rx<List<ChatMessages?>?> messagesList = Rx<List<ChatMessages?>?>([]);
-  RxList<DatabaseChatResponse?> myChats = RxList<DatabaseChatResponse?>([]);
+  RxList<Chat?> myChats = RxList<Chat?>([]);
   var member1UID = "".obs;
   var member2UID = "".obs;
   var isButtonEnabled = false.obs;
+  var isLoading = false.obs;
+
+  Rx<MessagePageData?> idTo = MessagePageData().obs;
+  Rx<MessagePageData?> idFrom = MessagePageData().obs;
 
   // @override
   // void onReady() {
@@ -20,8 +28,10 @@ class ChatController extends GetxController {
   // }
 
   void getMessages(String member1, member2) {
+    isLoading.value = true;
     //print(DataBaseService().getChats(member1, member2));
     messagesList.bindStream(DataBaseService().getChats(member1, member2));
+    isLoading.value = false;
     // for (var element in messagesList.value!) {
     //   print(element!.idFrom);
     //   print(element.idTo);
@@ -48,10 +58,32 @@ class ChatController extends GetxController {
     var resultStream = DataBaseService().getUserChats(userID);
     resultStream.listen((chats) {
       myChats.assignAll(chats);
-      // for (var element in myChats) {
-      //   sortByFirestoreTimestamp(element!.messages!);
-      // }
     });
     return resultStream;
+  }
+
+  void resolveTheNames(ChatMessages message) async {
+    idTo.value = await resolveNameToDisplay(message.idTo!);
+    idFrom.value = await resolveNameToDisplay(message.idFrom!);
+    update(); // This will trigger a rebuild of the widget
+  }
+
+  Future<MessagePageData> resolveNameToDisplay(String displayID) async {
+    MessagePageData nameToDisplay = MessagePageData();
+    MyUser? userDetails = await userController.getUserDetails(displayID);
+
+    if (userDetails!.isVendor!) {
+      var vendorData =
+          await userController.getVendorDetailsFuture(userDetails.uid!);
+      nameToDisplay.id = vendorData!.userID!;
+      nameToDisplay.name = vendorData.shopName!;
+      //nameToDisplay.imageUrl = vendorData.shopPicture!;
+    } else {
+      nameToDisplay.id = userDetails.uid!;
+      nameToDisplay.name = userDetails.fullname!;
+      nameToDisplay.imageUrl = userDetails.profilePhoto!;
+    }
+
+    return nameToDisplay;
   }
 }

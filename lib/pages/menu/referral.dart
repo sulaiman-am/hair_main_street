@@ -94,7 +94,7 @@ class ReferralPage extends StatelessWidget {
         ),
         body: Container(
           //decoration: BoxDecoration(gradient: myGradient),
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: 12,
             vertical: 8,
           ),

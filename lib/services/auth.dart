@@ -26,7 +26,8 @@ class AuthService {
         phoneNumber: data["phonenumber"],
         isVendor: data["isVendor"],
         fullname: data["fullname"],
-        address: data["address"],
+        address:
+            data["address"] != null ? Address.fromJson(data["address"]) : null,
         profilePhoto: data["profile photo"],
         // Set other properties here if needed
       );
@@ -133,7 +134,7 @@ class AuthService {
     }
   }
 
-  Future restPasswordProper(String newPassword, code) async {
+  Future resetPasswordProper(String newPassword, code) async {
     try {
       return await auth.confirmPasswordReset(
           code: code, newPassword: newPassword);

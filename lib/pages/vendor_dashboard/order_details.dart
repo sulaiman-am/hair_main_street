@@ -115,7 +115,7 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF0E4D92),
+            color: Colors.black,
           ),
         ),
         centerTitle: true,
@@ -144,7 +144,7 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                           style: TextButton.styleFrom(
                             // padding: EdgeInsets.symmetric(
                             //     horizontal: screenWidth * 0.24),
-                            backgroundColor: const Color(0xFF392F5A),
+                            backgroundColor: Colors.black,
                             side:
                                 const BorderSide(color: Colors.white, width: 2),
                             shape: RoundedRectangleBorder(
@@ -170,7 +170,7 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           width: 2,
-                          color: const Color(0xFF392F5A),
+                          color: Colors.black,
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -248,7 +248,7 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                                 );
                               },
                               style: TextButton.styleFrom(
-                                backgroundColor: const Color(0xFF392F5A),
+                                backgroundColor: Colors.black,
                                 padding: const EdgeInsets.all(4),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -281,7 +281,7 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           width: 2,
-                          color: const Color(0xFF392F5A),
+                          color: Colors.black,
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -400,22 +400,48 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                             height: 8,
                           ),
                           Visibility(
-                            visible: widget.orderDetails!.paymentPrice ==
-                                widget.orderDetails!.totalPrice,
+                            visible:
+                                widget.orderDetails!.orderStatus == "expired",
                             child: Row(
                               children: [
-                                Expanded(
+                                const Expanded(
                                   child: Text(
                                     "Order Status: ",
                                     style: TextStyle(fontSize: 16),
                                   ),
                                 ),
-                                dropDownValue == "confirmed"
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    widget.orderDetails!.orderStatus!,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Visibility(
+                            visible: widget.orderDetails!.paymentPrice ==
+                                widget.orderDetails!.totalPrice,
+                            child: Row(
+                              children: [
+                                const Expanded(
+                                  child: Text(
+                                    "Order Status: ",
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                dropDownValue == "confirmed" ||
+                                        dropDownValue == "expired" ||
+                                        dropDownValue == "cancelled"
                                     ? Expanded(
                                         flex: 2,
                                         child: Text(
                                           dropDownValue!.capitalizeFirst!,
-                                          style: TextStyle(fontSize: 16),
+                                          style: const TextStyle(fontSize: 16),
                                         ),
                                       )
                                     : Expanded(
@@ -466,8 +492,8 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                       visible: widget.orderDetails!.paymentPrice !=
                           widget.orderDetails!.totalPrice,
                       child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
                           borderRadius: BorderRadius.circular(12),
@@ -596,11 +622,11 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           width: 2,
-                          color: const Color(0xFF392F5A),
+                          color: Colors.black,
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -628,10 +654,12 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Get.to(
-                              //   () => ProductPage(),
-                              //   transition: Transition.fadeIn,
-                              // );
+                              Get.to(
+                                () => ProductPage(
+                                  id: widget.product!.productID,
+                                ),
+                                transition: Transition.fadeIn,
+                              );
                               //debugPrint("Clicked");
                             },
                             child: Padding(
@@ -651,37 +679,42 @@ class _VendorOrderDetailsPageState extends State<VendorOrderDetailsPage> {
                                   const SizedBox(
                                     width: 12,
                                   ),
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "${widget.product!.name}",
-                                        style: const TextStyle(
-                                          fontSize: 20,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(
-                                        height: 8,
-                                      ),
-                                      Text("₦${widget.product!.price}"),
-                                      const SizedBox(
-                                        height: 8,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text("Quantity Available"),
-                                          const SizedBox(
-                                            width: 30,
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${widget.product!.name}",
+                                          maxLines: 4,
+                                          style: const TextStyle(
+                                            fontSize: 20,
                                           ),
-                                          Text("x ${widget.product!.quantity}")
-                                        ],
-                                      ),
-                                    ],
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(
+                                          height: 8,
+                                        ),
+                                        Text("₦${widget.product!.price}"),
+                                        const SizedBox(
+                                          height: 8,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const Text("Quantity Available"),
+                                            const SizedBox(
+                                              width: 30,
+                                            ),
+                                            Text(
+                                                "x ${widget.product!.quantity}")
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),

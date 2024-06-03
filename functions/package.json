@@ -9,6 +9,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
   },
+  
   "engines": {
     "node": "18"
   },
@@ -30,4 +31,5 @@
     "firebase-functions-test": "^3.1.0"
   },
   "private": true
+
 }

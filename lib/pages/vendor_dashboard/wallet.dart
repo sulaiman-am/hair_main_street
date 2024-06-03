@@ -64,20 +64,19 @@ class _WalletPageState extends State<WalletPage> {
                     fontSize: 24,
                   ),
                 ),
-                leading:
-                    walletController.transactions.value[index].type == 'credit'
-                        ? Icon(
-                            Icons.keyboard_double_arrow_down_rounded,
-                            color: Colors.green[800],
-                            size: 28,
-                          )
-                        : Icon(
-                            Icons.keyboard_double_arrow_up_rounded,
-                            color: Colors.red[800],
-                            size: 28,
-                          ),
+                leading: walletController.transactions[index].type == 'credit'
+                    ? Icon(
+                        Icons.keyboard_double_arrow_down_rounded,
+                        color: Colors.green[800],
+                        size: 28,
+                      )
+                    : Icon(
+                        Icons.keyboard_double_arrow_up_rounded,
+                        color: Colors.red[800],
+                        size: 28,
+                      ),
                 subtitle: Text(
-                  "${walletController.transactions.value[index].transactionId}",
+                  "${walletController.transactions[index].transactionId}",
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w500,
@@ -85,7 +84,7 @@ class _WalletPageState extends State<WalletPage> {
                   ),
                 ),
                 trailing: Text(
-                  "₦${walletController.transactions.value[index].amount}",
+                  "₦${walletController.transactions[index].amount}",
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w500,
@@ -223,7 +222,7 @@ class _WalletPageState extends State<WalletPage> {
                                   const Expanded(
                                     flex: 2,
                                     child: Text(
-                                      "Amount available for withdrawal:",
+                                      "Withdrawable Balance:",
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w400,

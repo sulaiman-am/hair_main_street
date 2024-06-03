@@ -71,7 +71,7 @@ class NotificationService {
 
     //making the settings
     var androidInitialize =
-        const AndroidInitializationSettings('@drawable/std_icon');
+        const AndroidInitializationSettings('@drawable/ic_launcher');
     var iosInitialize = const DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -108,7 +108,7 @@ class NotificationService {
               android: AndroidNotificationDetails(
                 androidChannel.id,
                 androidChannel.name,
-                icon: "@drawable/std_icon",
+                icon: "@drawable/ic_launcher",
                 styleInformation: bigTextStyleInformation,
               ),
               iOS: DarwinNotificationDetails(

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hair_main_street/models/userModel.dart';
 
 class CartItem {
   dynamic cartItemID;
@@ -17,11 +18,15 @@ class CartItem {
 }
 
 class WishlistItem {
-  dynamic productID;
   dynamic wishListItemID;
   Timestamp? createdAt;
 
-  WishlistItem({this.productID, this.wishListItemID, this.createdAt});
+  WishlistItem({this.wishListItemID, this.createdAt});
+
+  factory WishlistItem.fromJson(Map<String, dynamic> json) => WishlistItem(
+        wishListItemID: json["wishListItemID"],
+        createdAt: json["created at"],
+      );
 }
 
 CheckoutItem checkoutItemFromJson(String str) =>
@@ -34,7 +39,7 @@ class CheckoutItem {
   String? checkoutitemID;
   String? price;
   String? quantity;
-  String? address;
+  Address? address;
   String? fullName;
   String? phoneNumber;
   String? createdAt;
