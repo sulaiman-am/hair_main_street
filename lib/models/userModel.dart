@@ -45,12 +45,46 @@ class MyUser {
 
 class Address {
   String? addressID;
-  String? address;
+  String? state;
+  String? lGA;
+  String? zipCode;
+  String? contactName;
+  String? contactPhoneNumber;
+  String? streetAddress;
+  String? landmark;
 
-  Address({this.address, this.addressID});
+  Address({
+    this.addressID,
+    this.contactName,
+    this.contactPhoneNumber,
+    this.lGA,
+    this.landmark,
+    this.state,
+    this.streetAddress,
+    this.zipCode,
+  });
 
   factory Address.fromJson(Map<String, dynamic> json) => Address(
-        address: json['address'],
+        streetAddress: json['street address'],
         addressID: json['addressID'],
+        lGA: json['LGA'],
+        state: json['state'],
+        contactName: json['contact name'],
+        contactPhoneNumber: json['contact phonenumber'],
+        zipCode: json['zipcode'],
+        landmark: json['landmark'],
       );
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['street address'] = streetAddress;
+    data['addressID'] = addressID;
+    data['LGA'] = lGA;
+    data['state'] = state;
+    data['contact name'] = contactName;
+    data['contact phonenumber'] = contactPhoneNumber;
+    data['zipcode'] = zipCode;
+    data['landmark'] = landmark;
+    return data;
+  }
 }

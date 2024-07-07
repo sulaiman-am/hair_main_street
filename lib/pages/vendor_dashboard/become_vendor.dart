@@ -1,12 +1,18 @@
+import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/controllers/vendorController.dart';
+import 'package:hair_main_street/extras/banks_bank_code.dart';
 import 'package:hair_main_street/extras/country_state.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/widgets/loading.dart';
+import 'package:hair_main_street/widgets/misc_widgets.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
+import 'package:iconify_flutter_plus/iconify_flutter_plus.dart';
+import 'package:iconify_flutter_plus/icons/ic.dart';
 import 'package:string_validator/string_validator.dart' as validator;
 
 class BecomeAVendorPage extends StatefulWidget {
@@ -28,11 +34,14 @@ class _BecomeAVendorPageState extends State<BecomeAVendorPage> {
       streetAddressController,
       phoneNumberController,
       stateController = TextEditingController();
-  String? country, state, localGovernment = "";
+  String? country, state, localGovernment, bankName, bankCode;
   GlobalKey<FormState> formKey = GlobalKey();
   UserController userController = Get.find<UserController>();
   @override
   Widget build(BuildContext context) {
+    BanksAndBankCodes banksAndBankCodes = BanksAndBankCodes();
+    Map<String, String> banksandCodes =
+        banksAndBankCodes.bankNamesWithBankCodes;
     Widget buildPicker(String label, List<String> items, String? selectedValue,
         Function(String?) onChanged) {
       return Card(
@@ -71,23 +80,28 @@ class _BecomeAVendorPageState extends State<BecomeAVendorPage> {
 
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
+        elevation: 0,
+        leadingWidth: 40,
+        backgroundColor: Colors.white,
+        leading: InkWell(
+          onTap: () => Get.back(),
+          radius: 12,
+          child: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: Colors.black,
+          ),
+        ),
         title: const Text(
-          'Become A Vendor',
+          'Become a Vendor',
           style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.w900,
             color: Colors.black,
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
+            fontFamily: 'Lato',
           ),
         ),
-        leading: IconButton(
-          onPressed: () => Get.back(),
-          icon: const Icon(
-            Icons.arrow_back_ios_rounded,
-            color: Colors.black,
-            size: 24,
-          ),
-        ),
+        centerTitle: false,
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -100,42 +114,38 @@ class _BecomeAVendorPageState extends State<BecomeAVendorPage> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: Colors.black,
-                    width: 1,
+                    color: Colors.black.withOpacity(0.75),
+                    width: 0.6,
                   ),
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black,
-                      blurStyle: BlurStyle.normal,
-                      offset: Offset.fromDirection(-4.0),
-                      blurRadius: 0,
-                    ),
-                    BoxShadow(
-                      color: Colors.black,
-                      blurStyle: BlurStyle.normal,
-                      offset: Offset.fromDirection(-2.0),
-                      blurRadius: 0,
-                    ),
-                  ],
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Shop Info",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Shop Info",
+                        style: TextStyle(
+                          color: Colors.black.withOpacity(0.65),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Lato',
+                        ),
                       ),
+                    ),
+                    const SizedBox(
+                      height: 8,
                     ),
                     TextInputWidget(
                       controller: shopNameController,
                       labelText: "Shop Name",
+                      labelColor: const Color(0xFF673AB7).withOpacity(0.50),
                       hintText: "",
                       maxLines: 3,
                       minLines: 1,
+                      fontSize: 15,
                       textInputType: TextInputType.text,
                       validator: (value) {
                         if (value!.isEmpty) {
@@ -149,117 +159,108 @@ class _BecomeAVendorPageState extends State<BecomeAVendorPage> {
                         });
                       },
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black,
-                      blurStyle: BlurStyle.normal,
-                      offset: Offset.fromDirection(-4.0),
-                      blurRadius: 1,
+                    const SizedBox(
+                      height: 8,
                     ),
-                    BoxShadow(
-                      color: Colors.black,
-                      blurStyle: BlurStyle.normal,
-                      offset: Offset.fromDirection(-2.0),
-                      blurRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Contact Info",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    BuildPicker(
+                      labelColor: const Color(0xFF673AB7).withOpacity(0.50),
+                      label: 'State',
+                      hintText: 'Select',
+                      labelFontSize: 15,
+                      items: countryAndStatesAndLocalGovernment.statesList,
+                      selectedValue: state,
+                      onChanged: (val) {
+                        setState(() {
+                          state = val;
+                          localGovernment = null;
+                        });
+                      },
                     ),
                     const SizedBox(
-                      height: 4,
+                      height: 14,
                     ),
-                    buildPicker(
-                      "Country",
-                      countryAndStatesAndLocalGovernment.countryList,
-                      vendor.contactInfo!["country"] ?? "select",
-                      (val) => setState(() {
-                        country = val;
-                        vendor.contactInfo!["country"] = country;
-                        vendor.contactInfo!["state"] = null;
-                      }),
-                    ),
-                    const SizedBox(
-                      height: 4,
-                    ),
-                    buildPicker(
-                      "State",
-                      countryAndStatesAndLocalGovernment.statesList,
-                      vendor.contactInfo!["state"] ?? "select",
-                      (val) => setState(() {
-                        state = val;
-                        vendor.contactInfo!["state"] = state;
-                        vendor.contactInfo!["local government"] = null;
-                      }),
-                    ),
-                    const SizedBox(
-                      height: 4,
-                    ),
-                    buildPicker(
-                      "Local Government",
-                      countryAndStatesAndLocalGovernment
-                              .stateAndLocalGovernments["$state"] ??
+                    BuildPicker(
+                      labelColor: const Color(0xFF673AB7).withOpacity(0.50),
+                      label: 'L.G.A',
+                      hintText: 'Select',
+                      labelFontSize: 15,
+                      items: countryAndStatesAndLocalGovernment
+                              .stateAndLocalGovernments[state] ??
                           [],
-                      vendor.contactInfo!["local government"] ?? "select",
-                      (val) => setState(() {
-                        localGovernment = val;
-                        vendor.contactInfo!["local government"] =
-                            localGovernment;
-                      }),
+                      selectedValue: localGovernment,
+                      onChanged: (val) {
+                        setState(() {
+                          localGovernment = val;
+                        });
+                      },
                     ),
                     const SizedBox(
-                      height: 4,
+                      height: 14,
                     ),
                     TextInputWidget(
                       controller: streetAddressController,
                       labelText: "Street Address",
+                      labelColor: const Color(0xFF673AB7).withOpacity(0.50),
                       hintText: "",
                       maxLines: 3,
                       minLines: 1,
+                      fontSize: 15,
                       textInputType: TextInputType.text,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Enter the address of your shop";
+                          return "Please Enter Your Shop Name";
                         }
                         return null;
                       },
                       onChanged: (val) {
                         setState(() {
-                          vendor.contactInfo!['street address'] = val!;
+                          vendor.contactInfo!['street address'] = val;
                         });
                       },
                     ),
                     const SizedBox(
-                      height: 4,
+                      height: 6,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black.withOpacity(0.75),
+                    width: 0.6,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Contact Details",
+                        style: TextStyle(
+                          color: Colors.black.withOpacity(0.65),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Lato',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 8,
                     ),
                     TextInputWidget(
                       controller: phoneNumberController,
                       labelText: "Phone Number",
+                      fontSize: 15,
                       hintText: "",
+                      labelColor: Color(0xFF673AB7).withOpacity(0.50),
                       maxLines: 1,
                       textInputType: TextInputType.number,
                       validator: (value) {
@@ -279,58 +280,207 @@ class _BecomeAVendorPageState extends State<BecomeAVendorPage> {
                       },
                     ),
                     const SizedBox(
-                      height: 4,
+                      height: 6,
                     ),
                   ],
                 ),
               ),
               const SizedBox(
-                height: 12,
+                height: 16,
               ),
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: Colors.black,
-                    width: 1,
+                    color: Colors.black.withOpacity(0.75),
+                    width: 0.6,
                   ),
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black,
-                      blurStyle: BlurStyle.normal,
-                      offset: Offset.fromDirection(-4.0),
-                      blurRadius: 1,
-                    ),
-                    BoxShadow(
-                      color: Colors.black,
-                      blurStyle: BlurStyle.normal,
-                      offset: Offset.fromDirection(-2.0),
-                      blurRadius: 1,
-                    ),
-                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextInputWidget(
-                      controller: bankNameController,
-                      labelText: "Bank Name",
-                      hintText: "First Bank",
-                      maxLines: 1,
-                      textInputType: TextInputType.text,
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Bank Details",
+                        style: TextStyle(
+                          color: Colors.black.withOpacity(0.65),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Lato',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    const Text(
+                      "Bank Name",
+                      style: TextStyle(
+                        color: Color(0xFF673AB7),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Raleway',
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 4,
+                    ),
+                    DropdownSearch(
+                      dropdownButtonProps: const DropdownButtonProps(
+                        icon: Iconify(
+                          Ic.baseline_keyboard_arrow_down,
+                          size: 24,
+                          color: Colors.black,
+                        ),
+                      ),
+                      dropdownBuilder: (context, selectedItem) =>
+                          selectedItem == null
+                              ? Text(
+                                  "Select Bank",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontFamily: 'Lato',
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black.withOpacity(0.45),
+                                  ),
+                                )
+                              : Text(
+                                  selectedItem.toString().capitalizeFirst!,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontFamily: 'Lato',
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                      popupProps: PopupProps.dialog(
+                        fit: FlexFit.loose,
+                        itemBuilder: (context, item, isSelected) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Text(
+                            "${item.toString().capitalizeFirst}",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontFamily: 'Raleway',
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        containerBuilder: (context, popupWidget) => Container(
+                          //height: 400,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white,
+                          ),
+                          child: popupWidget,
+                        ),
+                        searchFieldProps: TextFieldProps(
+                          //expands: true,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 0,
+                            vertical: 6,
+                          ),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            hintText: "Search",
+                            hintStyle: TextStyle(
+                              fontSize: 14,
+                              fontFamily: 'Raleway',
+                              fontWeight: FontWeight.w300,
+                              color: Colors.black.withOpacity(0.55),
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              size: 20,
+                              color: Colors.black.withOpacity(0.55),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.black.withOpacity(0.35),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Color(0xFF673AB7), width: 1.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                        title: const Text(
+                          "Select Bank",
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontFamily: 'Raleway',
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                        listViewProps: const ListViewProps(
+                          primary: false,
+                          shrinkWrap: true,
+                        ),
+                        showSearchBox: true,
+                      ),
+                      items: banksandCodes.keys.toList(),
                       validator: (value) {
-                        if (value!.isEmpty) {
-                          return "Enter your bank name";
+                        if (value.toString().isEmpty) {
+                          return "Please choose your Bank name";
                         }
                         return null;
                       },
-                      onChanged: (val) {
+                      onChanged: (value) {
                         setState(() {
-                          vendor.accountInfo!['bank name'] = val;
+                          bankName = value.toString();
+                          if (bankName != null) {
+                            vendor.accountInfo!['bank name'] = bankName;
+                            bankCode = banksandCodes[bankName];
+                            vendor.accountInfo!['bank code'] = bankCode;
+                          }
                         });
                       },
+                      dropdownDecoratorProps: DropDownDecoratorProps(
+                        dropdownSearchDecoration: InputDecoration(
+                          filled: true,
+                          fillColor: Color(0xFFf5f5f5),
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          hintText: "Select Bank",
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.black.withOpacity(0.35),
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                                color: Color(0xFF673AB7), width: 1.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          hintStyle: TextStyle(
+                            fontFamily: 'Lato',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black.withOpacity(0.45),
+                          ),
+                        ),
+                        baseStyle: const TextStyle(
+                          fontFamily: 'Lato',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      ),
                     ),
                     const SizedBox(
                       height: 4,
@@ -340,6 +490,8 @@ class _BecomeAVendorPageState extends State<BecomeAVendorPage> {
                       labelText: "Account Number",
                       hintText: "",
                       maxLines: 1,
+                      fontSize: 15,
+                      labelColor: Color(0xFF673AB7).withOpacity(0.50),
                       textInputType: TextInputType.number,
                       validator: (value) {
                         if (value!.isEmpty) {
@@ -365,6 +517,8 @@ class _BecomeAVendorPageState extends State<BecomeAVendorPage> {
                       labelText: "Account Name",
                       hintText: "",
                       maxLines: 1,
+                      fontSize: 15,
+                      labelColor: Color(0xFF673AB7).withOpacity(0.50),
                       textInputType: TextInputType.text,
                       validator: (value) {
                         if (value!.isEmpty) {
@@ -373,60 +527,73 @@ class _BecomeAVendorPageState extends State<BecomeAVendorPage> {
                         return null;
                       },
                       onChanged: (val) {
-                        vendor.accountInfo!['account name'] = val;
+                        setState(() {
+                          vendor.accountInfo!['account name'] = val;
+                        });
                       },
+                    ),
+                    const SizedBox(
+                      height: 6,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(
-                height: 20,
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () async {
-                    bool? validate = formKey.currentState!.validate();
-                    if (validate) {
-                      if (state == null ||
-                          country == null ||
-                          localGovernment == null) {
-                        userController
-                            .showMyToast("Please Select a Country and State");
-                      } else if (state == "select" ||
-                          country == "select" ||
-                          localGovernment == "select") {
-                        userController
-                            .showMyToast("Please Select a Country and State");
-                      } else {
-                        userController.isLoading.value = true;
-                        if (userController.isLoading.value) {
-                          Get.dialog(const LoadingWidget(),
-                              barrierDismissible: false);
-                        }
-                        vendor.userID = userController.userState.value!.uid;
-                        formKey.currentState!.save();
-                        await userController.becomeASeller(vendor);
-                      }
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: BottomAppBar(
+          height: kToolbarHeight,
+          elevation: 0,
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () async {
+                bool? validate = formKey.currentState!.validate();
+                if (validate) {
+                  if (state == null ||
+                      country == null ||
+                      localGovernment == null) {
+                    userController
+                        .showMyToast("Please Select a Country and State");
+                  } else if (state == "select" ||
+                      country == "select" ||
+                      localGovernment == "select") {
+                    userController
+                        .showMyToast("Please Select a Country and State");
+                  } else {
+                    userController.isLoading.value = true;
+                    if (userController.isLoading.value) {
+                      Get.dialog(const LoadingWidget(),
+                          barrierDismissible: false);
                     }
-                  },
-                  style: TextButton.styleFrom(
-                    // padding: EdgeInsets.symmetric(
-                    //     horizontal: screenWidth * 0.24),
-                    backgroundColor: Colors.black,
-                    side: const BorderSide(color: Colors.white, width: 2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    "Submit Request",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
+                    vendor.userID = userController.userState.value!.uid;
+                    formKey.currentState!.save();
+                    await userController.becomeASeller(vendor);
+                  }
+                }
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                backgroundColor: const Color(0xFF673AB7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-            ],
+              child: const Text(
+                "Submit Request",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ),
       ),

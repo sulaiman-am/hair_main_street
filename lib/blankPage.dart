@@ -12,8 +12,10 @@ class BlankPage extends StatelessWidget {
   final Widget? interactionIcon;
   final ButtonStyle? buttonStyle;
   final TextStyle? textStyle;
+  final TextStyle? textTextStyle;
   BlankPage({
     this.haveAppBar,
+    this.textTextStyle,
     super.key,
     this.buttonStyle,
     this.textStyle,
@@ -79,12 +81,13 @@ class BlankPage extends StatelessWidget {
                 text ?? "text goes here",
                 //overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  //fontFamily: 'Manrope',
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                ),
+                style: textTextStyle ??
+                    const TextStyle(
+                      //fontFamily: 'Manrope',
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
               ),
               const SizedBox(
                 height: 20,

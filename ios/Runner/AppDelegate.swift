@@ -1,5 +1,6 @@
 import UIKit
 import Flutter
+import app_links
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -16,6 +17,13 @@ import Flutter
       UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
     }
     GeneratedPluginRegistrant.register(with: self)
+     // Retrieve the link from parameters
+    if let url = AppLinks.shared.getLink(launchOptions: launchOptions) {
+      // We have a link, propagate it to your Flutter app
+      AppLinks.shared.handleLink(url: url)
+      return true // Returning true will stop the propagation to other packages
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

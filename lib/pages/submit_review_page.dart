@@ -11,8 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class SubmitReviewPage extends StatefulWidget {
-  String? productID;
-  SubmitReviewPage({this.productID, Key? key}) : super(key: key);
+  final String? productID;
+  const SubmitReviewPage({this.productID, super.key});
 
   @override
   _SubmitReviewPageState createState() => _SubmitReviewPageState();

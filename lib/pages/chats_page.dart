@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/chatController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/models/auxModels.dart';
 import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/cards.dart';
@@ -40,6 +41,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    // String? currentUserUid = userController.userState.value!.uid!;
     // List<DatabaseChatResponse> sortedList = [];
     // for (var element in chatController.myChats) {
     //   var sortedChats = element!.messages!
@@ -55,10 +57,12 @@ class _ChatPageState extends State<ChatPage> {
       () => Scaffold(
         appBar: AppBar(
           title: const Text(
-            "My Chats",
+            "Chats",
             style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
+              fontFamily: 'Lato',
+              color: Colors.black,
+              fontSize: 25,
+              fontWeight: FontWeight.w700,
             ),
           ),
           centerTitle: true,
@@ -77,33 +81,13 @@ class _ChatPageState extends State<ChatPage> {
               //print("hello");
               if (chatController.myChats.isEmpty) {
                 return BlankPage(
-                  textStyle: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
+                  textTextStyle: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 25,
+                    fontFamily: 'Raleway',
+                    fontWeight: FontWeight.w400,
                   ),
-                  // buttonStyle: ElevatedButton.styleFrom(
-                  //   backgroundColor: Color(0xFF392F5A),
-                  //   shape: RoundedRectangleBorder(
-                  //     side: const BorderSide(
-                  //       width: 1.2,
-                  //       color: Colors.black,
-                  //     ),
-                  //     borderRadius: BorderRadius.circular(16),
-                  //   ),
-                  // ),
-                  pageIcon: const Icon(
-                    Icons.do_disturb_alt_rounded,
-                    size: 48,
-                  ),
-                  text: "You Have No Chats",
-                  // interactionText: "Add Products",
-                  // interactionIcon: const Icon(
-                  //   Icons.person_2_outlined,
-                  //   size: 24,
-                  //   color: Colors.white,
-                  // ),
-                  // interactionFunction: () =>
-                  //     Get.to(() => AddproductPage()),
+                  text: "No Chats Yet",
                 );
               } else {
                 return ListView.builder(
@@ -111,31 +95,36 @@ class _ChatPageState extends State<ChatPage> {
                     shrinkWrap: true,
                     itemCount: chatController.myChats.length,
                     itemBuilder: (context, index) {
-                      var displayID = whoToDisplay(index);
                       String? nameToDisplay = "";
-                      someFunction() async {
-                        MyUser? userDetails =
-                            await userController.getUserDetails(displayID!);
-                        if (userDetails!.isVendor!) {
-                          var vendorData = await userController
-                              .getVendorDetailsFuture(userDetails.uid!);
-                          nameToDisplay = vendorData!.shopName;
-                        } else {
-                          nameToDisplay = userDetails.fullname;
-                        }
+                      Future<Map<String, MessagePageData>>
+                          someFunction() async {
+                        MessagePageData member1 =
+                            await chatController.resolveNameToDisplay(
+                                chatController.myChats[index]!.member1!);
+                        MessagePageData member2 =
+                            await chatController.resolveNameToDisplay(
+                                chatController.myChats[index]!.member2!);
+
+                        return {"member1": member1, "member2": member2};
                       }
 
-                      someFunction();
-
                       return FutureBuilder(
-                          future: someFunction(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {}
+                        future: someFunction(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const Text("Loading...");
+                          } else {
                             return ChatsCard(
                               index: index,
                               nameToDisplay: nameToDisplay,
+                              member1: snapshot.data?["member1"] ??
+                                  MessagePageData(),
+                              member2: snapshot.data?["member2"] ??
+                                  MessagePageData(),
                             );
-                          });
+                          }
+                        },
+                      );
                     });
               }
             } else {

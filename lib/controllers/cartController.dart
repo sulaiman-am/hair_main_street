@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:get/get_rx/get_rx.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
@@ -27,9 +25,9 @@ class CartController extends GetxController {
 
   updateCheckoutList(CartItem cartitem) {
     //fetchCart();
-    CheckOutController checkOutController = Get.find<CheckOutController>();
     UserController userController = Get.find<UserController>();
-    MyUser user = userController.myUser.value;
+    CheckOutController checkOutController = Get.find<CheckOutController>();
+    MyUser user = userController.userState.value!;
 
     var index = checkOutController.checkoutList
         .indexWhere((element) => element.productID == cartitem.productID);
@@ -44,6 +42,8 @@ class CartController extends GetxController {
       );
       print(
           "checkoutlist data: ${checkOutController.checkoutList[index].price}");
+      //update();
+      checkOutController.getTotalPriceAndTotalQuantity();
       //checkOutController.checkoutList.refresh();
     } else {
       print("cannot update");

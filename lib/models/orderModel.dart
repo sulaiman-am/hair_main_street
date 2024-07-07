@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hair_main_street/models/productModel.dart';
+import 'package:hair_main_street/models/userModel.dart';
 
 Orders ordersFromJson(String str) => Orders.fromJson(json.decode(str));
 
@@ -12,24 +14,28 @@ class Orders {
   String? buyerId;
   String? vendorId;
   num? totalPrice;
-  String? shippingAddress;
+  Address? shippingAddress;
   int? installmentNumber;
   int? installmentPaid;
   String? orderStatus;
+  String? refundStatus;
   Timestamp? createdAt;
   Timestamp? updatedAt;
   String? paymentMethod;
   String? paymentStatus;
+  String? recipientCode;
   List<String?>? transactionID;
 
   Orders({
     this.orderId,
     this.paymentPrice,
+    this.refundStatus,
     this.buyerId,
     this.vendorId,
     this.totalPrice,
     this.shippingAddress,
     this.installmentNumber,
+    this.recipientCode,
     this.installmentPaid,
     this.orderStatus,
     this.createdAt,
@@ -46,9 +52,12 @@ class Orders {
       buyerId: json['buyerID'],
       vendorId: json['vendorID'],
       totalPrice: json['totalPrice'],
-      shippingAddress: json['shipping address'],
+      shippingAddress: json['shipping address'] != null
+          ? Address.fromJson(json['shipping address'])
+          : null,
       installmentNumber: json['installment number'],
       installmentPaid: json['installment paid'],
+      refundStatus: json['refund status'],
       orderStatus: json['order status'],
       createdAt: json['created at'] != null
           ? Timestamp.fromMillisecondsSinceEpoch(json['created at'])
@@ -56,6 +65,7 @@ class Orders {
       updatedAt: json['updatedAt'] != null
           ? Timestamp.fromMillisecondsSinceEpoch(json['updated at'])
           : null,
+      recipientCode: json['recipient code'],
       paymentMethod: json['payment method'],
       paymentStatus: json['payment status'],
       transactionID: json['transactionID'] != null
@@ -75,6 +85,7 @@ class Orders {
       'installment number': installmentNumber,
       'installment paid': installmentPaid,
       'order status': orderStatus,
+      'refund status': refundStatus,
       'created at': createdAt?.millisecondsSinceEpoch,
       'updated at': updatedAt?.millisecondsSinceEpoch,
       'payment method': paymentMethod,
@@ -92,23 +103,27 @@ class OrderItem {
   String? productId;
   String? quantity;
   String? price;
+  String? optionName;
 
   OrderItem({
     this.productId,
     this.quantity,
     this.price,
+    this.optionName,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) => OrderItem(
         productId: json["productID"],
         quantity: json["quantity"],
         price: json["price"],
+        optionName: json["option"],
       );
 
   Map<String, dynamic> toJson() => {
         "productID": productId,
         "quantity": quantity,
         "price": price,
+        "option": optionName!,
       };
 }
 
@@ -123,10 +138,12 @@ class DatabaseOrderResponse {
   String? buyerId;
   String? vendorId;
   num? totalPrice;
-  String? shippingAddress;
+  String? recipientCode;
+  Address? shippingAddress;
   int? installmentNumber;
   int? installmentPaid;
   String? orderStatus;
+  String? refundStatus;
   dynamic createdAt;
   dynamic updatedAt;
   String? paymentMethod;
@@ -139,10 +156,12 @@ class DatabaseOrderResponse {
       this.createdAt,
       this.installmentNumber,
       this.installmentPaid,
+      this.recipientCode,
       this.orderId,
       this.orderStatus,
       this.paymentMethod,
       this.paymentPrice,
+      this.refundStatus,
       this.paymentStatus,
       this.orderItem,
       this.shippingAddress,
@@ -151,35 +170,42 @@ class DatabaseOrderResponse {
       this.updatedAt,
       this.vendorId});
 
-  factory DatabaseOrderResponse.fromJson(Map<String, dynamic> json) =>
-      DatabaseOrderResponse(
-        orderId: json["orderID"],
-        buyerId: json["buyerID"],
-        vendorId: json["vendorID"],
-        totalPrice: json["totalPrice"],
-        shippingAddress: json["shipping address"],
-        orderStatus: json["order status"],
-        createdAt: json["created at"],
-        updatedAt: json["updated at"],
-        installmentNumber: json["installment number"],
-        installmentPaid: json["installment paid"],
-        paymentMethod: json['payment method'],
-        paymentStatus: json['payment status'],
-        transactionID: json['transactionID'] != null
-            ? List<String?>.from(json['transactionID'])
-            : null,
-        paymentPrice: json['payment price'],
-        orderItem: List<OrderItem>.from(json["orderItems"].map((x) => x)),
-      );
+  factory DatabaseOrderResponse.fromJson(Map<String, dynamic> json) {
+    return DatabaseOrderResponse(
+      orderId: json["orderID"],
+      buyerId: json["buyerID"],
+      vendorId: json["vendorID"],
+      totalPrice: json["totalPrice"],
+      recipientCode: json['recipient code'],
+      // shippingAddress: json["shipping address"] != null
+      //     ? json['shipping address'].map((element) => Address.fromJson(element))
+      //     : null,
+      orderStatus: json["order status"],
+      createdAt: json["created at"],
+      refundStatus: json['refund status'],
+      updatedAt: json["updated at"],
+      installmentNumber: json["installment number"],
+      installmentPaid: json["installment paid"],
+      paymentMethod: json['payment method'],
+      paymentStatus: json['payment status'],
+      transactionID: json['transactionID'] != null
+          ? List<String?>.from(json['transactionID'])
+          : null,
+      paymentPrice: json['payment price'],
+      orderItem: List<OrderItem>.from(json["orderItems"].map((x) => x)),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "orderID": orderId,
         "payment price": paymentPrice,
         "buyerID": buyerId,
+        'refund status': refundStatus,
         "vendorID": vendorId,
         "totalPrice": totalPrice,
-        "shipping address": shippingAddress,
+        "shipping address": shippingAddress!.toJson(),
         "order status": orderStatus,
+        "recipient code": recipientCode,
         "created at": createdAt,
         "updated at": updatedAt,
         "transactionID": transactionID,

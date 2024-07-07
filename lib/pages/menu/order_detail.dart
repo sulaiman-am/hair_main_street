@@ -1,17 +1,19 @@
 // ignore_for_file: prefer_const_constructors
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/pages/cancellation_page.dart';
 import 'package:hair_main_street/pages/orders_stuff/payment_page.dart';
+import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/submit_review_page.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/loading.dart';
 
-import 'dart:ffi';
 import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
@@ -19,14 +21,13 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/models/orderModel.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/pages/messages.dart';
-import 'package:hair_main_street/pages/product_page.dart';
 import 'package:hair_main_street/pages/refund.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class OrderDetailsPage extends StatefulWidget {
-  DatabaseOrderResponse? orderDetails;
-  Product? product;
-  OrderDetailsPage({this.product, this.orderDetails, super.key});
+  final DatabaseOrderResponse? orderDetails;
+  final Product? product;
+  const OrderDetailsPage({this.product, this.orderDetails, super.key});
 
   @override
   State<OrderDetailsPage> createState() => _OrderDetailsPageState();
@@ -35,7 +36,7 @@ class OrderDetailsPage extends StatefulWidget {
 class _OrderDetailsPageState extends State<OrderDetailsPage> {
   CheckOutController checkOutController = Get.find<CheckOutController>();
   UserController userController = Get.find<UserController>();
-  var installmentDuration;
+  num? installmentDuration;
 
   @override
   void initState() {
@@ -84,7 +85,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       DateTime newDateTime = dateTime.add(Duration(days: daysToAdd));
 
       // Format the DateTime without the time part
-      String formattedDate = DateFormat('yyyy-MM-dd').format(newDateTime);
+      String formattedDate = DateFormat('dd-MM-yyyy').format(newDateTime);
 
       return formattedDate;
     }
@@ -93,35 +94,34 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       orderId: widget.orderDetails!.orderId,
       paymentStatus: widget.orderDetails!.paymentStatus,
       paymentMethod: widget.orderDetails!.paymentMethod,
-      shippingAddress: widget.orderDetails!.shippingAddress,
+      shippingAddress: widget.orderDetails!.shippingAddress != null
+          ? widget.orderDetails!.shippingAddress!
+          : Address(),
     );
 
-    Gradient myGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 255, 224, 139),
-        Color.fromARGB(255, 200, 242, 237)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
-    Gradient appBarGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 200, 242, 237),
-        Color.fromARGB(255, 255, 224, 139)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
+    String formatCurrency(String numberString) {
+      final number =
+          double.tryParse(numberString) ?? 0.0; // Handle non-numeric input
+      final formattedNumber =
+          number.toStringAsFixed(2); // Format with 2 decimals
+
+      // Split the number into integer and decimal parts
+      final parts = formattedNumber.split('.');
+      final intPart = parts[0];
+      final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+      // Format the integer part with commas for every 3 digits
+      final formattedIntPart = intPart.replaceAllMapped(
+        RegExp(r'\d{1,3}(?=(\d{3})+(?!\d))'),
+        (match) => '${match.group(0)},',
+      );
+
+      // Combine the formatted integer and decimal parts
+      final formattedResult = formattedIntPart + decimalPart;
+
+      return formattedResult;
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -130,19 +130,26 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               size: 24, color: Colors.black),
         ),
         title: const Text(
-          'Order Details',
+          'Order Detail',
           style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w900,
+            fontSize: 25,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'Lato',
             color: Colors.black,
           ),
         ),
         centerTitle: true,
-        // flexibleSpace: Container(
-        //   decoration: BoxDecoration(gradient: appBarGradient),
-        // ),
-        //backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0), // Adjust height as needed
+          child: Divider(
+            thickness: 1.0, // Adjust thickness as needed
+            color: Colors.black.withOpacity(0.2), // Adjust color as needed
+          ),
+        ),
       ),
+      backgroundColor: Colors.white,
       body: FutureBuilder(
           future: DataBaseService()
               .getVendorDetailsFuture(userID: widget.orderDetails!.vendorId!),
@@ -150,168 +157,157 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             if (!snapshot.hasData) {
               return LoadingWidget();
             }
-            return Container(
-              //decoration: BoxDecoration(gradient: myGradient),
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: ListView(
-                padding: const EdgeInsets.only(top: 12, bottom: 12),
+            return SingleChildScrollView(
+              //padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Column(
                 children: [
-                  // Container(
-                  //   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  //   decoration: BoxDecoration(
-                  //     color: Colors.grey[200],
-                  //     borderRadius: BorderRadius.circular(12),
-                  //     border: Border.all(
-                  //       width: 2,
-                  //       color: Color(0xFF392F5A),
-                  //     ),
-                  //     boxShadow: [
-                  //       BoxShadow(
-                  //         color: Color(0xFF000000),
-                  //         blurStyle: BlurStyle.normal,
-                  //         offset: Offset.zero,
-                  //         blurRadius: 2,
-                  //       ),
-                  //     ],
-                  //   ),
-                  //   child: Column(
-                  //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  //     crossAxisAlignment: CrossAxisAlignment.start,
-                  //     children: [
-                  //       Row(
-                  //         mainAxisAlignment: MainAxisAlignment.start,
-                  //         children: [
-                  //           HeaderText(
-                  //             text: "Delivery Status: ",
-                  //           ),
-                  //           Expanded(
-                  //             child: Text(
-                  //               "Awaiting Confirmation",
-                  //               style: TextStyle(
-                  //                   color: Colors.black,
-                  //                   fontSize: 16,
-                  //                   overflow: TextOverflow.ellipsis,
-                  //                   fontWeight: FontWeight.w600),
-                  //               //overflow: TextOverflow.ellipsis,
-                  //               maxLines: 2,
-                  //             ),
-                  //           ),
-                  //         ],
-                  //       ),
-                  //       const Text(
-                  //         "Complying with company policy, all deliveries are automatically confirmed 72hrs after order placement",
-                  //         style: TextStyle(
-                  //           color: Colors.black,
-                  //           fontSize: 16,
-                  //         ),
-                  //         maxLines: 3,
-                  //         overflow: TextOverflow.ellipsis,
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
-                  // const SizedBox(
-                  //   height: 16,
-                  // ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        width: 2,
-                        color: Color(0xFF392F5A),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF000000),
-                          blurStyle: BlurStyle.normal,
-                          offset: Offset.fromDirection(-4.0),
-                          blurRadius: 2,
-                        ),
-                      ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         GestureDetector(
                           onTap: () {
-                            // Get.to(
-                            //   () => ProductPage(),
-                            //   transition: Transition.fadeIn,
-                            // );
+                            Get.to(
+                              () => ProductPage(
+                                id: widget
+                                    .orderDetails!.orderItem![0].productId,
+                              ),
+                              transition: Transition.fadeIn,
+                            );
                             //debugPrint("Clicked");
                           },
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black45,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                width: screenWidth * 0.32,
-                                height: screenHeight * 0.16,
-                                child: Image.network(
-                                  widget.product?.image?.isNotEmpty == true
-                                      ? widget.product!.image!.first
-                                      : "https://firebasestorage.googleapis.com/v0/b/hairmainstreet.appspot.com/o/productImage%2Fnot%20available.jpg?alt=media&token=ea001edd-ec0f-4ffb-9a2d-efae1a28fc40",
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                // decoration: BoxDecoration(
+                                //   color: Colors.black45,
+                                // ),
+                                // width: screenWidth * 0.32,
+                                // height: screenHeight * 0.16,
+                                child: CachedNetworkImage(
+                                  imageBuilder: (context, imageProvider) =>
+                                      Container(
+                                    height: 140,
+                                    width: 123,
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  fit: BoxFit.fill,
+                                  imageUrl: widget.product?.image == null ||
+                                          widget.product?.image!.isNotEmpty ==
+                                              true
+                                      ? widget.product?.image!.first
+                                      : 'https://firebasestorage.googleapis.com/v0/b/hairmainstreet.appspot.com/o/productImage%2FImage%20Not%20Available.jpg?alt=media&token=0104c2d8-35d3-4e4f-a1fc-d5244abfeb3f',
+                                  errorWidget: ((context, url, error) =>
+                                      Text("Failed to Load Image")),
+                                  placeholder: ((context, url) => const Center(
+                                        child: CircularProgressIndicator(),
+                                      )),
                                 ),
                               ),
                               const SizedBox(
                                 width: 12,
                               ),
                               Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "${widget.product!.name}",
-                                      maxLines: 4,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(
-                                      height: 8,
-                                    ),
-                                    Text(
-                                      "NGN ${widget.product!.price}",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(
-                                      height: 8,
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "Quantity",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
+                                child: SizedBox(
+                                  height: 140,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "${widget.product!.name}",
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          fontFamily: 'Lato',
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                        SizedBox(
-                                          width: 30,
-                                        ),
-                                        Text(
-                                          "x${widget.orderDetails!.orderItem!.first.quantity}",
-                                          style: TextStyle(
-                                            fontSize: 14,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Order Quantity:",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w400,
+                                              fontFamily: 'Raleway',
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          overflow: TextOverflow.ellipsis,
-                                        )
-                                      ],
-                                    ),
-                                  ],
+                                          SizedBox(
+                                            width: 12,
+                                          ),
+                                          Text(
+                                            "${widget.orderDetails!.orderItem!.first.quantity}",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                              fontFamily: 'Raleway',
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          )
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          widget.orderDetails!.paymentStatus ==
+                                                  "paid"
+                                              ? Icon(
+                                                  Icons
+                                                      .check_circle_outline_outlined,
+                                                  color: Colors.green[400],
+                                                  size: 20,
+                                                )
+                                              : Icon(
+                                                  Icons.pending_outlined,
+                                                  color: Colors.black,
+                                                  size: 20,
+                                                ),
+                                          SizedBox(
+                                            width: 12,
+                                          ),
+                                          Text(
+                                            "${widget.orderDetails!.paymentStatus}",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                              fontFamily: 'Raleway',
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
@@ -319,6 +315,123 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         ),
                         SizedBox(
                           height: 8,
+                        ),
+                        ExpansionTile(
+                          initiallyExpanded: true,
+                          tilePadding: EdgeInsets.symmetric(horizontal: 0),
+                          backgroundColor: Colors.white,
+                          iconColor: Colors.black,
+                          collapsedIconColor: Colors.black,
+                          childrenPadding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 0),
+                          title: const Text(
+                            "Order Info",
+                            style: TextStyle(
+                              fontFamily: 'Lato',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                          children: [
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      "Order ID: ",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    Text("${widget.orderDetails!.orderId}")
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "Order Status: ",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    Text("${widget.orderDetails!.orderStatus}")
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  children: [
+                                    Text("Placed at: ",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600)),
+                                    Text(
+                                        "${resolveTimestampWithoutAdding(widget.orderDetails!.createdAt)}")
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  children: [
+                                    Text("Payment Method: ",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600)),
+                                    Text(
+                                        "${widget.orderDetails!.paymentMethod}")
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  children: [
+                                    Text("Payment Price: ",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600)),
+                                    Text(
+                                        "₦${widget.orderDetails!.paymentPrice}")
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Row(
+                                  children: [
+                                    Text("Delivery Address: ",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600)),
+                                    // Expanded(
+                                    //   child: Text(
+                                    //     "${widget.orderDetails?.shippingAddress!.landmark ?? ""},${widget.orderDetails?.shippingAddress!.streetAddress},${widget.orderDetails?.shippingAddress!.lGA},${widget.orderDetails?.shippingAddress!.state}.${widget.orderDetails?.shippingAddress!.zipCode ?? ""}",
+                                    //     maxLines: 3,
+                                    //   ),
+                                    // ),
+                                  ],
+                                ),
+                              ],
+                            )
+                          ],
+                          // subtitle: Text(
+                          //   "${product?.options?.length ?? 0} product options",
+                          //   style: TextStyle(
+                          //     fontFamily: 'Lato',
+                          //     fontSize: 13,
+                          //     fontWeight: FontWeight.w500,
+                          //     color: Colors.black.withOpacity(0.50),
+                          //   ),
+                          // ),
+                        ),
+                        const SizedBox(
+                          height: 20,
                         ),
                         Container(
                           padding: EdgeInsets.all(8),
@@ -364,6 +477,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                     Get.to(
                                       () => CancellationPage(
                                         orderId: widget.orderDetails!.orderId!,
+                                        paymentAmount:
+                                            widget.orderDetails!.paymentPrice!,
                                       ),
                                       transition: Transition.fadeIn,
                                     );
@@ -405,6 +520,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                     Get.to(
                                       () => RefundPage(
                                         orderId: widget.orderDetails!.orderId!,
+                                        paymentAmount:
+                                            widget.orderDetails!.paymentPrice!,
                                       ),
                                       transition: Transition.fadeIn,
                                     );
@@ -439,156 +556,156 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   const SizedBox(
                     height: 16,
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        width: 2,
-                        color: Color(0xFF392F5A),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF000000),
-                          blurStyle: BlurStyle.normal,
-                          offset: Offset.fromDirection(-4.0),
-                          blurRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        HeaderText(
-                          text: "Order Info",
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              "Order ID: ",
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
-                            Text("${widget.orderDetails!.orderId}")
-                          ],
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              "Order Status: ",
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
-                            Text("${widget.orderDetails!.orderStatus}")
-                          ],
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        Row(
-                          children: [
-                            Text("Placed at: ",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600)),
-                            Text(
-                                "${resolveTimestampWithoutAdding(widget.orderDetails!.createdAt)}")
-                          ],
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        Row(
-                          children: [
-                            Text("Payment Status: ",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600)),
-                            Text("${widget.orderDetails!.paymentStatus}")
-                          ],
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        Row(
-                          children: [
-                            Text("Payment Method: ",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600)),
-                            Text("${widget.orderDetails!.paymentMethod}")
-                          ],
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        Row(
-                          children: [
-                            Text("Payment Price: ",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600)),
-                            Text("₦${widget.orderDetails!.paymentPrice}")
-                          ],
-                        ),
-                        SizedBox(
-                          height: 8,
-                        ),
-                        Row(
-                          children: [
-                            Text("Delivery Address: ",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600)),
-                            Expanded(
-                              child: Text(
-                                "${widget.orderDetails!.shippingAddress}",
-                                maxLines: 3,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Divider(
-                          height: 7,
-                          color: Colors.black,
-                        ),
-                        SizedBox(
-                          width: double.infinity,
-                          child: TextButton(
-                            onPressed: () {
-                              Get.to(
-                                () => MessagesPage(
-                                  senderID: widget.orderDetails!.buyerId,
-                                  receiverID: widget.orderDetails!.vendorId,
-                                ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: const BorderSide(
-                                  width: 1.5,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                            child: Text(
-                              "Contact Vendor",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Container(
+                  //   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.grey[200],
+                  //     borderRadius: BorderRadius.circular(12),
+                  //     border: Border.all(
+                  //       width: 2,
+                  //       color: Color(0xFF392F5A),
+                  //     ),
+                  //     boxShadow: [
+                  //       BoxShadow(
+                  //         color: Color(0xFF000000),
+                  //         blurStyle: BlurStyle.normal,
+                  //         offset: Offset.fromDirection(-4.0),
+                  //         blurRadius: 2,
+                  //       ),
+                  //     ],
+                  //   ),
+                  //   child: Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     children: [
+                  //       HeaderText(
+                  //         text: "Order Info",
+                  //       ),
+                  //       SizedBox(
+                  //         height: 8,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //           Text(
+                  //             "Order ID: ",
+                  //             style: TextStyle(
+                  //                 fontSize: 16, fontWeight: FontWeight.w600),
+                  //           ),
+                  //           Text("${widget.orderDetails!.orderId}")
+                  //         ],
+                  //       ),
+                  //       SizedBox(
+                  //         height: 8,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //           Text(
+                  //             "Order Status: ",
+                  //             style: TextStyle(
+                  //                 fontSize: 16, fontWeight: FontWeight.w600),
+                  //           ),
+                  //           Text("${widget.orderDetails!.orderStatus}")
+                  //         ],
+                  //       ),
+                  //       SizedBox(
+                  //         height: 8,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //           Text("Placed at: ",
+                  //               style: TextStyle(
+                  //                   fontSize: 16, fontWeight: FontWeight.w600)),
+                  //           Text(
+                  //               "${resolveTimestampWithoutAdding(widget.orderDetails!.createdAt)}")
+                  //         ],
+                  //       ),
+                  //       SizedBox(
+                  //         height: 8,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //           Text("Payment Status: ",
+                  //               style: TextStyle(
+                  //                   fontSize: 16, fontWeight: FontWeight.w600)),
+                  //           Text("${widget.orderDetails!.paymentStatus}")
+                  //         ],
+                  //       ),
+                  //       SizedBox(
+                  //         height: 8,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //           Text("Payment Method: ",
+                  //               style: TextStyle(
+                  //                   fontSize: 16, fontWeight: FontWeight.w600)),
+                  //           Text("${widget.orderDetails!.paymentMethod}")
+                  //         ],
+                  //       ),
+                  //       SizedBox(
+                  //         height: 8,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //           Text("Payment Price: ",
+                  //               style: TextStyle(
+                  //                   fontSize: 16, fontWeight: FontWeight.w600)),
+                  //           Text("₦${widget.orderDetails!.paymentPrice}")
+                  //         ],
+                  //       ),
+                  //       SizedBox(
+                  //         height: 8,
+                  //       ),
+                  //       Row(
+                  //         children: [
+                  //           Text("Delivery Address: ",
+                  //               style: TextStyle(
+                  //                   fontSize: 16, fontWeight: FontWeight.w600)),
+                  //           Expanded(
+                  //             child: Text(
+                  //               "${widget.orderDetails!.shippingAddress}",
+                  //               maxLines: 3,
+                  //             ),
+                  //           ),
+                  //         ],
+                  //       ),
+                  //       Divider(
+                  //         height: 7,
+                  //         color: Colors.black,
+                  //       ),
+                  //       SizedBox(
+                  //         width: double.infinity,
+                  //         child: TextButton(
+                  //           onPressed: () {
+                  //             Get.to(
+                  //               () => MessagesPage(
+                  //                 senderID: widget.orderDetails!.buyerId,
+                  //                 receiverID: widget.orderDetails!.vendorId,
+                  //               ),
+                  //             );
+                  //           },
+                  //           style: TextButton.styleFrom(
+                  //             backgroundColor: Colors.black,
+                  //             padding: EdgeInsets.symmetric(
+                  //                 horizontal: 8, vertical: 4),
+                  //             shape: RoundedRectangleBorder(
+                  //               borderRadius: BorderRadius.circular(12),
+                  //               side: const BorderSide(
+                  //                 width: 1.5,
+                  //                 color: Colors.black,
+                  //               ),
+                  //             ),
+                  //           ),
+                  //           child: Text(
+                  //             "Contact Vendor",
+                  //             style: TextStyle(
+                  //               color: Colors.white,
+                  //               fontSize: 20,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                   const SizedBox(
                     height: 16,
                   ),
@@ -660,7 +777,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                               ),
                               Expanded(
                                 child: Text(
-                                    "${calculateDateTime(installmentDuration, widget.orderDetails!.updatedAt!)}"),
+                                    "${calculateDateTime(installmentDuration as int, widget.orderDetails!.updatedAt!)}"),
                               )
                             ],
                           ),
@@ -676,7 +793,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                   () => PaymentPage(
                                     orderDetails: widget.orderDetails,
                                     expectedTimeToPay: calculateDateTime(
-                                            installmentDuration,
+                                            installmentDuration as int,
                                             widget.orderDetails!.updatedAt!)
                                         .toString(),
                                   ),

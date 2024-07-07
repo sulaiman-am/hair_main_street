@@ -4,9 +4,11 @@ class CheckOutTickBoxModel {
   String? productID;
   num? price;
   int? quantity;
+  String? optionName;
   MyUser? user;
 
-  CheckOutTickBoxModel({this.price, this.productID, this.quantity, this.user});
+  CheckOutTickBoxModel(
+      {this.price, this.productID, this.quantity, this.user, this.optionName});
 }
 
 class Reminders {

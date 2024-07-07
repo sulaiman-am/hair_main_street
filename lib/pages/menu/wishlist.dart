@@ -57,6 +57,7 @@ class WishListPage extends StatelessWidget {
               color: Colors.black,
             ),
           ),
+          scrolledUnderElevation: 0,
           title: const Text(
             'Wishlist',
             style: TextStyle(
@@ -77,7 +78,7 @@ class WishListPage extends StatelessWidget {
                         wishListController.isEditingMode.value = true;
                       },
                       child: SvgPicture.asset(
-                        'assets/edit.svg',
+                        'assets/Icons/edit.svg',
                         color: Colors.black,
                         height: 25,
                         width: 25,

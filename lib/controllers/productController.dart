@@ -1,17 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get/get_rx/get_rx.dart';
-import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/models/review.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
-import 'package:hair_main_street/pages/vendor_dashboard/add_product.dart';
-import 'package:hair_main_street/pages/vendor_dashboard/vendor.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:http/http.dart' as http;
 
@@ -27,6 +23,7 @@ class ProductController extends GetxController {
   var isOptionVisible = false.obs;
   // VendorController vendorController = Get.find<VendorController>();
   RxList<File> imageList = RxList<File>([]);
+  RxList<String> categories = [""].obs;
   var downloadUrls = [].obs;
   var isLoading = false.obs;
   var isProductadded = false.obs;
@@ -50,6 +47,12 @@ class ProductController extends GetxController {
     } else {
       isLoading.value = false;
     }
+  }
+
+  //get categories
+  getCategories() {
+    var result = DataBaseService().getCategories();
+    categories.bindStream(result);
   }
 
   //filter products according to category
@@ -310,6 +313,7 @@ class ProductController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
+      Get.close(2);
     } else {
       Get.snackbar(
         "Error",
@@ -330,8 +334,9 @@ class ProductController extends GetxController {
 
   //get reviews of products
   dynamic getReviews(String? productID) {
+    // print("running this get review function");
     reviews.bindStream(DataBaseService().getReviews(productID!));
-    //print(reviews);
+    // print(reviews);
   }
 
   //get vendors list

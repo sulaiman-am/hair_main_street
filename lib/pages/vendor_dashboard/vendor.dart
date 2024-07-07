@@ -1,129 +1,163 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/controllers/vendorController.dart';
+import 'package:hair_main_street/models/orderModel.dart';
+import 'package:hair_main_street/pages/orders_stuff/payment_successful_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/Shop_page.dart';
-import 'package:hair_main_street/pages/authentication/authentication.dart';
-import 'package:hair_main_street/pages/cart.dart';
-import 'package:hair_main_street/pages/product_page.dart';
-import 'package:hair_main_street/pages/menu/referral.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/Inventory.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/add_product.dart';
-import 'package:hair_main_street/pages/vendor_dashboard/payment_settings.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/analytics_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/vendor_orders.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/wallet.dart';
-import 'package:hair_main_street/pages/menu/wishlist.dart';
 import 'package:hair_main_street/services/database.dart';
+import 'package:hair_main_street/widgets/loading.dart';
+import 'package:iconify_flutter_plus/iconify_flutter_plus.dart';
+import 'package:iconify_flutter_plus/icons/carbon.dart';
+import 'package:iconify_flutter_plus/icons/clarity.dart';
+import 'package:iconify_flutter_plus/icons/ion.dart';
+import 'package:iconify_flutter_plus/icons/material_symbols.dart';
+import 'package:iconify_flutter_plus/icons/mingcute.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:recase/recase.dart';
 
-class VendorPage extends StatelessWidget {
+class VendorPage extends StatefulWidget {
   VendorPage({super.key});
 
-  UserController userController = Get.find<UserController>();
-  VendorController vendorController = Get.find<VendorController>();
-  CheckOutController checkOutController = Get.find<CheckOutController>();
+  @override
+  State<VendorPage> createState() => _VendorPageState();
+}
+
+class _VendorPageState extends State<VendorPage> {
+  final UserController userController = Get.find<UserController>();
+
+  final VendorController vendorController = Get.find<VendorController>();
+
+  final CheckOutController checkOutController = Get.find<CheckOutController>();
+  Map<String, num> totalSaleValue = {};
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
     vendorController.vendorUID.value = userController.userState.value!.uid!;
     checkOutController.userUID.value = userController.userState.value!.uid!;
     vendorController.getVendorDetails(userController.userState.value!.uid!);
     vendorController.getVendorsProducts(userController.userState.value!.uid!);
+    checkOutController.getSellerOrders(userController.userState.value!.uid!);
+
+    super.initState();
+  }
+
+  String initialValue = "this week";
+
+  @override
+  Widget build(BuildContext context) {
+    print("totalSales: $totalSaleValue");
     //print(vendorController.vendorUID.value);
     List<String> vendorButtonsText = [
-      "Shop Page",
-      "My Orders",
+      "Shop Setup",
       "Inventory",
+      "Add Product",
+      "Orders",
+      "Analytics",
       "Wallet",
-      "Add Product"
     ];
+
+    // List<String> totalSalesValues = [
+    //   "This Week",
+    //   "Last Week",
+    //   "This Month",
+    //   "Older",
+    // ];
 
     List? vl = [
-      ShopPage(),
+      ShopSetupPage(),
+      const InventoryPage(),
+      const AddproductPage(),
       VendorOrdersPage(),
-      InventoryPage(),
-      WalletPage(),
-      AddproductPage(),
+      const AnalyticsPage(),
+      const WalletPage(),
     ];
 
-    List<IconData> vendorButtonsIcons = [
-      Symbols.storefront_rounded,
-      Symbols.list_alt_rounded,
-      Symbols.inventory_2_rounded,
-      Symbols.wallet_rounded,
-      Symbols.add,
+    double screenWidth = Get.width;
+
+    List<Widget> vendorButtonsIcons = [
+      SvgPicture.asset(
+        "assets/Icons/shop.svg",
+        color: Colors.black,
+        width: 40,
+        height: 40,
+      ),
+      const Iconify(
+        MaterialSymbols.inventory_rounded,
+        size: 40,
+        color: Colors.black,
+      ),
+      const Iconify(
+        MaterialSymbols.add_circle_outline_rounded,
+        size: 40,
+        color: Colors.black,
+      ),
+      SvgPicture.asset(
+        "assets/Icons/clarity_list_line.svg",
+        color: Colors.black,
+        width: 40,
+        height: 40,
+      ),
+      const Iconify(
+        Carbon.analytics,
+        size: 40,
+        color: Colors.black,
+      ),
+      SvgPicture.asset(
+        "assets/Icons/ion_wallet.svg",
+        color: Colors.black,
+        width: 40,
+        height: 40,
+      ),
     ];
-    num screenHeight = MediaQuery.of(context).size.height;
-    num screenWidth = MediaQuery.of(context).size.width;
-    Gradient myGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 255, 224, 139),
-        Color.fromARGB(255, 200, 242, 237)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
-    Gradient appBarGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 200, 242, 237),
-        Color.fromARGB(255, 255, 224, 139)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
+
+    String formatCurrency(String numberString) {
+      final number =
+          double.tryParse(numberString) ?? 0.0; // Handle non-numeric input
+      final formattedNumber =
+          number.toStringAsFixed(2); // Format with 2 decimals
+
+      // Split the number into integer and decimal parts
+      final parts = formattedNumber.split('.');
+      final intPart = parts[0];
+      final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+      // Format the integer part with commas for every 3 digits
+      final formattedIntPart = intPart.replaceAllMapped(
+        RegExp(r'\d{1,3}(?=(\d{3})+(?!\d))'),
+        (match) => '${match.group(0)},',
+      );
+
+      // Combine the formatted integer and decimal parts
+      final formattedResult = formattedIntPart + decimalPart;
+
+      return formattedResult;
+    }
+
     return StreamBuilder(
       stream: DataBaseService()
           .getVendorDetails(userID: userController.userState.value!.uid!),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          print("hello");
           return Obx(
             () => vendorController.vendor.value!.firstVerification == false
-                ? BlankPage(
-                    pageIcon: const Icon(
-                      Icons.cancel,
-                      size: 86,
-                      color: Colors.black,
-                    ),
-                    textStyle: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    buttonStyle: TextButton.styleFrom(
-                      // padding: EdgeInsets.symmetric(
-                      //     horizontal: screenWidth * 0.24),
-                      backgroundColor: Colors.black,
-                      side: const BorderSide(color: Colors.white, width: 2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    text: "You Have not been Verified Yet \nKindly Wait...",
-                    interactionIcon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                    ),
-                    interactionText: "Back",
-                    interactionFunction: () => Get.back(),
+                ? RequestProcessingPage(
+                    thingBeingProcessed: 'Vendor',
+                    getTo: () => Get.back(),
                   )
                 : Scaffold(
                     appBar: AppBar(
+                      elevation: 0,
+                      scrolledUnderElevation: 0,
                       leading: IconButton(
                         onPressed: () => Get.back(),
                         icon: const Icon(Symbols.arrow_back_ios_new_rounded,
@@ -132,37 +166,279 @@ class VendorPage extends StatelessWidget {
                       title: const Text(
                         'Vendor Dashboard',
                         style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w900,
+                          fontSize: 25,
+                          fontWeight: FontWeight.w700,
                           color: Colors.black,
+                          fontFamily: 'Lato',
                         ),
                       ),
-                      centerTitle: true,
+                      centerTitle: false,
                       // flexibleSpace: Container(
                       //   decoration: BoxDecoration(gradient: appBarGradient),
                       // ),
                       //backgroundColor: Colors.transparent,
                     ),
-                    body: Container(
-                      padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
-                      //decoration: BoxDecoration(gradient: myGradient),
-                      child: GridView(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 24,
-                          mainAxisSpacing: 24,
-                        ),
-                        children: List.generate(
-                          vendorButtonsText.length,
-                          (index) => DashboardButton(
-                            icon: vendorButtonsIcons[index],
-                            page: vl[index],
-                            text: vendorButtonsText[index],
-                          ),
-                        ),
-                      ),
-                    ),
+                    body: GetX<CheckOutController>(builder: (controller) {
+                      int productSold = checkOutController.vendorOrderList
+                          .where((test) => test.orderStatus == 'confirmed')
+                          .length;
+
+                      int orders = checkOutController.vendorOrderList.length;
+                      return controller.vendorOrdersMap["Completed"] == null
+                          ? const LoadingWidget()
+                          : Builder(builder: (context) {
+                              totalSaleValue =
+                                  checkOutController.getTotalSales();
+                              return SafeArea(
+                                child: SingleChildScrollView(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                                  //decoration: BoxDecoration(gradient: myGradient),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "Total Sales",
+                                                style: TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w400,
+                                                  fontFamily: 'Raleway',
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                height: 4,
+                                              ),
+                                              Text(
+                                                "NGN${formatCurrency(totalSaleValue[initialValue].toString())}",
+                                                style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontFamily: 'Lato',
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          PopupMenuButton<String>(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              side: const BorderSide(
+                                                color: Color(0xFF673AB7),
+                                                width: 0.3,
+                                              ),
+                                            ),
+                                            initialValue: initialValue,
+                                            color: Colors.white,
+                                            elevation: 0,
+                                            itemBuilder:
+                                                (BuildContext context) {
+                                              return <PopupMenuEntry<String>>[
+                                                const PopupMenuItem<String>(
+                                                  value: "this week",
+                                                  child: Text(
+                                                    'This Week',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: Colors.black,
+                                                      fontFamily: 'Lato',
+                                                    ),
+                                                  ),
+                                                ),
+                                                const PopupMenuItem<String>(
+                                                  value: "last week",
+                                                  child: Text(
+                                                    'Last Week',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: Colors.black,
+                                                      fontFamily: 'Lato',
+                                                    ),
+                                                  ),
+                                                ),
+                                                const PopupMenuItem<String>(
+                                                  value: "this month",
+                                                  child: Text(
+                                                    'This Month',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: Colors.black,
+                                                      fontFamily: 'Lato',
+                                                    ),
+                                                  ),
+                                                ),
+                                                const PopupMenuItem<String>(
+                                                  value: 'older',
+                                                  child: Text(
+                                                    'Older',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: Colors.black,
+                                                      fontFamily: 'Lato',
+                                                    ),
+                                                  ),
+                                                ),
+                                              ];
+                                            },
+                                            onSelected: (String value) {
+                                              setState(() {
+                                                initialValue = value;
+                                              });
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                                color: const Color(0xFF673AB7)
+                                                    .withOpacity(0.10),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                      6, 4, 6, 4),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    initialValue.titleCase,
+                                                    style: const TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: Color(0xFF673AB7),
+                                                      fontFamily: 'Raleway',
+                                                    ),
+                                                  ),
+                                                  const Icon(
+                                                    Icons.arrow_drop_down,
+                                                    size: 20,
+                                                    color: Color(0xFF673AB7),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 20,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            width: screenWidth * 0.45,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              color: const Color(0xFF673AB7)
+                                                  .withOpacity(0.10),
+                                            ),
+                                            padding: const EdgeInsets.all(8),
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  "$orders",
+                                                  style: const TextStyle(
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.w700,
+                                                    fontFamily: 'Lato',
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                                const Text(
+                                                  "Orders",
+                                                  style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w400,
+                                                    fontFamily: 'Raleway',
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            width: screenWidth * 0.45,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              color: Color(0xFFE91E63)
+                                                  .withOpacity(0.10),
+                                            ),
+                                            padding: EdgeInsets.all(8),
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  "$productSold",
+                                                  style: const TextStyle(
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.w700,
+                                                    fontFamily: 'Lato',
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                                const Text(
+                                                  "Products sold",
+                                                  style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w400,
+                                                    fontFamily: 'Raleway',
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 24,
+                                      ),
+                                      MasonryGridView(
+                                        shrinkWrap: true,
+                                        crossAxisSpacing: 16,
+                                        // mainAxisExtent: 40,
+                                        mainAxisSpacing: 16,
+                                        gridDelegate:
+                                            const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                        ),
+                                        children: List.generate(
+                                          vendorButtonsText.length,
+                                          (index) => DashboardButton(
+                                            icon: vendorButtonsIcons[index],
+                                            page: vl[index],
+                                            text: vendorButtonsText[index],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            });
+                    }),
                   ),
           );
         } else {
@@ -185,7 +461,7 @@ class VendorPage extends StatelessWidget {
 class DashboardButton extends StatelessWidget {
   final Widget? page;
   final String? text;
-  final IconData? icon;
+  final Widget? icon;
   const DashboardButton({this.icon, this.page, this.text, super.key});
 
   @override
@@ -193,9 +469,13 @@ class DashboardButton extends StatelessWidget {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.black, width: 2),
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: Colors.black.withOpacity(0.45),
+            width: 1.5,
+          ),
         ),
       ),
       onPressed: () => Get.to(() => page!),
@@ -203,22 +483,20 @@ class DashboardButton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon!,
-            size: 40,
-            color: Colors.black,
-          ),
-          Divider(
-            height: 8,
+          icon!,
+          const Divider(
+            height: 20,
             color: Colors.black,
             thickness: 1,
           ),
           Text(
             text!,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 20,
-              color: Colors.black,
+              color: Colors.black87,
+              fontFamily: 'Lato',
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

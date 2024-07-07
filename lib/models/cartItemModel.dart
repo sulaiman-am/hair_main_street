@@ -7,10 +7,12 @@ class CartItem {
   dynamic productID;
   int? quantity;
   num? price;
+  String? optionName;
   Timestamp? createdAt;
 
   CartItem(
       {this.productID,
+      this.optionName,
       this.price,
       this.quantity,
       this.cartItemID,

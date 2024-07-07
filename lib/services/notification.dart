@@ -7,10 +7,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/notificationController.dart';
+import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/pages/notifcation.dart';
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
+void navigateToNotifications() {
+  Get.offAll(() => HomePage());
+  Get.find<BottomNavController>().changeTabIndex(1);
+}
 
 var androidChannel = const AndroidNotificationChannel(
   "hair_main_street",
@@ -22,6 +29,8 @@ Future handleBackgroundNotification(RemoteMessage message) async {
   print(message.notification?.title);
   print(message.notification?.body);
   print(message.data);
+  navigateToNotifications();
+
   // final notification = message.notification;
   // if (notification == null) {
   //   return;
@@ -126,12 +135,7 @@ class NotificationService {
     FirebaseMessaging.onBackgroundMessage(handleBackgroundNotification);
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      Get.to(
-        arguments: message,
-        () => NotificationsPage(
-          data: message,
-        ),
-      );
+      navigateToNotifications();
       // Handle notification when the app is in the background
       print("Background Notification: $message");
     });
@@ -144,11 +148,9 @@ class NotificationService {
       if (notification == null) {
         return;
       } else {
-        Get.to(
-          () => NotificationsPage(
-            data: initialMessage,
-          ),
-        );
+        Future.delayed(Duration(seconds: 1), () {
+          navigateToNotifications();
+        });
       }
       print("Terminated Notification: $initialMessage");
     }

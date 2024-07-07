@@ -2,6 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+	<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+			<!-- Your scheme -->
+			<key>CFBundleURLSchemes</key>
+			<array>			
+				<string>hairmainstreet.com</string>
+			</array>
+			<!-- Optional URL to distinguish your app from others
+				in case of conflicting scheme name -->
+			<key>CFBundleURLName</key>
+			<string>open.my.app</string>		
+			</dict>
+		</array>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>

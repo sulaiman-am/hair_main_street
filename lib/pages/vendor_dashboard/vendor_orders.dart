@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/blankPage.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
@@ -37,7 +38,13 @@ class _VendorOrdersPageState extends State<VendorOrdersPage>
 
   @override
   Widget build(BuildContext context) {
-    List categories = ["Active", "Expired", "Cancelled"];
+    List categories = [
+      "All",
+      "Active",
+      "Expired",
+      "Completed",
+      "Cancelled",
+    ];
     TabController tabController =
         TabController(length: categories.length, vsync: this);
     //s checkOutController.userUID.value = userController.userState.value!.uid!;
@@ -47,106 +54,111 @@ class _VendorOrdersPageState extends State<VendorOrdersPage>
     checkOutController.getSellerOrders(userController.userState.value!.uid!);
     // print(
     //     "value: ${checkOutController.getBuyerOrders(checkOutController.userUID.value).first}");
-    Gradient myGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 255, 224, 139),
-        Color.fromARGB(255, 200, 242, 237)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
-    Gradient appBarGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 200, 242, 237),
-        Color.fromARGB(255, 255, 224, 139)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
     return Obx(
       () => Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            onPressed: () => Get.back(),
-            icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-                size: 24, color: Colors.black),
-          ),
-          title: const Text(
-            'Vendors Orders',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
+          elevation: 0,
+          leadingWidth: 40,
+          backgroundColor: Colors.white,
+          leading: InkWell(
+            onTap: () => Get.back(),
+            radius: 12,
+            child: const Icon(
+              Symbols.arrow_back_ios_new_rounded,
+              size: 20,
               color: Colors.black,
             ),
           ),
-          centerTitle: true,
+          title: const Text(
+            'Orders',
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.w900,
+              color: Colors.black,
+              fontFamily: 'Lato',
+            ),
+          ),
+          centerTitle: false,
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(kToolbarHeight),
+            preferredSize: const Size.fromHeight(kToolbarHeight / 2),
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: TabBar(
                   tabAlignment: TabAlignment.start,
                   isScrollable: true,
                   controller: tabController,
-                  indicatorWeight: 4,
-                  indicatorColor: Colors.black,
+                  indicatorWeight: 5,
+                  unselectedLabelColor: Colors.black,
+                  labelColor: const Color(0xFF673AB7),
+                  labelStyle: const TextStyle(
+                    fontSize: 15,
+                    fontFamily: 'Raleway',
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 15,
+                    fontFamily: 'Raleway',
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  indicatorColor: const Color(0xFF673AB7),
                   tabs: categories
                       .map((e) => Text(
                             e,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 15,
-                            ),
+                            // style: const TextStyle(
+                            //   fontSize: 15,
+                            //   fontFamily: 'Raleway',
+                            //   fontWeight: FontWeight.w400,
+                            //   //color: Color(0xFF673AB7),
+                            // ),
                           ))
                       .toList()),
             ),
           ),
         ),
-        body: StreamBuilder(
-          stream: DataBaseService()
-              .getVendorsOrders(userController.userState.value!.uid!),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              if (!showContent) {
-                return const SizedBox();
+        body: SafeArea(
+          child: StreamBuilder(
+            stream: DataBaseService()
+                .getVendorsOrders(userController.userState.value!.uid!),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                if (!showContent) {
+                  return const SizedBox();
+                }
+                return checkOutController.vendorOrderList.isEmpty
+                    ? BlankPage(
+                        text: "You have no Orders yet",
+                        textStyle: const TextStyle(
+                          fontSize: 40,
+                          color: Colors.black,
+                          fontFamily: 'Lato',
+                          fontWeight: FontWeight.w600,
+                        ),
+                        pageIcon: SvgPicture.asset(
+                            "assets/Icons/solar--cart-cross-bold.svg",
+                            color: const Color(0xFF673AB7).withOpacity(0.65),
+                            height: 40,
+                            width: 40),
+                      )
+                    : TabBarView(
+                        controller: tabController,
+                        children: [
+                          _buildTabContent("All"),
+                          _buildTabContent("Active"),
+                          _buildTabContent("Expired"),
+                          _buildTabContent("Completed"),
+                          _buildTabContent("Cancelled"),
+                        ],
+                      );
+              } else {
+                return const LoadingWidget();
               }
-              return checkOutController.vendorOrderList.isEmpty
-                  ? BlankPage(
-                      text: "No Orders Currently",
-                      textStyle: const TextStyle(
-                        fontSize: 40,
-                        color: Colors.black,
-                      ),
-                      pageIcon: const Icon(
-                        Icons.do_disturb_alt_rounded,
-                        color: Colors.black,
-                        size: 40,
-                      ),
-                    )
-                  : TabBarView(
-                      controller: tabController,
-                      children: [
-                        _buildTabContent("Active"),
-                        _buildTabContent("Expired"),
-                        _buildTabContent("Cancelled"),
-                      ],
-                    );
-            } else {
-              return const LoadingWidget();
-            }
-          },
+            },
+          ),
         ),
       ),
     );
@@ -157,19 +169,21 @@ class _VendorOrdersPageState extends State<VendorOrdersPage>
       final orders = checkOutController.vendorOrdersMap[tabName]!;
       return orders.isNotEmpty
           ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: ListView.builder(
                 itemBuilder: (context, index) =>
                     VendorOrderCard(mapKey: tabName, index: index),
                 itemCount: orders.length,
               ),
             )
-          : const Center(
+          : Center(
               child: Text(
-                "Nothing Here",
-                style: TextStyle(
-                  fontSize: 40,
+                "No $tabName orders yet",
+                style: const TextStyle(
+                  fontSize: 25,
                   color: Colors.black,
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             );

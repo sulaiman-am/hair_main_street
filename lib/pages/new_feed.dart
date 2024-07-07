@@ -67,6 +67,7 @@ class _NewFeedPageState extends State<NewFeedPage>
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Color(0xFF673AB7),
+              fontFamily: "Lato",
             ),
           ),
         ),
@@ -100,7 +101,7 @@ class _NewFeedPageState extends State<NewFeedPage>
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       SvgPicture.asset(
-                        "assets/search-normal-1.svg",
+                        "assets/Icons/search-normal-1.svg",
                         color: Colors.black54.withOpacity(0.50),
                         height: 18,
                         width: 18,
@@ -108,13 +109,13 @@ class _NewFeedPageState extends State<NewFeedPage>
                       const SizedBox(
                         width: 8,
                       ),
-                      const Text(
+                      Text(
                         "Search",
                         style: TextStyle(
-                          color: Colors.black38,
+                          color: Colors.black.withOpacity(0.45),
                           fontFamily: 'Raleway',
                           fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -127,7 +128,7 @@ class _NewFeedPageState extends State<NewFeedPage>
                     tabAlignment: TabAlignment.start,
                     isScrollable: true,
                     controller: tabController,
-                    indicatorWeight: 6,
+                    indicatorWeight: 5,
                     indicatorColor: const Color(0xFF673AB7),
                     tabs: categories
                         .map((e) => Text(
@@ -136,9 +137,10 @@ class _NewFeedPageState extends State<NewFeedPage>
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w900),
+                                fontSize: 15,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w400,
+                              ),
                             ))
                         .toList()),
               ),

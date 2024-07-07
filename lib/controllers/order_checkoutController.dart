@@ -52,6 +52,18 @@ class CheckOutController extends GetxController {
   //   buyerOrderList.bindStream(getBuyerOrders(userUID.value));
   //   print(vendorOrderList);
   // }
+  @override
+  void onInit() {
+    super.onInit();
+    initCartItemsListener();
+  }
+
+  void initCartItemsListener() {
+    final cartController = Get.find<CartController>();
+    cartController.cartItems.listen((cartItems) {
+      updateCheckoutItemFromCartItems(cartItems);
+    });
+  }
 
   //function to filter the buyer order list
   void filterTheBuyerOrderList(List<DatabaseOrderResponse> buyerOrder) {
@@ -103,32 +115,105 @@ class CheckOutController extends GetxController {
   //filter vendor orders
   void filterVendorOrdersList(List<DatabaseOrderResponse> vendorOrders) {
     // No filter
+    vendorOrdersMap["All"] = vendorOrders;
 
     // Filter the once only payment method
     vendorOrdersMap["Active"] = vendorOrders
-        .where((order) =>
-            order.orderStatus != null && order.orderStatus != "expired")
+        .where(
+          (order) =>
+              order.orderStatus != null &&
+              order.orderStatus != "expired" &&
+              order.orderStatus != 'confirmed',
+        )
         .toList();
 
-    // Filter the installment only payment method
+    // Filter the expired orders
     vendorOrdersMap["Expired"] = vendorOrders
         .where((order) =>
             order.orderStatus != null && order.orderStatus == "expired")
         .toList();
 
+    // Filter the cancelled orders
     vendorOrdersMap["Cancelled"] = vendorOrders
         .where((order) =>
             order.orderStatus != null && order.orderStatus == "cancelled")
         .toList();
 
+    // Filter the completed orders
+    vendorOrdersMap["Completed"] = vendorOrders
+        .where((order) =>
+            order.orderStatus != null && order.orderStatus == "confirmed")
+        .toList();
+
     vendorOrdersMap.refresh();
+  }
+
+  //update checkoutlist based on cart items
+  void updateCheckoutItemFromCartItems(List<CartItem> cartItems) {
+    UserController userController = Get.find<UserController>();
+    MyUser user = userController.userState.value!;
+
+    for (var cartItem in cartItems) {
+      int index = checkoutList
+          .indexWhere((element) => element.productID == cartItem.productID);
+
+      if (index != -1) {
+        checkoutList[index] = CheckOutTickBoxModel(
+          price: cartItem.price,
+          quantity: cartItem.quantity,
+          productID: cartItem.productID,
+          user: user,
+        );
+      }
+    }
+
+    // Update the total price and quantity
+    getTotalPriceAndTotalQuantity();
+  }
+
+  //get total sales
+  Map<String, num> getTotalSales() {
+    DateTime now = DateTime.now();
+    Map<String, num> completedOrdersMap = {
+      "this week": 0,
+      "last week": 0,
+      "this month": 0,
+      "older": 0,
+    };
+
+    List<DatabaseOrderResponse>? completedOrders = vendorOrdersMap["Completed"];
+
+    if (completedOrders != null) {
+      for (var order in completedOrders) {
+        DateTime updatedAt = order.updatedAt.toDate();
+        int daysDifference = now.difference(updatedAt).inDays;
+
+        if (order.paymentPrice != null) {
+          if (daysDifference <= 7) {
+            completedOrdersMap["this week"] =
+                (completedOrdersMap["this week"] ?? 0) + order.paymentPrice!;
+          } else if (daysDifference > 7 && daysDifference <= 14) {
+            completedOrdersMap["last week"] =
+                (completedOrdersMap["last week"] ?? 0) + order.paymentPrice!;
+          } else if (daysDifference > 14 && daysDifference <= 30) {
+            completedOrdersMap["this month"] =
+                (completedOrdersMap["this month"] ?? 0) + order.paymentPrice!;
+          } else {
+            completedOrdersMap["older"] =
+                (completedOrdersMap["older"] ?? 0) + order.paymentPrice!;
+          }
+        }
+      }
+    }
+
+    return completedOrdersMap;
   }
 
   //update checkoutlist
   updateCheckoutList(CartItem cartitem) {
     //fetchCart();
     UserController userController = Get.find<UserController>();
-    MyUser user = userController.myUser.value;
+    MyUser user = userController.userState.value!;
 
     var index = checkoutList
         .indexWhere((element) => element.productID == cartitem.productID);
@@ -142,8 +227,8 @@ class CheckOutController extends GetxController {
         user: user,
       );
       print("checkoutlist data: ${checkoutList[index].price}");
-      update();
-      //getTotalPriceAndTotalQuantity();
+      //update();
+      getTotalPriceAndTotalQuantity();
       //checkOutController.checkoutList.refresh();
     } else {
       print("cannot update");
@@ -192,6 +277,7 @@ class CheckOutController extends GetxController {
         quantity: item!.quantity,
         price: item!.price,
         cartID: item!.cartItemID,
+        optionName: item!.optionName,
       );
     });
   }
@@ -230,7 +316,7 @@ class CheckOutController extends GetxController {
       isLoading.value = false;
       Get.snackbar(
         "Deleted",
-        "Successfully Deleted Items from Wishlist",
+        "Successfully deleted item(s) from cart ",
         snackPosition: SnackPosition.BOTTOM,
         duration: Duration(seconds: 1, milliseconds: 800),
         forwardAnimationCurve: Curves.decelerate,
@@ -273,11 +359,18 @@ class CheckOutController extends GetxController {
     price,
     user,
     String? cartID,
+    String? optionName,
   }) {
     itemCheckboxState[productID]?.value = value!;
     if (value!) {
       // Check if the item already exists in the checkout list
-      bool itemExists = checkoutList.any((item) => item.productID == productID);
+      bool itemExists = checkoutList.any((item) {
+        if (optionName != null) {
+          return item.productID == productID && item.optionName == optionName;
+        } else {
+          return item.productID == productID;
+        }
+      });
       bool itemExists2 = deletableCartItems.any((item) => item == cartID);
       // If the item doesn't exist, add it to the checkout list
       if (!itemExists && !itemExists2) {
@@ -288,6 +381,7 @@ class CheckOutController extends GetxController {
             price: price,
             quantity: quantity,
             user: user,
+            optionName: optionName,
             // Add other necessary properties
           ),
         );
@@ -322,17 +416,14 @@ class CheckOutController extends GetxController {
   }
 
   //create checkboxItem
-  createCheckBoxItem(
-    String productID,
-    int quantity,
-    num price,
-    MyUser user,
-  ) {
+  createCheckBoxItem(String productID, int quantity, num price, MyUser user,
+      {String? optionName}) {
     var value = CheckOutTickBoxModel(
       productID: productID,
       quantity: quantity,
       price: price,
       user: user,
+      optionName: optionName ?? "",
     );
     return value;
   }
@@ -345,26 +436,33 @@ class CheckOutController extends GetxController {
       String? orderQuantity,
       String? productID,
       String? vendorID,
-      String? shippingAddress,
+      Address? deliveryAddress,
       num? totalPrice,
+      String? recipientCode,
       MyUser? user,
-      int? paymentPrice,
+      num? paymentPrice,
       int? installmentNumber,
-      int? installmentPaid}) async {
+      int? installmentPaid,
+      String? optionName}) async {
     order.value = Orders(
         buyerId: user!.uid,
         vendorId: vendorID,
         installmentNumber: installmentNumber,
         paymentPrice: paymentPrice,
         installmentPaid: installmentPaid,
-        shippingAddress: shippingAddress,
+        shippingAddress: deliveryAddress,
         totalPrice: totalPrice,
         paymentMethod: paymentMethod,
+        recipientCode: recipientCode,
         paymentStatus: "paid",
         orderStatus: "created",
         transactionID: [transactionID]);
     orderItem.value = OrderItem(
-        productId: productID, quantity: orderQuantity, price: productPrice);
+      productId: productID,
+      quantity: orderQuantity,
+      price: productPrice,
+      optionName: optionName,
+    );
 
     var response =
         await DataBaseService().createOrder(order.value!, orderItem.value!);
@@ -385,6 +483,7 @@ class CheckOutController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
+      return 'success';
       // Timer(const Duration(seconds: 3), () {
       //   DataBaseService().updateWalletAfterOrderPlacement(
       //       order.value!.vendorId!,
@@ -450,7 +549,7 @@ class CheckOutController extends GetxController {
 
   //get buyer orders
   Stream<List<DatabaseOrderResponse>> getBuyerOrders(String userID) {
-    var resultStream = DataBaseService().getBuyerOrders(userID);
+    var resultStream = DataBaseService().getBuyerOrdersStream(userID);
     resultStream.listen((buyerOrders) {
       buyerOrderList.assignAll(buyerOrders);
       filterTheBuyerOrderList(buyerOrders);
@@ -464,6 +563,7 @@ class CheckOutController extends GetxController {
     resultStream.listen((buyerOrders) {
       vendorOrderList.assignAll(buyerOrders);
       filterVendorOrdersList(buyerOrders);
+      //getTotalSales();
     });
     return resultStream;
   }
@@ -512,7 +612,7 @@ class CheckOutController extends GetxController {
   }
 
   //verify paystack transaction
-  Future verifyTransaction({required String reference}) async {
+  Future<bool> verifyTransaction({required String reference}) async {
     var response =
         await DataBaseService().verifyTransaction(reference: reference);
     return response;

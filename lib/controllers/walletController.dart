@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/models/wallet_transaction.dart';
+import 'package:hair_main_street/pages/orders_stuff/payment_successful_page.dart';
 import 'package:hair_main_street/services/database.dart';
 
 class WalletController extends GetxController {
@@ -9,6 +10,8 @@ class WalletController extends GetxController {
   RxList<WithdrawalRequest> withdrawalRequests = RxList<WithdrawalRequest>([]);
   RxBool isLoading = false.obs;
   RxString id = "".obs;
+  RxMap<String, List<Transactions>> filteredTransactionMap =
+      RxMap<String, List<Transactions>>({});
 
   @override
   void onReady() {
@@ -52,6 +55,40 @@ class WalletController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
+      Get.close(1);
+      Get.off(() => const WithdrawalSuccessPage());
     }
+  }
+
+  getTransactionsByDate(List<Transactions> transactionsObjects) {
+    final now = DateTime.now();
+
+    filteredTransactionMap["Today"] = transactionsObjects
+        .where((transaction) =>
+            now.difference(transaction.timestamp!.toDate()).inHours < 24)
+        .toList();
+
+    filteredTransactionMap["Yesterday"] = transactionsObjects
+        .where((transaction) =>
+            now.difference(transaction.timestamp!.toDate()).inHours >= 24 &&
+            now.difference(transaction.timestamp!.toDate()).inHours < 72)
+        .toList();
+
+    filteredTransactionMap["Last Week"] = transactionsObjects
+        .where((transaction) =>
+            now.difference(transaction.timestamp!.toDate()).inDays >= 3 &&
+            now.difference(transaction.timestamp!.toDate()).inDays < 7)
+        .toList();
+    filteredTransactionMap["Last Month"] = transactionsObjects
+        .where((transaction) =>
+            now.difference(transaction.timestamp!.toDate()).inDays >= 7 &&
+            now.difference(transaction.timestamp!.toDate()).inDays < 28)
+        .toList();
+    filteredTransactionMap["Older"] = transactionsObjects
+        .where((transaction) =>
+            now.difference(transaction.timestamp!.toDate()).inDays > 28)
+        .toList();
+
+    filteredTransactionMap.refresh();
   }
 }

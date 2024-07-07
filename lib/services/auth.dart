@@ -59,6 +59,9 @@ class AuthService {
         "referral link": referralLink
       });
       return await convertToMyUserType(user);
+    } on FirebaseAuthException catch (e) {
+      //print(e.toString());
+      return e;
     } catch (e) {
       //print(e.toString());
       return e;
@@ -80,10 +83,13 @@ class AuthService {
         await userProfileCollection.doc(user.uid).update(
             {"referral code": referralCode, "referral link": referralLink});
       }
-      await userProfileCollection.doc(user.uid).update({
+      await userProfileCollection.doc(user.uid).set({
         "token": token,
-      });
+      }, SetOptions(merge: true));
       return await convertToMyUserType(user);
+    } on FirebaseAuthException catch (e) {
+      //print(e.toString());
+      return e;
     } catch (e) {
       //print(e.toString());
       return e;
@@ -99,6 +105,18 @@ class AuthService {
     } catch (e) {
       //print(e.toString());
       return null;
+    }
+  }
+
+  //delete account
+  Future deleteAccount() async {
+    try {
+      var currentUser = auth.currentUser;
+      if (currentUser != null) {
+        await currentUser.delete();
+      } else {}
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -124,10 +142,15 @@ class AuthService {
     }
   }
 
+  final actionCodeSettings = ActionCodeSettings(
+    handleCodeInApp: true, url: '', // Set to true to handle it in-app
+  );
+
   //handle forgotten password
   Future resetPasswordEmail(String email) async {
     try {
-      return await auth.sendPasswordResetEmail(email: email);
+      await auth.sendPasswordResetEmail(email: email);
+      return 'success';
     } on FirebaseAuthException catch (e) {
       print(e.message);
       return e;
@@ -136,8 +159,8 @@ class AuthService {
 
   Future resetPasswordProper(String newPassword, code) async {
     try {
-      return await auth.confirmPasswordReset(
-          code: code, newPassword: newPassword);
+      await auth.confirmPasswordReset(code: code, newPassword: newPassword);
+      return 'success';
     } on FirebaseAuthException catch (e) {
       print(e.message);
       return e;

@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/cartController.dart';
@@ -18,6 +19,7 @@ import 'package:hair_main_street/controllers/userController.dart';
 import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/extras/colors.dart';
 import 'package:hair_main_street/extras/country_state.dart';
+import 'package:hair_main_street/models/auxModels.dart';
 import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/models/review.dart';
@@ -25,6 +27,7 @@ import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/pages/client_shop_page.dart';
 import 'package:hair_main_street/pages/messages.dart';
 import 'package:hair_main_street/pages/product_page.dart';
+import 'package:hair_main_street/pages/refund.dart';
 import 'package:hair_main_street/pages/review_page.dart';
 import 'package:hair_main_street/pages/vendor_dashboard/order_details.dart';
 import 'package:hair_main_street/services/database.dart';
@@ -38,9 +41,6 @@ import '../pages/menu/order_detail.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:recase/recase.dart';
 import 'package:string_validator/string_validator.dart' as validator;
-import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/material_symbols.dart';
-import 'package:solar_icons/solar_icons.dart';
 
 class WhatsAppButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -52,7 +52,7 @@ class WhatsAppButton extends StatelessWidget {
       children: [
         IconButton(
           icon: SvgPicture.asset(
-            'assets/whatsapp_icon.svg', // Replace with the path to your WhatsApp icon SVG file
+            'assets/Icons/whatsapp_icon.svg', // Replace with the path to your WhatsApp icon SVG file
             width: 24, // Set the icon width
             height: 24, // Set the icon height
             color: Colors.green, // Set the icon color
@@ -120,16 +120,7 @@ class ProductCard extends StatelessWidget {
     //print(id);
 
     bool isUserLoggedIn = userController.userState.value != null;
-    // if (isUserLoggedIn) {
-    //   wishListController.fetchWishList();
-    //   wishListController.initializeIsLikedState(id!, isUserLoggedIn);
-    // }
 
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   wishListController.initializeIsLikedState(id!, isUserLoggedIn);
-    // });
-
-    //print(wishListController.isLiked.value);
     String formatCurrency(String numberString) {
       final number =
           double.tryParse(numberString) ?? 0.0; // Handle non-numeric input
@@ -215,8 +206,10 @@ class ProductCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        placeholder: ((context, url) => const Center(
-                              child: CircularProgressIndicator(),
+                        placeholder: ((context, url) => const SizedBox(
+                              width: double.infinity,
+                              height: 154,
+                              child: Center(child: CircularProgressIndicator()),
                             )),
                       ),
                     ),
@@ -234,7 +227,7 @@ class ProductCard extends StatelessWidget {
                           style: const TextStyle(
                             fontFamily: 'Raleway',
                             fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w400,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -586,105 +579,182 @@ class ClientShopCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ProductController productController = Get.find<ProductController>();
+    UserController userController = Get.find<UserController>();
+    WishListController wishListController = Get.find<WishListController>();
     //bool showSocialMediaIcons = false;
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
+    Product? product = productController.products[index!]!;
 
-    return GetX<ProductController>(builder: (controller) {
-      // Color buttonColor =
-      //     productController.isRed.value ? Colors.red : primaryAccent;
-      return InkWell(
-        onTap: () {
-          Get.to(
-              () => ProductPage(
-                    id: productController.products[index!]!.productID,
-                  ),
-              transition: Transition.fadeIn);
-        },
-        splashColor: Theme.of(context).primaryColorDark,
-        child: Container(
-          padding: EdgeInsets.fromLTRB(4, 12, 4, 4),
-          height: screenHeight * 0.46,
-          width: screenWidth * 0.15,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.all(
-              Radius.circular(16),
+    bool isUserLoggedIn = userController.userState.value != null;
+
+    String formatCurrency(String numberString) {
+      final number =
+          double.tryParse(numberString) ?? 0.0; // Handle non-numeric input
+      final formattedNumber =
+          number.toStringAsFixed(2); // Format with 2 decimals
+
+      // Split the number into integer and decimal parts
+      final parts = formattedNumber.split('.');
+      final intPart = parts[0];
+      final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+      // Format the integer part with commas for every 3 digits
+      final formattedIntPart = intPart.replaceAllMapped(
+        RegExp(r'\d{1,3}(?=(\d{3})+(?!\d))'),
+        (match) => '${match.group(0)},',
+      );
+
+      // Combine the formatted integer and decimal parts
+      final formattedResult = formattedIntPart + decimalPart;
+
+      return formattedResult;
+    }
+
+    return FutureBuilder(
+      future: DataBaseService().isProductInWishlist(product.productID!),
+      builder: (context, snapshot) {
+        bool isLiked = false;
+        if (snapshot.hasData) {
+          isLiked = snapshot.data!;
+        }
+
+        return InkWell(
+          onTap: () {
+            Get.to(
+                () => ProductPage(
+                      id: product.productID,
+                      //index: index,
+                    ),
+                transition: Transition.fadeIn);
+          },
+          splashColor: Colors.black,
+          child: Card(
+            elevation: 1,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(20),
+              ),
+              // side: BorderSide(
+              //   color: Colors.white,
+              //   width: 0.5,
+              // ),
             ),
             color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Color(0xFF000000),
-                blurStyle: BlurStyle.normal,
-                offset: Offset.fromDirection(-4.0),
-                blurRadius: 4,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black45,
-                    borderRadius: BorderRadius.circular(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
                   ),
-                  width: 120,
-                  height: 106,
                   child: CachedNetworkImage(
                     fit: BoxFit.fill,
-                    imageUrl: productController
-                                .products[index!]?.image?.isNotEmpty ==
-                            true
-                        ? productController.products[index!]!.image!.first
+                    imageUrl: product.image?.isNotEmpty == true
+                        ? product.image!.first
                         : 'https://firebasestorage.googleapis.com/v0/b/hairmainstreet.appspot.com/o/productImage%2FImage%20Not%20Available.jpg?alt=media&token=0104c2d8-35d3-4e4f-a1fc-d5244abfeb3f',
-                    errorWidget: ((context, url, error) =>
-                        Text("Failed to Load Image")),
+                    errorWidget: ((context, url, error) => const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text("Failed to Load Image"),
+                        )),
+                    imageBuilder: (context, imageProvider) => Container(
+                      width: double.infinity,
+                      height: 154,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                     placeholder: ((context, url) => const Center(
                           child: CircularProgressIndicator(),
                         )),
                   ),
                 ),
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 12.0),
-                child: Text(
-                  "${productController.products[index!]!.name}",
-                  style: const TextStyle(
-                    fontSize: 20,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                const SizedBox(
+                  height: 4,
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 12.0),
-                child: Text(
-                    "NGN ${productController.products.value[index!]!.price}"),
-              ),
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.end,
-              //   children: [
-              //     ShareCard(),
-              //     IconButton(
-              //       onPressed: () {
-              //         productController.isRed.value =
-              //             !productController.isRed.value;
-              //       },
-              //       icon: Icon(
-              //         EvaIcons.heart,
-              //         color: buttonColor,
-              //       ),
-              //     ),
-              //   ],
-              // ),
-            ],
+                SizedBox(
+                  height: screenHeight * 0.055,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    child: Text(
+                      ReCase("${product.name}").titleCase,
+                      style: const TextStyle(
+                        fontFamily: 'Raleway',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Text(
+                    "NGN ${formatCurrency(product.price.toString())}",
+                    style: const TextStyle(
+                      fontFamily: 'Lato',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
+                  child: LikeButton(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    size: 20,
+                    bubblesSize: 48,
+                    isLiked: isLiked,
+                    onTap: (isTapped) async {
+                      // Only proceed if the user is logged in
+                      if (isUserLoggedIn) {
+                        if (isLiked) {
+                          await wishListController
+                              .removeFromWishlistWithProductID(
+                                  product.productID!);
+                        } else {
+                          WishlistItem wishlistItem =
+                              WishlistItem(wishListItemID: product.productID!);
+                          await wishListController.addToWishlist(wishlistItem);
+                        }
+                      }
+                      return isUserLoggedIn ? !isLiked : false;
+                    },
+                    likeBuilder: (isLiked) {
+                      if (isLiked) {
+                        return const Icon(
+                          Icons.favorite,
+                          color: Color(0xFF673AB7),
+                        );
+                      } else {
+                        return const Icon(
+                          Icons.favorite_outline_rounded,
+                          color: Color(0xFF673AB7),
+                        );
+                      }
+                    },
+                    bubblesColor: BubblesColor(
+                      dotPrimaryColor: const Color(0xFF673AB7),
+                      dotSecondaryColor:
+                          const Color(0xFF673AB7).withOpacity(0.70),
+                      dotThirdColor: Colors.white,
+                      dotLastColor: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 
@@ -716,40 +786,59 @@ class CarouselCard extends StatelessWidget {
   }
 }
 
-class CartCard extends StatelessWidget {
+class CartCard extends StatefulWidget {
   final String? id;
   final String? cartId;
-  CartCard({this.cartId, this.id, super.key});
+  final String? optionName;
+  CartCard({this.cartId, this.id, this.optionName, super.key});
 
+  @override
+  State<CartCard> createState() => _CartCardState();
+}
+
+class _CartCardState extends State<CartCard> {
   //bool isChecked = false;
   UserController userController = Get.find<UserController>();
+
   CartController cartController = Get.find<CartController>();
+
   ProductController productController = Get.find<ProductController>();
+
   CheckOutController checkOutController = Get.find<CheckOutController>();
+
   // late bool isChecked;
   @override
   Widget build(BuildContext context) {
     Product? product = productController.products
-        .firstWhere((element) => element!.productID! == id);
+        .firstWhere((element) => element!.productID! == widget.id);
 
-    CartItem cartItem = cartController.cartItems
-        .firstWhere((element) => element.productID == id);
+    CartItem cartItem = cartController.cartItems.firstWhere((element) {
+      if (widget.optionName != null) {
+        return element.optionName == widget.optionName &&
+            element.productID == widget.id;
+      } else {
+        return element.optionName == widget.optionName;
+      }
+    });
 
-    if (checkOutController.checkoutList
-        .any((element) => element.productID == cartItem.productID)) {
-      print("cartItem price: ${cartItem.price}");
-      checkOutController.updateCheckoutList(cartItem);
-      checkOutController.getTotalPriceAndTotalQuantity();
-      //checkOutController.getTotalPriceAndTotalQuantity();
-      WidgetsBinding.instance.addPostFrameCallback((_) {});
-    } else {
-      print("Not inside");
-    }
+    // SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+    //   if (checkOutController.checkoutList
+    //       .any((element) => element.productID == cartItem.productID)) {
+    //     print("cartItem price: ${cartItem.price}");
+    //     checkOutController.updateCheckoutList(cartItem);
+    //     checkOutController.getTotalPriceAndTotalQuantity();
+    //     //checkOutController.getTotalPriceAndTotalQuantity();
+    //     WidgetsBinding.instance.addPostFrameCallback((_) {});
+    //   } else {
+    //     print("Not inside");
+    //   }
+    // });
 
     // Initialize the checkbox state for this item
     if (!checkOutController.itemCheckboxState.containsKey(product!.productID)) {
       checkOutController.itemCheckboxState[product.productID] = false.obs;
     }
+
     String formatCurrency(String numberString) {
       final number =
           double.tryParse(numberString) ?? 0.0; // Handle non-numeric input
@@ -810,12 +899,14 @@ class CartCard extends StatelessWidget {
                     onChanged: (val) {
                       //print(object)
                       checkOutController.toggleCheckbox(
-                          productID: cartItem.productID,
-                          quantity: cartItem.quantity,
-                          price: cartItem.price,
-                          user: userController.userState.value,
-                          cartID: cartId,
-                          value: val!);
+                        productID: cartItem.productID,
+                        quantity: cartItem.quantity,
+                        price: cartItem.price,
+                        user: userController.userState.value,
+                        cartID: widget.cartId,
+                        value: val!,
+                        optionName: cartItem.optionName,
+                      );
                       //print(checkOutController.checkoutList.first.price);
                       checkOutController.getTotalPriceAndTotalQuantity();
                       // Optionally, you can notify listeners here if needed
@@ -871,7 +962,7 @@ class CartCard extends StatelessWidget {
                         maxLines: 1,
                         style: const TextStyle(
                           fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                           fontFamily: 'Raleway',
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -900,10 +991,11 @@ class CartCard extends StatelessWidget {
                             onTap: () async {
                               if (cartItem.quantity! > 1) {
                                 await cartController.updateCartItem(
-                                  cartItemID: cartId,
+                                  cartItemID: widget.cartId,
                                   newQuantity: -1,
-                                  productID: id,
+                                  productID: widget.id,
                                 );
+                                setState(() {});
                               } else {
                                 cartController
                                     .showMyToast("Cannot be less than 1");
@@ -944,12 +1036,12 @@ class CartCard extends StatelessWidget {
                             radius: 50,
                             onTap: () async {
                               await cartController.updateCartItem(
-                                cartItemID: cartId,
+                                cartItemID: widget.cartId,
                                 newQuantity: 1,
-                                productID: id,
+                                productID: widget.id,
                               );
-                              checkOutController
-                                  .getTotalPriceAndTotalQuantity();
+
+                              setState(() {});
                             },
                             child: Container(
                               padding: const EdgeInsets.all(0.5),
@@ -988,7 +1080,7 @@ class CartCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               SvgPicture.asset(
-                                'assets/shop.svg',
+                                'assets/Icons/shop.svg',
                                 height: 16,
                                 width: 16,
                                 color: Colors.black,
@@ -1145,12 +1237,12 @@ class WishListCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "${product!.name}",
+                      product!.name ?? "",
                       maxLines: 1,
                       style: const TextStyle(
                         fontSize: 15,
                         fontFamily: 'Raleway',
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w500,
                         color: Colors.black,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -1189,7 +1281,7 @@ class WishListCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             SvgPicture.asset(
-                              'assets/shop.svg',
+                              'assets/Icons/shop.svg',
                               height: 16,
                               width: 16,
                               color: Colors.black,
@@ -1328,6 +1420,138 @@ class WishListCard extends StatelessWidget {
   }
 }
 
+class VendorArrivalCard extends StatelessWidget {
+  final String? productID;
+  const VendorArrivalCard({this.productID, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    ProductController productController = Get.find<ProductController>();
+    Product? product;
+    product = productController.products
+        .firstWhere((product) => product?.productID == productID);
+    String formatCurrency(String numberString) {
+      final number =
+          double.tryParse(numberString) ?? 0.0; // Handle non-numeric input
+      final formattedNumber =
+          number.toStringAsFixed(2); // Format with 2 decimals
+
+      // Split the number into integer and decimal parts
+      final parts = formattedNumber.split('.');
+      final intPart = parts[0];
+      final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+      // Format the integer part with commas for every 3 digits
+      final formattedIntPart = intPart.replaceAllMapped(
+        RegExp(r'\d{1,3}(?=(\d{3})+(?!\d))'),
+        (match) => '${match.group(0)},',
+      );
+
+      // Combine the formatted integer and decimal parts
+      final formattedResult = formattedIntPart + decimalPart;
+
+      return formattedResult;
+    }
+
+    num screenHeight = MediaQuery.of(context).size.height;
+    num screenWidth = MediaQuery.of(context).size.width;
+    return GestureDetector(
+      onTap: () {
+        Get.to(
+          () => ProductPage(
+            id: productID,
+          ),
+        );
+      },
+      child: Container(
+        color: Colors.white,
+        //height: screenHeight * 0.20,
+        width: double.infinity,
+        padding: const EdgeInsets.all(6),
+        //margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              // decoration: BoxDecoration(
+              //   color: Colors.black45,
+              // ),
+              // width: screenWidth * 0.36,
+              // height: screenHeight * 0.20,
+              child: CachedNetworkImage(
+                //fit: BoxFit.contain,
+                imageUrl: product?.image?.isNotEmpty == true
+                    ? product!.image!.first
+                    : 'https://firebasestorage.googleapis.com/v0/b/hairmainstreet.appspot.com/o/productImage%2FImage%20Not%20Available.jpg?alt=media&token=0104c2d8-35d3-4e4f-a1fc-d5244abfeb3f',
+                errorWidget: ((context, url, error) =>
+                    const Text("Failed to Load Image")),
+                placeholder: ((context, url) => const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.black,
+                      ),
+                    )),
+                imageBuilder: (context, imageProvider) => Container(
+                  height: 140,
+                  width: 130,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            Expanded(
+              child: SizedBox(
+                height: 140,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product!.name ?? "",
+                      maxLines: 2,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontFamily: 'Raleway',
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Text(
+                      "NGN${formatCurrency(product!.price.toString())}",
+                      style: const TextStyle(
+                        fontFamily: 'Lato',
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF673AB7),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class OrderCard extends StatelessWidget {
   final Function? onTap;
   int? index;
@@ -1338,6 +1562,29 @@ class OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String formatCurrency(String numberString) {
+      final number =
+          double.tryParse(numberString) ?? 0.0; // Handle non-numeric input
+      final formattedNumber =
+          number.toStringAsFixed(2); // Format with 2 decimals
+
+      // Split the number into integer and decimal parts
+      final parts = formattedNumber.split('.');
+      final intPart = parts[0];
+      final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+      // Format the integer part with commas for every 3 digits
+      final formattedIntPart = intPart.replaceAllMapped(
+        RegExp(r'\d{1,3}(?=(\d{3})+(?!\d))'),
+        (match) => '${match.group(0)},',
+      );
+
+      // Combine the formatted integer and decimal parts
+      final formattedResult = formattedIntPart + decimalPart;
+
+      return formattedResult;
+    }
+
     var orderDetails = checkOutController.buyerOrderMap[mapKey]![index!];
     var product = productController.getSingleProduct(checkOutController
         .buyerOrderMap[mapKey]![index!].orderItem!.first.productId!);
@@ -1354,66 +1601,84 @@ class OrderCard extends StatelessWidget {
       child: Container(
         //height: screenHeight * 0.20,
         width: screenWidth * 0.88,
-        padding: EdgeInsets.all(8),
-        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+        margin: EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(
-            Radius.circular(16),
+            Radius.circular(10),
+          ),
+          border: Border.all(
+            width: 0.5,
+            color: Colors.black.withOpacity(0.80),
           ),
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Color(0xFF000000),
-              blurStyle: BlurStyle.normal,
-              offset: Offset.fromDirection(-4.0),
-              blurRadius: 4,
-            ),
-          ],
         ),
         child: Column(
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Expanded(
                   flex: 2,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black45,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    width: screenWidth * 0.32,
-                    height: screenHeight * 0.16,
-                    child: Image.network(
-                      product?.image?.isNotEmpty == true
-                          ? product!.image!.first
-                          : "https://firebasestorage.googleapis.com/v0/b/hairmainstreet.appspot.com/o/productImage%2Fnot%20available.jpg?alt=media&token=ea001edd-ec0f-4ffb-9a2d-efae1a28fc40",
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: SizedBox(
+                      width: 145,
+                      height: 140,
+                      child: Image.network(
+                        product?.image?.isNotEmpty == true
+                            ? product!.image!.first
+                            : "https://firebasestorage.googleapis.com/v0/b/hairmainstreet.appspot.com/o/productImage%2Fnot%20available.jpg?alt=media&token=ea001edd-ec0f-4ffb-9a2d-efae1a28fc40",
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(
-                  width: 12,
+                  width: 6,
                 ),
                 Expanded(
                   flex: 3,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "${product!.name}",
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontFamily: 'Raleway',
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: Colors.black,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
                       Text(
-                        "${product!.name}",
+                        "NGN ${formatCurrency(orderDetails.totalPrice.toString())}",
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontFamily: 'Lato',
+                          color: Color(0xFF673AB7),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(
-                        height: 8,
-                      ),
-                      Text("${orderDetails.totalPrice}"),
-                      const SizedBox(
-                        height: 8,
+                        height: 4,
                       ),
                       // Container(
                       //   padding:
@@ -1442,69 +1707,120 @@ class OrderCard extends StatelessWidget {
                       // ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(12),
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(8),
                           ),
-                          color: Colors.black,
-                          // boxShadow: [
-                          //   BoxShadow(
-                          //     color: Color(0xFF000000),
-                          //     blurStyle: BlurStyle.normal,
-                          //     offset: Offset.fromDirection(-4.0),
-                          //     blurRadius: 4,
-                          //   ),
-                          // ],
+                          color: Colors.white70,
+                          border: Border.all(
+                            width: 0.3,
+                            color: Colors.black.withOpacity(0.85),
+                          ),
                         ),
                         child: Text(
-                          "${orderDetails.paymentMethod}",
-                          style: TextStyle(color: Colors.white),
+                          "${orderDetails.orderStatus}",
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 11,
+                            fontFamily: 'Lato',
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(
-                        height: 8,
+                        height: 4,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(8),
+                          ),
+                          color: Colors.white70,
+                          border: Border.all(
+                            width: 0.3,
+                            color: Colors.black.withOpacity(0.85),
+                          ),
+                        ),
+                        child: Text(
+                          "${orderDetails.paymentMethod}",
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 11,
+                            fontFamily: 'Lato',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 4,
                       ),
                       Visibility(
                         visible: orderDetails.paymentMethod == "installment",
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             borderRadius: const BorderRadius.all(
-                              Radius.circular(12),
+                              Radius.circular(10),
                             ),
-                            color: Colors.black,
-                            // boxShadow: [
-                            //   BoxShadow(
-                            //     color: Color(0xFF000000),
-                            //     blurStyle: BlurStyle.normal,
-                            //     offset: Offset.fromDirection(-4.0),
-                            //     blurRadius: 4,
-                            //   ),
-                            // ],
+                            color: const Color(0xFF673AB7).withOpacity(0.30),
                           ),
                           child: Text(
-                            "Amount Paid: N${orderDetails.paymentPrice}",
-                            style: TextStyle(color: Colors.white),
+                            "Amount Paid: NGN${formatCurrency(orderDetails.paymentPrice.toString())}",
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontFamily: 'Lato',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                      Visibility(
+                        visible: orderDetails.orderStatus == "confirmed",
+                        child: GestureDetector(
+                          onTap: () {
+                            Get.to(
+                              () => RefundPage(
+                                orderId: orderDetails.orderId!,
+                                paymentAmount: orderDetails.paymentPrice!,
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10),
+                              ),
+                              color: Color(0xFF673AB7),
+                            ),
+                            child: const Text(
+                              "Request Refund",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Lato',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       )
                     ],
                   ),
                 ),
-                SizedBox(
-                  width: screenWidth * 0.04,
-                ),
-                // Icon(
-                //   Symbols.arrow_forward_ios_rounded,
-                //   size: 20,
-                //   color: Colors.black,
-                // )
               ],
             ),
             const SizedBox(
-              height: 8,
+              height: 4,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -1516,13 +1832,10 @@ class OrderCard extends StatelessWidget {
                     // });
                   },
                   style: TextButton.styleFrom(
+                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
                     backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(
-                        width: 2,
-                        color: Colors.white,
-                      ),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   child: const Text(
@@ -1530,6 +1843,8 @@ class OrderCard extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Lato',
                     ),
                   ),
                 ),
@@ -1552,11 +1867,34 @@ class VendorOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var orderDetails = checkOutController.vendorOrderList[index!];
+    var orderDetails = checkOutController.vendorOrdersMap[mapKey]![index!];
     var product = productController.getSingleProduct(checkOutController
         .vendorOrdersMap[mapKey]![index!].orderItem!.first.productId!);
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
+    String formatCurrency(String numberString) {
+      final number =
+          double.tryParse(numberString) ?? 0.0; // Handle non-numeric input
+      final formattedNumber =
+          number.toStringAsFixed(2); // Format with 2 decimals
+
+      // Split the number into integer and decimal parts
+      final parts = formattedNumber.split('.');
+      final intPart = parts[0];
+      final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+      // Format the integer part with commas for every 3 digits
+      final formattedIntPart = intPart.replaceAllMapped(
+        RegExp(r'\d{1,3}(?=(\d{3})+(?!\d))'),
+        (match) => '${match.group(0)},',
+      );
+
+      // Combine the formatted integer and decimal parts
+      final formattedResult = formattedIntPart + decimalPart;
+
+      return formattedResult;
+    }
+
     return GestureDetector(
       onTap: () => Get.to(
         () => VendorOrderDetailsPage(
@@ -1568,117 +1906,176 @@ class VendorOrderCard extends StatelessWidget {
       child: Container(
         // height: screenHeight * 0.20,
         // width: screenWidth * 0.88,
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.all(
-            Radius.circular(12),
-          ),
+        //padding: EdgeInsets.fromLTRB(),
+        margin: const EdgeInsets.fromLTRB(0, 4, 0, 8),
+        decoration: const BoxDecoration(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black,
-              blurStyle: BlurStyle.normal,
-              offset: Offset.fromDirection(-4.0),
-              blurRadius: 4,
-            ),
-          ],
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Container(
-            //   decoration: BoxDecoration(
-            //     color: Colors.black45,
-            //     borderRadius: BorderRadius.circular(16),
-            //   ),
-            //   width: screenWidth * 0.32,
-            //   height: screenHeight * 0.16,
-            // ),
-            // const SizedBox(
-            //   width: 12,
-            // ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              // decoration: BoxDecoration(
+              //   color: Colors.black45,
+              // ),
+              // width: screenWidth * 0.32,
+              // height: screenHeight * 0.16,
+              child: CachedNetworkImage(
+                imageBuilder: (context, imageProvider) => Container(
+                  height: 140,
+                  width: 123,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                fit: BoxFit.fill,
+                imageUrl: product!.image != null &&
+                        product.image!.isNotEmpty == true
+                    ? product.image!.first
+                    : 'https://firebasestorage.googleapis.com/v0/b/hairmainstreet.appspot.com/o/productImage%2FImage%20Not%20Available.jpg?alt=media&token=0104c2d8-35d3-4e4f-a1fc-d5244abfeb3f',
+                errorWidget: ((context, url, error) =>
+                    Text("Failed to Load Image")),
+                placeholder: ((context, url) => Container(
+                      alignment: Alignment.center,
+                      height: 140,
+                      width: 123,
+                      child: CircularProgressIndicator(),
+                    )),
+              ),
+            ),
+            const SizedBox(
+              width: 8,
+            ),
             Expanded(
               flex: 3,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "${product!.name}",
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(
-                    height: 2,
-                  ),
-                  Text(
-                    "${orderDetails.orderId}",
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(
-                    height: 2,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "${product.name}",
+                        maxLines: 2,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Raleway',
+                          color: Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                      Text(
+                        "Qty:${orderDetails.orderItem!.first.quantity}pcs",
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontFamily: 'Lato',
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                      Text(
+                        "Amount Paid:${formatCurrency(orderDetails.paymentPrice.toString())}",
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontFamily: 'Lato',
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                      Text(
+                        "Payment Method: ${orderDetails.paymentMethod}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          fontFamily: 'Lato',
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                    ],
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text("N${orderDetails.paymentPrice}"),
+                      Expanded(
+                        child: Text(
+                          "Total: ${formatCurrency(orderDetails.totalPrice.toString())}",
+                          style: const TextStyle(
+                            fontFamily: 'Lato',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: Color(0xFF673AB7),
+                          ),
+                        ),
+                      ),
                       const SizedBox(
                         height: 2,
                       ),
                       Text(
-                        "x${orderDetails.orderItem!.first.quantity}",
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        "${orderDetails.orderStatus}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Raleway',
+                          fontSize: 12,
+                          color: Colors.black.withOpacity(0.85),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(
                     height: 6,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(12),
-                          ),
-                          color: Color.fromARGB(255, 200, 242, 237),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFF000000),
-                              blurStyle: BlurStyle.normal,
-                              offset: Offset.fromDirection(-4.0),
-                              blurRadius: 1.2,
-                            ),
-                          ],
-                        ),
-                        child: Text("${orderDetails.paymentStatus}"),
-                      ),
-                      const SizedBox(
-                        height: 2,
-                      ),
-                      Text(
-                        "${orderDetails.paymentMethod}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //   children: [
+                  //     Container(
+                  //       padding:
+                  //           EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  //       decoration: BoxDecoration(
+                  //         borderRadius: const BorderRadius.all(
+                  //           Radius.circular(12),
+                  //         ),
+                  //         color: Color.fromARGB(255, 200, 242, 237),
+                  //         boxShadow: [
+                  //           BoxShadow(
+                  //             color: Color(0xFF000000),
+                  //             blurStyle: BlurStyle.normal,
+                  //             offset: Offset.fromDirection(-4.0),
+                  //             blurRadius: 1.2,
+                  //           ),
+                  //         ],
+                  //       ),
+                  //       child: Text("${orderDetails.paymentStatus}"),
+                  //     ),
+                  //     const SizedBox(
+                  //       height: 2,
+                  //     ),
+                  //   ],
+                  // ),
+                  // const SizedBox(
+                  //   height: 8,
+                  // ),
                   // Container(
                   //   padding: EdgeInsets.all(4),
                   //   decoration: BoxDecoration(
@@ -1700,14 +2097,14 @@ class VendorOrderCard extends StatelessWidget {
                 ],
               ),
             ),
-            // SizedBox(
-            //   width: screenWidth * 0.04,
-            // ),
-            // const Icon(
-            //   Symbols.arrow_forward_ios_rounded,
-            //   size: 20,
-            //   color: Colors.black,
-            // )
+            const SizedBox(
+              width: 4,
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 20,
+              color: Colors.black,
+            )
           ],
         ),
       ),
@@ -2197,223 +2594,235 @@ class _ShopDetailsCardState extends State<ShopDetailsCard> {
           builder: (context, StateSetter setState) => AlertDialog(
             scrollable: true,
             backgroundColor: Colors.white,
-            contentPadding: const EdgeInsets.all(8),
-            content: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Edit $text",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.black,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                    if (label == "contact info")
-                      Column(
-                        children: [
-                          buildPicker(
-                              "Country",
-                              countryAndStatesAndLocalGovernment.countryList,
-                              country, (val) {
-                            setState(() {
-                              country = val;
-                            });
-                          }),
-                          buildPicker(
-                              "State",
-                              countryAndStatesAndLocalGovernment.statesList,
-                              state, (val) {
-                            setState(() {
-                              state = val;
-                              localGovernment = null;
-                            });
-                          }),
-                          buildPicker(
-                              "Local Government",
-                              countryAndStatesAndLocalGovernment
-                                  .stateAndLocalGovernments[state]!,
-                              localGovernment ?? "select", (val) {
-                            setState(() {
-                              localGovernment = val;
-                            });
-                          }),
-                          TextInputWidgetWithoutLabelForDialog(
-                            controller: streetController,
-                            initialValue: vendorController.vendor.value!
-                                    .contactInfo!["street address"] ??
-                                "",
-                            hintText: "Street Address",
-                            validator: (val) {
-                              if (val!.isEmpty) {
-                                return "Cannot be Empty";
-                              }
-                              return null;
-                            },
-                            onChanged: (val) {
-                              streetController.text = val!;
-                              street = streetController.text;
-                              return null;
-                            },
-                          ),
-                        ],
-                      )
-                    else if (label == "phone number")
-                      TextInputWidgetWithoutLabelForDialog(
-                        controller: phoneNumberController,
-                        initialValue: vendorController
-                            .vendor.value!.contactInfo!["phone number"],
-                        hintText: "Phone Number",
-                        textInputType: TextInputType.phone,
-                        validator: (val) {
-                          if (val!.isEmpty) {
-                            return "Cannot be Empty";
-                          }
-                          return null;
-                        },
-                        onChanged: (val) {
-                          phoneNumberController.text = val!;
-                          phoneNumber = phoneNumberController.text;
-                          return null;
-                        },
-                      )
-                    else if (label == "account info")
-                      Column(
-                        children: [
-                          TextInputWidgetWithoutLabelForDialog(
-                            controller: accountNumberController,
-                            initialValue: vendorController
-                                .vendor.value!.accountInfo!["account number"],
-                            hintText: "Account Number",
-                            validator: (val) {
-                              if (val!.isEmpty) {
-                                return "Cannot be Empty";
-                              }
-                              if (!validator.isNumeric(val)) {
-                                return "Must Be A Number";
-                              }
-                              if (val.length < 10) {
-                                return "Account Number must have at least 10 digits";
-                              }
-                              return null;
-                            },
-                            onChanged: (val) {
-                              accountNumberController.text = val!;
-                              accountNumber = accountNumberController.text;
-                              return null;
-                            },
-                          ),
-                          TextInputWidgetWithoutLabelForDialog(
-                            controller: accountNameController,
-                            hintText: "Account Name",
-                            initialValue: vendor.accountInfo!["account name"],
-                            validator: (val) {
-                              if (val!.isEmpty) {
-                                return "Cannot be Empty";
-                              }
-                              return null;
-                            },
-                            onChanged: (val) {
-                              accountNameController.text = val!;
-                              accountName = accountNameController.text;
-                              return null;
-                            },
-                          ),
-                          TextInputWidgetWithoutLabelForDialog(
-                            controller: bankNameController,
-                            initialValue: vendor.accountInfo!["bank name"],
-                            hintText: "Bank Name",
-                            validator: (val) {
-                              if (val!.isEmpty) {
-                                return "Cannot be Empty";
-                              }
-                              return null;
-                            },
-                            onChanged: (val) {
-                              bankNameController.text = val!;
-                              bankName = bankNameController.text;
-                              return null;
-                            },
-                          ),
-                        ],
-                      )
-                    else if (label == "name")
-                      TextInputWidgetWithoutLabelForDialog(
-                        controller: shopNameController,
-                        initialValue: vendor.shopName,
-                        hintText: text,
-                        validator: (val) {
-                          if (val!.isEmpty) {
-                            return "Cannot be Empty";
-                          }
-                          return null;
-                        },
-                        textInputType: TextInputType.text,
-                        onChanged: (val) {
-                          shopNameController.text = val!;
-                          shopName = shopNameController.text;
-                          return null;
-                        },
-                      ),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.red.shade300,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            12,
-                          ),
-                          side: const BorderSide(
-                            width: 2,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                      onPressed: () async {
-                        var validated = formKey.currentState!.validate();
-                        if (validated) {
-                          formKey.currentState!.save();
-                          switch (label) {
-                            case "Phone Number":
-                              await vendorController.updateVendor(
-                                  'contact info',
-                                  {"phone number": phoneNumber});
-                              break;
-                            case "contact info":
-                              await vendorController
-                                  .updateVendor("contact info", {
-                                "country": country,
-                                "state": state,
-                                "street address": street,
-                                "local government": localGovernment,
-                              });
-                            case "account info":
-                              await vendorController
-                                  .updateVendor("account info", {
-                                "bank name": bankName,
-                                "account name": accountName,
-                                "account number": accountNumber,
-                              });
-                            case "name":
-                              await vendorController.updateVendor(
-                                  "shop name", shopName);
-                            default:
-                          }
-                          //Get.back();
-                        }
-                      },
-                      child: const Text(
-                        "Confirm Edit",
-                        style: TextStyle(
+            contentPadding: const EdgeInsets.all(16),
+            content: SizedBox(
+              width: double.infinity,
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Edit $text",
+                        style: const TextStyle(
+                          fontSize: 20,
                           color: Colors.black,
-                          fontSize: 18,
+                          decoration: TextDecoration.none,
                         ),
                       ),
-                    ),
-                  ],
+                      if (label == "contact info")
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            buildPicker(
+                                "State",
+                                countryAndStatesAndLocalGovernment.statesList,
+                                state, (val) {
+                              setState(() {
+                                state = val;
+                                localGovernment = null;
+                              });
+                            }),
+                            const SizedBox(height: 3),
+                            buildPicker(
+                                "Local Government",
+                                countryAndStatesAndLocalGovernment
+                                    .stateAndLocalGovernments[state]!,
+                                localGovernment ?? "select", (val) {
+                              setState(() {
+                                localGovernment = val;
+                              });
+                            }),
+                            const SizedBox(height: 3),
+                            TextInputWidgetWithoutLabelForDialog(
+                              controller: streetController,
+                              initialValue: vendorController.vendor.value!
+                                      .contactInfo!["street address"] ??
+                                  "",
+                              hintText: "Street Address",
+                              validator: (val) {
+                                if (val!.isEmpty) {
+                                  return "Cannot be Empty";
+                                }
+                                return null;
+                              },
+                              onChanged: (val) {
+                                streetController.text = val!;
+                                street = streetController.text;
+                                return null;
+                              },
+                            ),
+                          ],
+                        )
+                      else if (label == "phone number")
+                        TextInputWidgetWithoutLabelForDialog(
+                          controller: phoneNumberController,
+                          initialValue: vendorController
+                              .vendor.value!.contactInfo!["phone number"],
+                          hintText: "Phone Number",
+                          textInputType: TextInputType.phone,
+                          validator: (val) {
+                            if (val!.isEmpty) {
+                              return "Cannot be Empty";
+                            }
+                            return null;
+                          },
+                          onChanged: (val) {
+                            phoneNumberController.text = val!;
+                            phoneNumber = phoneNumberController.text;
+                            return null;
+                          },
+                        )
+                      else if (label == "account info")
+                        Column(
+                          children: [
+                            TextInputWidgetWithoutLabelForDialog(
+                              controller: accountNumberController,
+                              initialValue: vendorController
+                                  .vendor.value!.accountInfo!["account number"],
+                              hintText: "Account Number",
+                              validator: (val) {
+                                if (val!.isEmpty) {
+                                  return "Cannot be Empty";
+                                }
+                                if (!validator.isNumeric(val)) {
+                                  return "Must Be A Number";
+                                }
+                                if (val.length < 10) {
+                                  return "Account Number must have at least 10 digits";
+                                }
+                                return null;
+                              },
+                              onChanged: (val) {
+                                accountNumberController.text = val!;
+                                accountNumber = accountNumberController.text;
+                                return null;
+                              },
+                            ),
+                            TextInputWidgetWithoutLabelForDialog(
+                              controller: accountNameController,
+                              hintText: "Account Name",
+                              initialValue: vendor.accountInfo!["account name"],
+                              validator: (val) {
+                                if (val!.isEmpty) {
+                                  return "Cannot be Empty";
+                                }
+                                return null;
+                              },
+                              onChanged: (val) {
+                                accountNameController.text = val!;
+                                accountName = accountNameController.text;
+                                return null;
+                              },
+                            ),
+                            TextInputWidgetWithoutLabelForDialog(
+                              controller: bankNameController,
+                              initialValue: vendor.accountInfo!["bank name"],
+                              hintText: "Bank Name",
+                              validator: (val) {
+                                if (val!.isEmpty) {
+                                  return "Cannot be Empty";
+                                }
+                                return null;
+                              },
+                              onChanged: (val) {
+                                bankNameController.text = val!;
+                                bankName = bankNameController.text;
+                                return null;
+                              },
+                            ),
+                          ],
+                        )
+                      else if (label == "name")
+                        TextInputWidgetWithoutLabelForDialog(
+                          controller: shopNameController,
+                          initialValue: vendor.shopName,
+                          hintText: text,
+                          validator: (val) {
+                            if (val!.isEmpty) {
+                              return "Cannot be Empty";
+                            }
+                            return null;
+                          },
+                          textInputType: TextInputType.text,
+                          onChanged: (val) {
+                            shopNameController.text = val!;
+                            shopName = shopNameController.text;
+                            return null;
+                          },
+                        ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            backgroundColor: Color(0xFF673AB7),
+                            padding: const EdgeInsets.all(6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                10,
+                              ),
+                            ),
+                          ),
+                          onPressed: () async {
+                            var validated = formKey.currentState!.validate();
+                            if (validated) {
+                              formKey.currentState!.save();
+                              switch (label) {
+                                case "Phone Number":
+                                  var result = await vendorController
+                                      .updateVendor('contact info',
+                                          {"phone number": phoneNumber});
+                                  if (result == "success") {
+                                    Get.close(1);
+                                  }
+                                  break;
+                                case "contact info":
+                                  var result = await vendorController
+                                      .updateVendor("contact info", {
+                                    "country": "Nigeria",
+                                    "state": state,
+                                    "street address": street,
+                                    "local government": localGovernment,
+                                  });
+                                  if (result == "success") {
+                                    Get.close(1);
+                                  }
+                                case "account info":
+                                  var result = await vendorController
+                                      .updateVendor("account info", {
+                                    "bank name": bankName,
+                                    "account name": accountName,
+                                    "account number": accountNumber,
+                                  });
+                                  if (result == "success") {
+                                    Get.close(1);
+                                  }
+                                case "name":
+                                  var result = await vendorController
+                                      .updateVendor("shop name", shopName);
+                                  if (result == "success") {
+                                    Get.close(1);
+                                  }
+                                default:
+                              }
+                              //Get.back();
+                            }
+                          },
+                          child: const Text(
+                            "Confirm Edit",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: "Lato",
+                              fontWeight: FontWeight.w500,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -2424,47 +2833,58 @@ class _ShopDetailsCardState extends State<ShopDetailsCard> {
 
     return Obx(
       () => ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         children: [
-          Stack(
-            //alignment: AlignmentDirectional.bottomEnd,
-            children: [
-              userController.userState.value == null ||
-                      vendorController.vendor.value!.shopPicture == null
-                  ? Container(
-                      height: screenHeight * 0.40,
-                      width: double.infinity,
-                      color: Colors.blue,
-                    )
-                  : Container(
-                      height: screenWidth * 0.40,
-                      width: double.infinity,
-                      //backgroundColor: Colors.black,
-                      child: Image.network(
-                        vendorController.vendor.value!.shopPicture!,
-                        scale: 1,
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            child: Center(
+              child: Stack(
+                //alignment: AlignmentDirectional.bottomEnd,
+                children: [
+                  userController.userState.value == null ||
+                          vendorController.vendor.value!.shopPicture == null
+                      ? CircleAvatar(
+                          radius: 68,
+                          backgroundColor: Color(0xFFF5f5f5),
+                          child: SvgPicture.asset(
+                            "assets/Icons/user.svg",
+                            color: Colors.black.withOpacity(0.70),
+                            height: 50,
+                            width: 50,
+                          ),
+                        )
+                      : CircleAvatar(
+                          radius: 68,
+                          //backgroundColor: Colors.black,
+                          backgroundImage: NetworkImage(
+                            vendorController.vendor.value!.shopPicture!,
+                            scale: 1,
+                          ),
+                        ),
+                  Positioned(
+                    bottom: -2,
+                    right: 8,
+                    child: IconButton(
+                      style: IconButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          side: const BorderSide(
+                            color: Colors.black,
+                            width: 0.5,
+                          )),
+                      onPressed: () {
+                        showImageUploadDialog();
+                      },
+                      icon: Icon(
+                        Icons.camera_alt_rounded,
+                        size: 28,
+                        color: const Color(0xFF673AB7).withOpacity(0.7),
                       ),
                     ),
-              Positioned(
-                bottom: 8,
-                right: 16,
-                child: IconButton(
-                  style: IconButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(
-                        color: Colors.black,
-                        width: 1,
-                      )),
-                  onPressed: () {
-                    showImageUploadDialog();
-                  },
-                  icon: const Icon(
-                    Icons.camera_alt_rounded,
-                    size: 32,
-                    color: Colors.black,
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
           const SizedBox(
             height: 8,
@@ -2473,420 +2893,473 @@ class _ShopDetailsCardState extends State<ShopDetailsCard> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Shop Link",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                      //border: Border(bottom: BorderSide(color: Colors.black))
-                      // boxShadow: [
-                      //   BoxShadow(
-                      //     color: Color(0xFF000000),
-                      //     blurStyle: BlurStyle.normal,
-                      //     offset: Offset.fromDirection(-4.0),
-                      //     blurRadius: 4,
-                      //   ),
-                      // ],
-                    ),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    child: Column(
-                      children: [
-                        referralText,
-                        const SizedBox(
-                          height: 4,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFf5f5f5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.transparent),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 1,
+                      spreadRadius: 0,
+                      color: const Color(0xFF673AB7).withOpacity(0.10),
+                      offset: const Offset(0, 1),
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Shop Details",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontFamily: 'Lato',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: TextButton.icon(
-                                icon: const Icon(
-                                  Icons.copy,
-                                  size: 32,
-                                  color: Colors.white,
-                                ),
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  padding: const EdgeInsets.all(6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: const BorderSide(
-                                      width: 0.5,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  FlutterClipboard.copy(referralText.data!);
-                                  Get.snackbar(
-                                    "Link Copied",
-                                    "Successful",
-                                    snackPosition: SnackPosition.BOTTOM,
-                                    duration:
-                                        Duration(seconds: 1, milliseconds: 400),
-                                    forwardAnimationCurve: Curves.decelerate,
-                                    reverseAnimationCurve: Curves.easeOut,
-                                    backgroundColor:
-                                        Color.fromARGB(255, 200, 242, 237),
-                                    margin: EdgeInsets.only(
-                                      left: 12,
-                                      right: 12,
-                                      bottom: screenHeight * 0.16,
-                                    ),
-                                  );
-                                },
-                                label: const Text(
-                                  "Copy",
-                                  style: TextStyle(
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 4,
+                    ),
+                    const Text(
+                      "Shop Link",
+                      style: TextStyle(
+                        fontFamily: 'Lato',
+                        color: Color(0xFF673AB7),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.all(3),
+                      child: Column(
+                        children: [
+                          referralText,
+                          const SizedBox(
+                            height: 4,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: TextButton.icon(
+                                  icon: const Icon(
+                                    Icons.copy,
+                                    size: 20,
                                     color: Colors.white,
-                                    fontSize: 16,
                                   ),
-                                  maxLines: 2,
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Color(0xFF673AB7),
+                                    padding: const EdgeInsets.all(4),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    FlutterClipboard.copy(referralText.data!);
+                                    Get.snackbar(
+                                      "Link Copied",
+                                      "Successful",
+                                      colorText: Colors.white,
+                                      snackPosition: SnackPosition.BOTTOM,
+                                      duration: Duration(
+                                          seconds: 1, milliseconds: 200),
+                                      forwardAnimationCurve: Curves.decelerate,
+                                      reverseAnimationCurve: Curves.easeOut,
+                                      backgroundColor:
+                                          Color(0xFF673AB7).withOpacity(0.8),
+                                      margin: EdgeInsets.only(
+                                        left: 12,
+                                        right: 12,
+                                        bottom: screenHeight * 0.16,
+                                      ),
+                                    );
+                                  },
+                                  label: const Text(
+                                    "Copy",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 2,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(
-                              width: 8,
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: TextButton.icon(
-                                icon: const Icon(
-                                  Icons.share,
-                                  size: 32,
-                                  color: Colors.white,
-                                ),
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  padding: EdgeInsets.all(6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: const BorderSide(
-                                      width: 0.5,
-                                      color: Colors.white,
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: TextButton.icon(
+                                  icon: const Icon(
+                                    Icons.share,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Color(0xFF673AB7),
+                                    padding: EdgeInsets.all(4),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
-                                ),
-                                onPressed: () {
-                                  Share.share(message,
-                                      subject: "Hair Main Street Shop Link");
-                                },
-                                label: const Text(
-                                  "Share",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
+                                  onPressed: () {
+                                    Share.share(message,
+                                        subject: "Hair Main Street Shop Link");
+                                  },
+                                  label: const Text(
+                                    "Share",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 2,
                                   ),
-                                  maxLines: 2,
                                 ),
                               ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Shop Name",
+                                style: TextStyle(
+                                  fontFamily: 'Lato',
+                                  color: Color(0xFF673AB7),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              InkWell(
+                                child: SvgPicture.asset(
+                                  "assets/Icons/edit.svg",
+                                  color: Color(0xFF673AB7),
+                                  height: 25,
+                                  width: 25,
+                                ),
+                                onTap: () {
+                                  showCancelDialog("Name", label: "name");
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.all(3),
+                          child: Text(
+                            "${vendorController.vendor.value!.shopName}",
+                            style: const TextStyle(
+                              fontSize: 20,
                             ),
-                          ],
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(
+                height: 12,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFf5f5f5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.transparent),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 1,
+                      spreadRadius: 0,
+                      color: const Color(0xFF673AB7).withOpacity(0.10),
+                      offset: const Offset(0, 1),
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Contact Info",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Lato',
+                              color: Color(0xFF673AB7),
+                            ),
+                          ),
+                          InkWell(
+                            child: SvgPicture.asset(
+                              "assets/Icons/edit.svg",
+                              color: Color(0xFF673AB7),
+                              height: 25,
+                              width: 25,
+                            ),
+                            onTap: () {
+                              showCancelDialog("Contact Info",
+                                  label: "contact info");
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.all(3),
+                      child: Text(
+                        "${vendorController.vendor.value!.contactInfo!['street address']}\n${vendorController.vendor.value!.contactInfo!['local government']} LGA\n${vendorController.vendor.value!.contactInfo!['state']}\n${vendorController.vendor.value!.contactInfo!['country']}",
+                        style: const TextStyle(
+                          fontSize: 20,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Phone number",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontFamily: "Lato",
+                                  color: Color(0xFF673AB7),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              InkWell(
+                                child: SvgPicture.asset(
+                                  "assets/Icons/edit.svg",
+                                  color: Color(0xFF673AB7),
+                                  height: 25,
+                                  width: 25,
+                                ),
+                                onTap: () {
+                                  showCancelDialog("Phone Number",
+                                      label: "phone number");
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.all(3),
+                          child: Text(
+                            "${vendorController.vendor.value?.contactInfo?['phone number']}",
+                            style: const TextStyle(
+                              fontSize: 20,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(
                 height: 12,
               ),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFf5f5f5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.transparent),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 1,
+                      spreadRadius: 0,
+                      color: const Color(0xFF673AB7).withOpacity(0.10),
+                      offset: const Offset(0, 1),
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Shop Name",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                    ),
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        shape: const RoundedRectangleBorder(
-                          side: BorderSide(color: Colors.white, width: 2),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(12),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Account Info",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF673AB7),
+                              fontFamily: "Lato",
+                            ),
                           ),
-                        ),
+                          InkWell(
+                            child: SvgPicture.asset(
+                              "assets/Icons/edit.svg",
+                              color: Color(0xFF673AB7),
+                              width: 25,
+                              height: 25,
+                            ),
+                            onTap: () {
+                              showCancelDialog("Account Info",
+                                  label: "account info");
+                            },
+                          ),
+                        ],
                       ),
-                      label: const Text(
-                        "edit",
-                        style: TextStyle(
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
                           color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
+                          borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.all(3),
+                      child: Text(
+                        "${vendorController.vendor.value!.accountInfo!['account number']}\n${vendorController.vendor.value!.accountInfo!['account name']}\n${vendorController.vendor.value!.accountInfo!['bank name']}",
+                        style: const TextStyle(
+                          fontSize: 20,
                         ),
-                      ),
-                      onPressed: () {
-                        showCancelDialog("Name", label: "name");
-                      },
-                      icon: const Icon(
-                        Icons.edit,
-                        size: 24,
-                        color: Colors.white,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
-                Text(
-                  "${vendorController.vendor.value!.shopName}",
-                  style: const TextStyle(
-                    fontSize: 20,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Color(0xFFf5f5f5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.transparent),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 1,
+                      spreadRadius: 0,
+                      color: const Color(0xFF673AB7).withOpacity(0.10),
+                      offset: const Offset(0, 1),
+                    )
+                  ],
                 ),
-              ]),
-              const SizedBox(
-                height: 16,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Contact Info",
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w700),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      "Choose Installment Duration",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF673AB7),
+                        fontFamily: "Lato",
                       ),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: const RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.white, width: 2),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(12),
-                            ),
-                          ),
-                        ),
-                        label: const Text(
-                          "edit",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        onPressed: () {
-                          showCancelDialog("Contact Info",
-                              label: "contact info");
-                        },
-                        icon: const Icon(
-                          Icons.edit,
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    "${vendorController.vendor.value!.contactInfo!['street address']}\n${vendorController.vendor.value!.contactInfo!['local government']} LGA\n${vendorController.vendor.value!.contactInfo!['state']}\n${vendorController.vendor.value!.contactInfo!['country']}",
-                    style: const TextStyle(
-                      fontSize: 20,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Phone number",
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w700),
-                      ),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: const RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.white, width: 2),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(12),
-                            ),
-                          ),
-                        ),
-                        label: const Text(
-                          "edit",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        onPressed: () {
-                          showCancelDialog("Phone Number",
-                              label: "phone number");
-                        },
-                        icon: const Icon(
-                          Icons.edit,
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    "${vendorController.vendor.value?.contactInfo?['phone number']}",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Account Info",
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w700),
-                      ),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: const RoundedRectangleBorder(
-                            side: BorderSide(color: Colors.white, width: 2),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(12),
-                            ),
-                          ),
-                        ),
-                        label: const Text(
-                          "edit",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        onPressed: () {
-                          showCancelDialog("Account Info",
-                              label: "account info");
-                        },
-                        icon: const Icon(
-                          Icons.edit,
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    "${vendorController.vendor.value!.accountInfo!['account number']}\n${vendorController.vendor.value!.accountInfo!['account name']}\n${vendorController.vendor.value!.accountInfo!['bank name']}",
-                    style: const TextStyle(
-                      fontSize: 20,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              Card(
-                color: Colors.grey[200],
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        "Choose Installment Duration",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: TextFormField(
-                                controller: _controller,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: "Enter a number",
-                                ),
-                                validator: (value) {
-                                  if (value!.isEmpty) {
-                                    return "Please Enter a Number";
-                                  } else if (!validator.isNumeric(value)) {
-                                    return "Please Enter a Number";
-                                  }
-                                  return null;
-                                },
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: TextFormField(
+                              controller: _controller,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: "Enter a number",
                               ),
+                              validator: (value) {
+                                if (value!.isEmpty) {
+                                  return "Please Enter a Number";
+                                } else if (!validator.isNumeric(value)) {
+                                  return "Please Enter a Number";
+                                }
+                                return null;
+                              },
                             ),
                           ),
-                          DropdownButton<String>(
-                            value: _selectedUnit,
-                            onChanged: (newValue) {
-                              setState(() {
-                                _selectedUnit = newValue!;
-                              });
-                            },
-                            items: ["Week(s)", "Month(s)", "Year(s)"]
-                                .map((unit) => DropdownMenuItem<String>(
-                                      value: unit,
-                                      child: Text(unit),
-                                    ))
-                                .toList(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          // padding: EdgeInsets.symmetric(
-                          //     horizontal: screenWidth * 0.24),
-                          backgroundColor: Colors.black,
-                          side: const BorderSide(color: Colors.white, width: 2),
+                        ),
+                        DropdownButton<String>(
+                          value: _selectedUnit,
+                          onChanged: (newValue) {
+                            setState(() {
+                              _selectedUnit = newValue!;
+                            });
+                          },
+                          items: ["Week(s)", "Month(s)", "Year(s)"]
+                              .map((unit) => DropdownMenuItem<String>(
+                                    value: unit,
+                                    child: Text(unit),
+                                  ))
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        // padding: EdgeInsets.symmetric(
+                        //     horizontal: screenWidth * 0.24),
+                        backgroundColor: const Color(0xFF673AB7),
 
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
-                          _validateAndSend();
-                        },
-                        child: const Text(
-                          "Submit",
-                          style: TextStyle(fontSize: 14, color: Colors.white),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                    ],
-                  ),
+                      onPressed: () {
+                        _validateAndSend();
+                      },
+                      child: const Text(
+                        "Submit",
+                        style: TextStyle(fontSize: 15, color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               // Form(
@@ -2989,31 +3462,30 @@ class _ShopDetailsCardState extends State<ShopDetailsCard> {
     return Card(
       color: Colors.white,
       elevation: 0,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: label,
-            border: OutlineInputBorder(),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: selectedValue,
-              isDense: true,
-              onChanged: onChanged,
-              items: [
-                const DropdownMenuItem(
-                  value: 'select',
-                  child: Text('Select'),
-                ),
-                ...items.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }),
-              ],
-            ),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: selectedValue,
+            elevation: 0,
+            isExpanded: true,
+            isDense: true,
+            onChanged: onChanged,
+            items: [
+              const DropdownMenuItem(
+                value: 'select',
+                child: Text('Select'),
+              ),
+              ...items.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }),
+            ],
           ),
         ),
       ),
@@ -3221,7 +3693,7 @@ class ClientReviewCard extends StatelessWidget {
                                       },
                                       style: ButtonStyle(
                                         backgroundColor:
-                                            MaterialStateProperty.all<Color>(
+                                            WidgetStateProperty.all<Color>(
                                                 Colors.white),
                                       ),
                                       child: const Text(
@@ -3238,7 +3710,7 @@ class ClientReviewCard extends StatelessWidget {
                                       },
                                       style: ButtonStyle(
                                         backgroundColor:
-                                            MaterialStateProperty.all<Color>(
+                                            WidgetStateProperty.all<Color>(
                                                 Colors.red),
                                       ),
                                       child: const Text(
@@ -3295,9 +3767,13 @@ class ChatsCard extends StatefulWidget {
   int? index;
   String? nameToDisplay;
   Vendors? vendorDetails;
+  MessagePageData? member1;
+  MessagePageData? member2;
 
   ChatsCard({
     super.key,
+    this.member1,
+    this.member2,
     this.index,
     this.nameToDisplay,
     this.vendorDetails,
@@ -3311,20 +3787,18 @@ class _ChatsCardState extends State<ChatsCard> {
   ChatController chatController = Get.find<ChatController>();
   UserController userController = Get.find<UserController>();
 
-  var senderID;
-  var receiverID;
+  MessagePageData? sender;
+  MessagePageData? receiver;
 
   @override
   void initState() {
     super.initState();
-    if (userController.userState.value!.uid! ==
-        chatController.myChats[widget.index!]!.member2) {
-      senderID = chatController.myChats[widget.index!]!.member2;
-      receiverID = chatController.myChats[widget.index!]!.member1;
-    } else if (userController.userState.value!.uid! ==
-        chatController.myChats[widget.index!]!.member1) {
-      senderID = chatController.myChats[widget.index!]!.member1;
-      receiverID = chatController.myChats[widget.index!]!.member2;
+    if (userController.userState.value!.uid! == widget.member2!.id) {
+      sender = widget.member2!;
+      receiver = widget.member1!;
+    } else if (userController.userState.value!.uid! == widget.member1!.id) {
+      sender = widget.member1!;
+      receiver = widget.member2!;
     }
   }
 
@@ -3360,125 +3834,124 @@ class _ChatsCardState extends State<ChatsCard> {
 
     //Review review = reviewController.myReviews[index!];
     var screenWidth = Get.width;
-    return GestureDetector(
+    return InkWell(
       onTap: () => Get.to(
         () => MessagesPage(
-          senderID: senderID,
-          receiverID: receiverID,
+          senderID: sender!.id,
+          receiverID: receiver!.id,
         ),
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.black38, width: 0.4),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black,
-                blurStyle: BlurStyle.normal,
-                offset: Offset.fromDirection(-4.0),
-                blurRadius: 0.5,
-              ),
-              BoxShadow(
-                color: Colors.black,
-                blurStyle: BlurStyle.normal,
-                offset: Offset.fromDirection(-2.0),
-                blurRadius: 0.5,
-              ),
-            ],
-          ),
-          // Add some margin if needed (replace with desired values)
-          //margin: const EdgeInsets.all(8.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  // boxShadow: [
-                  //   BoxShadow(
-                  //     color: Colors.black,
-                  //     blurStyle: BlurStyle.normal,
-                  //     offset: Offset.fromDirection(-4.0),
-                  //     blurRadius: 0.5,
-                  //   ),
-                  // ],
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  height: 65,
+                  width: 65,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      width: 0.3,
+                      color: const Color(0xFF673AB7).withOpacity(0.45),
+                    ),
+                  ),
+                  child:
+                      receiver!.imageUrl == null || receiver!.imageUrl!.isEmpty
+                          ? CircleAvatar(
+                              radius: 50,
+                              backgroundColor: const Color(0xFFf5f5f5),
+                              child: SvgPicture.asset(
+                                "assets/Icons/user.svg",
+                                color: Colors.black,
+                                height: 24,
+                                width: 24,
+                              ),
+                            )
+                          : CircleAvatar(
+                              radius: 50,
+                              backgroundImage: NetworkImage(
+                                receiver!.imageUrl!,
+                              ),
+                            ),
                 ),
-                child: CircleAvatar(
-                  radius: screenWidth * 0.08,
-                  backgroundColor: Colors.black,
+                const SizedBox(
+                  width: 20,
                 ),
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 20,
-                          child: Text(
-                            widget.nameToDisplay!,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 20,
+                            child: Text(
+                              receiver!.name!,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.black,
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
-                        // Text(
-                        //   resolveTimestampWithoutAdding(chatController
-                        //           .myChats[widget.index!]!.recentMessageSentAt!)
-                        //       .toString()
-                        //       .split(" ")[0],
-                        //   style: const TextStyle(
-                        //     fontSize: 14,
-                        //     fontWeight: FontWeight.w500,
-                        //     color: Colors.black,
-                        //   ),
-                        // ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    Text(
-                      chatController
-                              .myChats[widget.index!]!.recentMessageText ??
-                          "hello",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                          // Text(
+                          //   resolveTimestampWithoutAdding(chatController
+                          //           .myChats[widget.index!]!.recentMessageSentAt!)
+                          //       .toString()
+                          //       .split(" ")[0],
+                          //   style: const TextStyle(
+                          //     fontSize: 14,
+                          //     fontWeight: FontWeight.w500,
+                          //     color: Colors.black,
+                          //   ),
+                          // ),
+                        ],
                       ),
-                    ),
-                    // Row(
-                    //   children: [
-                    //     Icon(
-                    //       Icons.star_half_rounded,
-                    //       color: Colors.yellow[700],
-                    //     ),
-                    //     Text(
-                    //       "${review.stars}",
-                    //       style: const TextStyle(fontSize: 14),
-                    //     ),
-                    //   ],
-                    // ),
-                  ],
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      Text(
+                        chatController
+                                .myChats[widget.index!]!.recentMessageText ??
+                            "hello",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      // Row(
+                      //   children: [
+                      //     Icon(
+                      //       Icons.star_half_rounded,
+                      //       color: Colors.yellow[700],
+                      //     ),
+                      //     Text(
+                      //       "${review.stars}",
+                      //       style: const TextStyle(fontSize: 14),
+                      //     ),
+                      //   ],
+                      // ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          Divider(
+            height: 2,
+            thickness: 1,
+            color: Colors.black.withOpacity(0.35),
+          ),
+        ],
       ),
     );
   }

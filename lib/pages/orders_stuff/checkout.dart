@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/widgets/text_input.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_paystack/flutter_paystack.dart';
+import 'package:flutter_paystack_payment/flutter_paystack_payment.dart';
 
 class CheckOutPage extends StatefulWidget {
   const CheckOutPage({super.key});
@@ -18,7 +18,7 @@ class _CheckOutPageState extends State<CheckOutPage>
     with SingleTickerProviderStateMixin {
   late TabController tabController;
   String? publicKey = dotenv.env["PAYSTACK_PUBLIC_KEY"];
-  final plugin = PaystackPlugin();
+  final plugin = PaystackPayment();
   bool? isVisible = true;
   List<bool>? isSelected = [true, false];
   String? dropdownValue;

@@ -11,6 +11,7 @@ class Searchtext extends StatelessWidget {
 }
 
 class TextInputWidget extends StatelessWidget {
+  final FocusNode? focusNode;
   final Color? labelColor;
   final double? fontSize;
   final int? maxLines;
@@ -25,6 +26,7 @@ class TextInputWidget extends StatelessWidget {
   final IconButton? visibilityIcon;
   const TextInputWidget({
     this.labelColor,
+    this.focusNode,
     this.controller,
     this.autovalidateMode,
     this.fontSize,
@@ -52,7 +54,7 @@ class TextInputWidget extends StatelessWidget {
           style: TextStyle(
             color: labelColor ?? const Color(0xFF673AB7),
             fontSize: fontSize ?? 20,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontFamily: 'Raleway',
           ),
         ),
@@ -60,6 +62,7 @@ class TextInputWidget extends StatelessWidget {
           height: 4,
         ),
         TextFormField(
+          focusNode: focusNode,
           style: const TextStyle(
             fontFamily: "Lato",
             color: Colors.black,
@@ -73,10 +76,12 @@ class TextInputWidget extends StatelessWidget {
           minLines: minLines,
           autovalidateMode: autovalidateMode ?? AutovalidateMode.disabled,
           decoration: InputDecoration(
-            errorStyle: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: Colors.red,
+            errorMaxLines: 3,
+            errorStyle: TextStyle(
+              fontSize: 11,
+              fontFamily: 'Raleway',
+              fontWeight: FontWeight.w400,
+              color: Colors.red[300],
             ),
             // labelStyle: TextStyle(
             //     fontSize: 14, fontWeight: FontWeight.w900, color: Colors.black),
@@ -86,8 +91,8 @@ class TextInputWidget extends StatelessWidget {
             fillColor: const Color(0xFFF5F5F5),
             suffixIcon: visibilityIcon ?? const SizedBox.shrink(),
             hintText: hintText ?? "",
-            hintStyle: const TextStyle(
-              color: Colors.black,
+            hintStyle: TextStyle(
+              color: Colors.black.withOpacity(0.34),
               fontSize: 15,
               fontFamily: "Raleway",
               fontWeight: FontWeight.w500,
@@ -125,15 +130,22 @@ class TextInputWidget extends StatelessWidget {
 
 class TextInputWidgetWithoutLabel extends StatelessWidget {
   final int? maxLines;
+  final int? minLines;
   final bool? obscureText;
+  final InputBorder? enabledBorder, border;
   final TextInputType? textInputType;
   final AutovalidateMode? autovalidateMode;
+  final String? initialValue;
   final String? hintText;
   final String? Function(String?)? onSubmit, onChanged, validator;
   final TextEditingController? controller;
   final IconButton? visibilityIcon;
   const TextInputWidgetWithoutLabel(
       {this.controller,
+      this.minLines,
+      this.initialValue,
+      this.border,
+      this.enabledBorder,
       this.maxLines,
       this.visibilityIcon,
       this.autovalidateMode,
@@ -151,36 +163,47 @@ class TextInputWidgetWithoutLabel extends StatelessWidget {
       keyboardType: textInputType ?? TextInputType.text,
       obscureText: obscureText ?? false,
       maxLines: maxLines ?? 1,
-      minLines: 1,
+      minLines: minLines ?? 1,
+      initialValue: initialValue,
       autovalidateMode: autovalidateMode ?? AutovalidateMode.disabled,
       decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
+        errorMaxLines: 3,
+        errorStyle: TextStyle(
+          fontSize: 11,
+          fontFamily: 'Raleway',
+          fontWeight: FontWeight.w400,
+          color: Colors.red[300],
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         filled: true,
         fillColor: const Color(0xFFF5F5F5),
         suffixIcon: visibilityIcon ?? const SizedBox.shrink(),
         hintText: hintText ?? "",
         hintStyle: TextStyle(
-          color: Colors.black.withOpacity(1),
+          color: Colors.black.withOpacity(0.45),
+          fontFamily: 'Raleway',
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
         ),
-        enabledBorder: OutlineInputBorder(
-          gapPadding: 4,
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFF5F5F5),
-            width: 1.5,
-          ),
-        ),
-        border: OutlineInputBorder(
-          gapPadding: 4,
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFF5F5F5),
-            width: 1.5,
-          ),
-        ),
+        enabledBorder: enabledBorder ??
+            OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(
+                color: Color(0xFFF5F5F5),
+                width: 1.5,
+              ),
+            ),
+        border: border ??
+            OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(
+                color: Color(0xFFF5F5F5),
+                width: 1.5,
+              ),
+            ),
         focusedBorder: OutlineInputBorder(
           gapPadding: 4,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(
             color: Color(0xFF673AB7),
             width: 1.5,

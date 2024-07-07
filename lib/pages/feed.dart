@@ -1,19 +1,10 @@
-import 'dart:async';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/productController.dart';
-import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/extras/delegate.dart';
-import 'package:hair_main_street/extras/my_flutter_app_icons.dart';
 import 'package:hair_main_street/pages/notifcation.dart';
-import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/widgets/cards.dart';
-import 'package:infinite_carousel/infinite_carousel.dart';
-import 'package:material_symbols_icons/symbols.dart';
-import 'package:shimmer/shimmer.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});

@@ -62,10 +62,13 @@ class ChatController extends GetxController {
     return resultStream;
   }
 
-  void resolveTheNames(ChatMessages message) async {
+  Future<String> resolveTheNames(ChatMessages message) async {
     idTo.value = await resolveNameToDisplay(message.idTo!);
     idFrom.value = await resolveNameToDisplay(message.idFrom!);
-    update(); // This will trigger a rebuild of the widget
+    return 'success';
+    // print(idTo.value);
+    // print(idFrom.value);
+    //update(); // This will trigger a rebuild of the widget
   }
 
   Future<MessagePageData> resolveNameToDisplay(String displayID) async {
@@ -77,11 +80,11 @@ class ChatController extends GetxController {
           await userController.getVendorDetailsFuture(userDetails.uid!);
       nameToDisplay.id = vendorData!.userID!;
       nameToDisplay.name = vendorData.shopName!;
-      //nameToDisplay.imageUrl = vendorData.shopPicture!;
+      nameToDisplay.imageUrl = vendorData.shopPicture ?? "";
     } else {
       nameToDisplay.id = userDetails.uid!;
       nameToDisplay.name = userDetails.fullname!;
-      nameToDisplay.imageUrl = userDetails.profilePhoto!;
+      nameToDisplay.imageUrl = userDetails.profilePhoto ?? "";
     }
 
     return nameToDisplay;

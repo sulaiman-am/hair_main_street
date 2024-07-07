@@ -1,10 +1,8 @@
-import 'dart:async';
-import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:hair_main_street/models/orderModel.dart';
+import 'package:hair_main_street/controllers/productController.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/services/database.dart';
@@ -18,6 +16,10 @@ class VendorController extends GetxController {
   var isImageSelected = false.obs;
   var selectedImage = "".obs;
   var isLoading = false.obs;
+  RxMap<String, List<Product>> filteredVendorProductList =
+      RxMap<String, List<Product>>({});
+  RxMap<String, List<Product>> filteredMapByAvailability =
+      RxMap<String, List<Product>>({});
 
   // @override
   // void onInit() async {
@@ -51,6 +53,86 @@ class VendorController extends GetxController {
   // Stream<List<Vendors>> getVendors() {
   //   return DataBaseService().getVendors();
   // }
+
+  ProductController productController = Get.find<ProductController>();
+  //calculate average store rating
+  double calculateOverallAverageReviewValue() {
+    double totalAverageReviewValue = 0;
+
+    for (var product in productList) {
+      productController.getReviews(product.productID);
+      var reviews = productController.reviews;
+      // print("reviews:$reviews");
+      double averageReviewValueForProduct =
+          calculateAverageReviewValue(reviews);
+
+      totalAverageReviewValue += averageReviewValueForProduct;
+    }
+
+    return totalAverageReviewValue / productList.length;
+  }
+
+  double calculateAverageReviewValue(dynamic reviews) {
+    if (reviews.isEmpty) {
+      return 0.0;
+    }
+
+    double totalStars = 0;
+    for (var review in reviews) {
+      totalStars += review.stars;
+      print("totalstars:$totalStars");
+    }
+
+    return totalStars / reviews.length;
+  }
+
+  //filter vendor products with the age
+  getProductsByAge(List<Product> vendorOrdersObject) {
+    final now = DateTime.now();
+
+    filteredVendorProductList["Today"] = vendorOrdersObject
+        .where((product) =>
+            now.difference(product.createdAt!.toDate()).inHours < 24)
+        .toList();
+
+    filteredVendorProductList["Yesterday"] = vendorOrdersObject
+        .where((product) =>
+            now.difference(product.createdAt!.toDate()).inHours >= 24 &&
+            now.difference(product.createdAt!.toDate()).inHours < 72)
+        .toList();
+
+    filteredVendorProductList["Last Week"] = vendorOrdersObject
+        .where((product) =>
+            now.difference(product.createdAt!.toDate()).inDays >= 3 &&
+            now.difference(product.createdAt!.toDate()).inDays < 7)
+        .toList();
+    filteredVendorProductList["Last Month"] = vendorOrdersObject
+        .where((product) =>
+            now.difference(product.createdAt!.toDate()).inDays >= 7 &&
+            now.difference(product.createdAt!.toDate()).inDays < 28)
+        .toList();
+    filteredVendorProductList["Older"] = vendorOrdersObject
+        .where((product) =>
+            now.difference(product.createdAt!.toDate()).inDays > 28)
+        .toList();
+
+    filteredVendorProductList.refresh();
+  }
+
+  //filter by availability
+  filterByAvailability(List<Product> vendorOrdersObject) {
+    filteredMapByAvailability["All"] = vendorOrdersObject;
+
+    filteredMapByAvailability["Available"] = vendorOrdersObject
+        .where((product) => product.isAvailable == true)
+        .toList();
+
+    filteredMapByAvailability["Unavailable"] = vendorOrdersObject
+        .where((product) => product.isAvailable == false)
+        .toList();
+
+    filteredVendorProductList.refresh();
+  }
 
   void showMyToast(String message) {
     Fluttertoast.showToast(
@@ -130,7 +212,7 @@ class VendorController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
-      Get.close(1);
+      //Get.close(1);
       return "success";
     } else {
       Get.snackbar(

@@ -7,8 +7,8 @@ import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/chatController.dart';
 import 'package:hair_main_street/controllers/notificationController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/extras/colors.dart';
 import 'package:hair_main_street/pages/authentication/authentication.dart';
-import 'package:hair_main_street/pages/authentication/create_account.dart';
 import 'package:hair_main_street/pages/client_shop_page.dart';
 import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/pages/menu/orders.dart';
@@ -18,8 +18,6 @@ import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/services/notification.dart';
 import 'package:hair_main_street/splash_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'extras/colors.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -148,7 +146,10 @@ class _MyAppState extends State<MyApp> {
       initialRoute: "/",
       defaultTransition: Transition.fadeIn,
       getPages: [
-        GetPage(name: '/', page: () => const SplashScreen()),
+        GetPage(
+            name: '/',
+            page: () =>
+                widget.showHome ? const HomePage() : const OnboardingScreen()),
         GetPage(name: "/orders", page: () => OrdersPage()),
         GetPage(name: '/shops', page: () => const ClientShopPage()),
         GetPage(name: '/products', page: () => const ProductPage()),
@@ -165,7 +166,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         navigationBarTheme: NavigationBarThemeData(
           elevation: 0,
-          labelTextStyle: MaterialStateProperty.all(
+          labelTextStyle: WidgetStateProperty.all(
             const TextStyle(
               fontSize: 14,
               fontFamily: 'Lato',
@@ -178,10 +179,10 @@ class _MyAppState extends State<MyApp> {
           style: TextButton.styleFrom(
             backgroundColor: const Color(0xFF673AB7),
             padding: const EdgeInsets.symmetric(vertical: 10),
+            foregroundColor: Colors.white,
             textStyle: const TextStyle(
               fontFamily: 'Lato',
               fontWeight: FontWeight.w500,
-              color: Colors.white,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -214,9 +215,16 @@ class _MyAppState extends State<MyApp> {
           backgroundColor: Colors.white,
           actionsIconTheme: IconThemeData(color: Colors.white),
         ),
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(color: Colors.black),
+          titleLarge: TextStyle(color: Colors.black),
+          titleMedium: TextStyle(color: Colors.black),
+        ),
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Raleway',
-        primarySwatch: primary,
+        //primaryColor: Colors.white,
+        splashColor: const Color(0xFF673AB7).withOpacity(0.30),
+        //primarySwatch: primary,
         useMaterial3: true,
       ),
       home: widget.showHome ? const HomePage() : const OnboardingScreen(),

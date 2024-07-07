@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/productController.dart';
-import 'package:hair_main_street/controllers/vendorController.dart';
 import 'package:hair_main_street/models/productModel.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/pages/searchPage.dart';

@@ -79,40 +79,59 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
     return Obx(
       () => Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            onPressed: () => Get.back(),
-            icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-                size: 24, color: Colors.black),
+          elevation: 0,
+          leadingWidth: 40,
+          backgroundColor: Colors.white,
+          leading: InkWell(
+            onTap: () => Get.back(),
+            radius: 12,
+            child: const Icon(
+              Symbols.arrow_back_ios_new_rounded,
+              size: 20,
+              color: Colors.black,
+            ),
           ),
           title: const Text(
             'Orders',
             style: TextStyle(
-              fontSize: 32,
+              fontSize: 25,
               fontWeight: FontWeight.w900,
               color: Colors.black,
+              fontFamily: 'Lato',
             ),
           ),
-          centerTitle: true,
+          centerTitle: false,
           bottom: PreferredSize(
-            preferredSize: Size.fromHeight(kToolbarHeight),
+            preferredSize: const Size.fromHeight(kToolbarHeight / 2),
             child: Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8.0),
               child: TabBar(
                   tabAlignment: TabAlignment.start,
                   isScrollable: true,
                   controller: tabController,
-                  indicatorWeight: 4,
-                  indicatorColor: Colors.black,
+                  indicatorWeight: 5,
+                  labelStyle: const TextStyle(
+                    fontSize: 15,
+                    fontFamily: 'Raleway',
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF673AB7),
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 15,
+                    fontFamily: 'Raleway',
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  indicatorColor: const Color(0xFF673AB7),
                   tabs: categories
-                      .map((e) => Text(
-                            e,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 15,
-                            ),
-                          ))
+                      .map(
+                        (e) => Text(
+                          e,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      )
                       .toList()),
             ),
           ),
@@ -123,7 +142,7 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
         ),
         body: StreamBuilder(
           stream: DataBaseService()
-              .getBuyerOrders(userController.userState.value!.uid!),
+              .getBuyerOrdersStream(userController.userState.value!.uid!),
           builder: (context, snapshot) {
             // print(snapshot.data);
             if (snapshot.hasData) {
@@ -173,19 +192,22 @@ class _OrdersPageState extends State<OrdersPage> with TickerProviderStateMixin {
       final orders = checkOutController.buyerOrderMap[tabName]!;
       return orders.isNotEmpty
           ? Container(
-              padding: EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: ListView.builder(
                 itemBuilder: (context, index) =>
                     OrderCard(mapKey: tabName, index: index),
                 itemCount: orders.length,
               ),
             )
-          : const Center(
+          : Center(
               child: Text(
-                "Nothing Here",
-                style: TextStyle(
-                  fontSize: 40,
+                "No $tabName Orders Yet",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 25,
+                  fontFamily: 'Lato',
                   color: Colors.black,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             );

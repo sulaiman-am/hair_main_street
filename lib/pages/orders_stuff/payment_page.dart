@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_paystack/flutter_paystack.dart';
+import 'package:flutter_paystack_payment/flutter_paystack_payment.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/controllers/order_checkoutController.dart';
 import 'package:hair_main_street/controllers/userController.dart';
@@ -27,7 +27,7 @@ class _PaymentPageState extends State<PaymentPage> {
   num amountPaid = 0;
   GlobalKey<FormState> formKey = GlobalKey();
   String? publicKey = dotenv.env["PAYSTACK_PUBLIC_KEY"];
-  final plugin = PaystackPlugin();
+  final plugin = PaystackPayment();
   Orders orders = Orders();
   String userEmail = "";
 

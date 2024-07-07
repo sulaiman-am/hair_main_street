@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:hair_main_street/models/admin_variable_model.dart';
 import 'package:hair_main_street/models/cartItemModel.dart';
 import 'package:hair_main_street/models/messageModel.dart';
 import 'package:hair_main_street/models/notificationsModel.dart';
@@ -37,6 +39,9 @@ class DataBaseService {
   var auth = FirebaseAuth.instance;
 
   var fcm = FirebaseMessaging.instance;
+
+  CollectionReference adminVariablesCollection =
+      FirebaseFirestore.instance.collection("admin variables");
 
   CollectionReference userProfileCollection =
       FirebaseFirestore.instance.collection("userProfile");
@@ -73,6 +78,13 @@ class DataBaseService {
 
   CollectionReference remindersCollection =
       FirebaseFirestore.instance.collection('reminders');
+
+  //get admin variables
+  Stream<AdminVariableModel?> getAdminVariables() {
+    var result = adminVariablesCollection.doc("admin").snapshots();
+    return result.map((snapshot) =>
+        AdminVariableModel.fromJson(snapshot.data() as Map<String, dynamic>));
+  }
 
   //get the role dynamically
   Stream<DocumentSnapshot?> get getRoleDynamically {
@@ -145,36 +157,9 @@ class DataBaseService {
   }
 
   Future<Map<String, dynamic>> updateUserProfile(
-      String fieldName, String value) async {
+      Map<String, dynamic> updatedFields) async {
     try {
-      if (fieldName == "address") {
-        await userProfileCollection.doc(currentUser!.uid).update({
-          fieldName: {"addressID": currentUser!.uid, "address": value}
-        });
-
-        Map<String, bool>? fieldExist =
-            (await addressExists(currentUser!.uid))?.cast<String, bool>();
-        if (fieldExist == null || !fieldExist.values.contains(true)) {
-          await userProfileCollection
-              .doc(currentUser!.uid)
-              .collection('delivery addresses')
-              .doc(currentUser!.uid)
-              .set({
-            "addressID": currentUser!.uid,
-            "address": value,
-          });
-        } else {
-          await userProfileCollection
-              .doc(currentUser!.uid)
-              .collection('delivery addresses')
-              .doc(currentUser!.uid)
-              .set({"address": value}, SetOptions(merge: true));
-        }
-      } else {
-        await userProfileCollection
-            .doc(currentUser!.uid)
-            .update({fieldName: value});
-      }
+      await userProfileCollection.doc(currentUser!.uid).update(updatedFields);
 
       var result = await userProfileCollection.doc(currentUser!.uid).get();
       var user = result.data() as Map<String, dynamic>;
@@ -210,19 +195,53 @@ class DataBaseService {
   }
 
   //add delivery address
-  Future addDeliveryAddresses(String userID, String address) async {
+  Future addDeliveryAddresses(
+      String userID, Address address, bool defaultAddress) async {
     try {
-      //create delivery address subcollection or add to it if doesnt exist
-      var addressID = userProfileCollection
+      var addressFields = address.toJson();
+      addressFields["addressID"] = userProfileCollection
           .doc(userID)
           .collection('delivery addresses')
           .doc()
           .id;
+      if (defaultAddress == true) {
+        await userProfileCollection
+            .doc(userID)
+            .update({"address": addressFields});
+      }
+      //create delivery address subcollection or add to it if doesnt exist
       await userProfileCollection
           .doc(userID)
           .collection('delivery addresses')
-          .doc(addressID)
-          .set({"addressID": addressID, "address": address});
+          .doc(addressFields["addressID"])
+          .set(addressFields);
+      return "success";
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  //edit delivery address
+  Future editDeliveryAddresses(
+      String userID, Address address, bool defaultAddress) async {
+    try {
+      var addressFields = address.toJson();
+      if (defaultAddress == true) {
+        await userProfileCollection
+            .doc(userID)
+            .set({"address": addressFields}, SetOptions(merge: true));
+      }
+      //add delivery address subcollection or add to it if doesnt exist
+      await userProfileCollection
+          .doc(userID)
+          .collection('delivery addresses')
+          .doc(addressFields["addressID"])
+          .set(
+            addressFields,
+            SetOptions(
+              merge: true,
+            ),
+          );
       return "success";
     } catch (e) {
       print(e);
@@ -434,6 +453,7 @@ class DataBaseService {
                 price: doc["price"],
                 quantity: doc['quantity'],
                 productID: doc['productID'],
+                optionName: doc["option"],
               );
             }).toList();
           }
@@ -467,13 +487,39 @@ class DataBaseService {
     //return {querySnapshot.docs.firstOrNull!.id: querySnapshot.docs.isNotEmpty};
   }
 
+  Future<Map<dynamic, bool>?> cartItemExists(String productID, userID,
+      {String? fieldName, String? anotherFieldName, String? checkValue}) async {
+    final querySnapshot = anotherFieldName == null
+        ? await userProfileCollection
+            .doc(userID)
+            .collection("cart")
+            .where(fieldName ?? 'productID', isEqualTo: productID)
+            .get()
+        : await userProfileCollection
+            .doc(userID)
+            .collection("cart")
+            .where(fieldName ?? 'productID', isEqualTo: productID)
+            .where(anotherFieldName, isEqualTo: checkValue)
+            .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      return null;
+    } else if (querySnapshot.docs.first.exists) {
+      //print("pow");
+      return {querySnapshot.docs.first.id: true};
+    }
+    return null;
+    //return {querySnapshot.docs.firstOrNull!.id: querySnapshot.docs.isNotEmpty};
+  }
+
   //add to cart function
   Future addToCart(CartItem cartItem) async {
     try {
       var role = await verifyRole();
       if (role!.keys.contains("Buyer") || role.keys.contains("Vendor")) {
         //check if item already exists then add to quantity and calculate price
-        var item = await itemExists(cartItem.productID, role["Buyer"], 'cart');
+        var item = await cartItemExists(cartItem.productID, role["Buyer"],
+            anotherFieldName: "option", checkValue: cartItem.optionName);
         if (item != null) {
           var quantityIncrement = FieldValue.increment(cartItem.quantity!);
           await userProfileCollection
@@ -524,6 +570,7 @@ class DataBaseService {
             "quantity": cartItem.quantity,
             "price": cartItem.price,
             "cartItemID": cartItemId,
+            "option": cartItem.optionName,
           });
         }
         return "Success";
@@ -600,32 +647,85 @@ class DataBaseService {
   //create order and update orders and get orders
 
   //get buyers orders
-  Stream<List<DatabaseOrderResponse>> getBuyerOrders(String? userID) async* {
-    await for (var event in ordersCollection
-        .where('buyerID', isEqualTo: userID)
-        .orderBy('created at', descending: true)
-        .snapshots()) {
-      if (event.docs.isEmpty) {
-        yield [];
-      } else {
-        var futures = event.docs.map((doc) async {
-          var data = doc.data() as Map<String, dynamic>;
-          var orderItemSnapshot =
-              await doc.reference.collection('order items').get();
-          var orderItems = orderItemSnapshot.docs.map((orderItemDoc) {
-            var orderItemData = orderItemDoc.data();
-            return OrderItem.fromJson(orderItemData);
-          }).toList();
-          data["orderItems"] = orderItems;
-          //print(data['orderItems']);
-          return DatabaseOrderResponse.fromJson(data);
-        }).toList();
+  Future<List<DatabaseOrderResponse>> getBuyerOrders(String? userID) async {
+    try {
+      final querySnapshot = await ordersCollection
+          .where('buyerID', isEqualTo: userID)
+          .orderBy('created at', descending: true)
+          .get();
 
-        var results = await Future.wait(futures);
-        yield results;
-      }
+      List<DatabaseOrderResponse> orders = await Future.wait(
+        querySnapshot.docs.map((doc) async {
+          final data = doc.data() as Map<String, dynamic>;
+          data['orderID'] = doc.id;
+
+          // Fetch order items
+          final orderItemsSnapshot =
+              await doc.reference.collection('order items').get();
+          final orderItems = orderItemsSnapshot.docs.map((itemDoc) {
+            return OrderItem.fromJson(itemDoc.data());
+          }).toList();
+
+          data['orderItems'] = orderItems;
+
+          // Handle shipping address
+          // if (data['shipping address'] != null &&
+          //     data['shipping address'] is Map) {
+          //   data['shipping address'] = Address.fromJson(
+          //           data['shipping address'] as Map<String, dynamic>)
+          //       .toJson();
+          // } else {
+          //   data['shipping address'] = null;
+          // }
+
+          return DatabaseOrderResponse.fromJson(data);
+        }),
+      );
+
+      return orders;
+    } catch (e) {
+      print('Error fetching buyer orders: $e');
+      return [];
     }
   }
+
+  Stream<List<DatabaseOrderResponse>> getBuyerOrdersStream(
+      String? userID) async* {
+    yield await getBuyerOrders(userID);
+    yield* ordersCollection
+        .where('buyerID', isEqualTo: userID)
+        .orderBy('created at', descending: true)
+        .snapshots()
+        .asyncMap((_) => getBuyerOrders(userID));
+  }
+
+  // Stream<List<DatabaseOrderResponse>> getBuyerOrders(String? userID) async* {
+  //   await for (var event in ordersCollection
+  //       .where('buyerID', isEqualTo: userID)
+  //       .orderBy('created at', descending: true)
+  //       .snapshots()) {
+  //     if (event.docs.isEmpty) {
+  //       yield [];
+  //     } else {
+  //       var futures = event.docs.map((doc) async {
+  //         var data = doc.data() as Map<String, dynamic>;
+  //         var orderItemSnapshot =
+  //             await doc.reference.collection('order items').get();
+  //         var orderItems = orderItemSnapshot.docs.map((orderItemDoc) {
+  //           var orderItemData = orderItemDoc.data();
+  //           return OrderItem.fromJson(orderItemData);
+  //         }).toList();
+  //         data["orderItems"] = orderItems.map((item) => item.toJson()).toList();
+
+  //         // No need to handle shipping address separately,
+  //         // DatabaseOrderResponse.fromJson will handle it
+
+  //         return DatabaseOrderResponse.fromJson(data);
+  //       }).toList();
+  //       yield await Future.wait(futures);
+  //     }
+  //   }
+  // }
 
   //get vendors orders
   Stream<List<DatabaseOrderResponse>> getVendorsOrders(String? userID) async* {
@@ -680,7 +780,7 @@ class DataBaseService {
           "buyerID": order.buyerId,
           "vendorID": order.vendorId,
           "totalPrice": order.totalPrice,
-          "shipping address": order.shippingAddress,
+          "shipping address": order.shippingAddress!.toJson(),
           "order status": order.orderStatus,
           "created at": FieldValue.serverTimestamp(),
           "updated at": FieldValue.serverTimestamp(),
@@ -1033,6 +1133,8 @@ class DataBaseService {
             "productID": product.productID,
             "name": product.name,
             "category": product.category,
+            "specifications":
+                product.specifications?.map((spec) => spec.toData()).toList(),
             "isAvailable": product.isAvailable,
             "isDeleted": product.isDeleted,
             "price": product.price,
@@ -1407,6 +1509,19 @@ class DataBaseService {
             .doc(DateTime.now().millisecondsSinceEpoch.toString())
             .set(fields);
       } else {
+        var chatFields = {
+          "chatID": check.keys.first,
+          "member1": chat.member1,
+          "member2": chat.member2,
+          "recent message sent at": FieldValue.serverTimestamp(),
+          "recent message sent by": chat.recentMessageSentBy,
+          "recent message text": chat.recentMessageText,
+          "read by": chat.readBy,
+        };
+
+        await chatCollection
+            .doc(check.keys.first)
+            .set(chatFields, SetOptions(merge: true));
         return await chatCollection
             .doc(check.keys.first)
             .collection('messages')
@@ -1445,6 +1560,7 @@ class DataBaseService {
       var result = chatCollection
           .doc(check.keys.first)
           .collection('messages')
+          .orderBy('timestamp', descending: true)
           .snapshots();
       await for (var event in result) {
         //print(event.docs.map((e) => ChatMessages.fromJson(e.data())).toList());
@@ -1784,9 +1900,9 @@ class DataBaseService {
         .orderBy("time stamp", descending: true)
         .snapshots();
     return result.map((event) {
-      return event.docs
-          .map((doc) => Notifications.fromJson(doc.data()))
-          .toList();
+      return event.docs.map((doc) {
+        return Notifications.fromJson(doc.data());
+      }).toList();
     });
   }
 
@@ -1839,5 +1955,46 @@ class DataBaseService {
     } catch (e) {
       print(e);
     }
+  }
+
+  //get categories from admin
+  Stream<List<String>> getCategories() {
+    return adminVariablesCollection
+        .doc("admin")
+        .snapshots()
+        .map((DocumentSnapshot snapshot) {
+      final data = snapshot.data() as Map<String, dynamic>?;
+      if (data != null && data.containsKey('categories')) {
+        final categoryList = List<String>.from(data['categories']);
+        return categoryList;
+      }
+      return [];
+    });
+  }
+
+  Future<String?> initiateTransaction(
+      num amount, String email, String reference) async {
+    final num resolvedAmount = amount * 100;
+    final String resolvedEmail = email;
+    const String callbackUrl = "https://api-hhhpti4wta-uc.a.run.app/";
+
+    HttpsCallable callable =
+        FirebaseFunctions.instance.httpsCallable('initiateTransaction');
+    try {
+      final response = await callable.call(<String, dynamic>{
+        'amount': resolvedAmount,
+        'email': resolvedEmail,
+        'callbackUrl': callbackUrl,
+        'reference': reference,
+      });
+
+      final String accessCode = response.data['accessCode'];
+      print('Access Code: $accessCode');
+      // Use the access code for further processing
+      return accessCode;
+    } catch (e) {
+      print('Error: $e');
+    }
+    return null;
   }
 }

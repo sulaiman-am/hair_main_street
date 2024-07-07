@@ -15,6 +15,7 @@ class Product {
   int? quantity;
   Timestamp? updatedAt;
   dynamic vendorId;
+  List<ProductSpecification>? specifications;
   List<ProductOption>? options; // New field for options
 
   Product({
@@ -26,6 +27,7 @@ class Product {
     this.category,
     this.image,
     this.name,
+    this.specifications,
     this.isAvailable,
     this.isDeleted,
     this.price,
@@ -38,6 +40,7 @@ class Product {
   factory Product.fromData(Map<String, dynamic> data) {
     final List<dynamic>? images = data["image"];
     final List<dynamic>? optionsData = data["options"]; // Get options data
+    final List<dynamic>? specifications = data["specifications"];
 
     return Product(
       productID: data["productID"],
@@ -50,6 +53,9 @@ class Product {
       name: data["name"],
       isAvailable: data["isAvailable"],
       isDeleted: data["isDeleted"],
+      specifications: specifications
+          ?.map((spec) => ProductSpecification.fromJson(spec))
+          .toList(),
       price: data["price"],
       quantity: data["quantity"],
       updatedAt: data["updatedAt"],
@@ -67,6 +73,7 @@ class Product {
       "description": description,
       "category": category,
       "hasOption": hasOptions,
+      "specifications": specifications?.map((spec) => spec.toData()).toList(),
       "image": List<dynamic>.from(image!.map((x) => x)),
       "name": name,
       "price": price,
@@ -113,6 +120,26 @@ class ProductOption {
       "price": price,
       "stock available": stockAvailable,
       // Add other fields to map
+    };
+  }
+}
+
+class ProductSpecification {
+  String? title;
+  String? specification;
+
+  ProductSpecification({this.title, this.specification});
+
+  factory ProductSpecification.fromJson(Map<String, dynamic> json) =>
+      ProductSpecification(
+        title: json["title"],
+        specification: json["specification"],
+      );
+
+  Map<String, dynamic> toData() {
+    return {
+      "title": title,
+      "specification": specification,
     };
   }
 }

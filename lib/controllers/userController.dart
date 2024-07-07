@@ -1,17 +1,22 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:hair_main_street/controllers/notificationController.dart';
 import 'package:hair_main_street/controllers/referralController.dart';
+import 'package:hair_main_street/models/admin_variable_model.dart';
 import 'package:hair_main_street/models/userModel.dart';
 import 'package:hair_main_street/models/vendorsModel.dart';
 import 'package:hair_main_street/pages/homePage.dart';
 import 'package:hair_main_street/services/auth.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:recase/recase.dart';
 
 class UserController extends GetxController {
   Rx<MyUser?> userState = Rx<MyUser?>(null);
+  Rx<AdminVariableModel?> adminVariables = Rx<AdminVariableModel?>(null);
   var isLoading = false.obs;
   var myUser = MyUser().obs;
   var isObscure = true.obs;
@@ -21,6 +26,8 @@ class UserController extends GetxController {
   Rx<MyUser?> buyerDetails = Rx<MyUser?>(null);
   Rx<Vendors?> vendorDetails = Rx<Vendors?>(null);
   RxList<Address?> deliveryAddresses = RxList<Address?>([null]);
+  RxString error = "".obs;
+  RxBool isEditingMode = false.obs;
 
   get screenHeight => Get.height;
 
@@ -31,6 +38,7 @@ class UserController extends GetxController {
     // print(userState.value!.email);
     super.onInit();
     userState.bindStream(determineAuthState());
+    adminVariables.bindStream(getAdminVariables());
 
     ever(userState, (MyUser? newUser) {
       if (newUser != null) {
@@ -47,11 +55,24 @@ class UserController extends GetxController {
     update();
   }
 
+  //get admin variables
+  Stream<AdminVariableModel?> getAdminVariables() {
+    return DataBaseService().getAdminVariables();
+  }
+
+  //get single address
+  Address? getSingleAddress(String addressID) {
+    Address? address = deliveryAddresses
+        .firstWhere((element) => element!.addressID == addressID);
+    return address;
+  }
+
   //add delivery address
-  Future<String?> addDeliveryAddress(String userID, String address) async {
+  Future<String?> addDeliveryAddress(
+      String userID, Address address, bool defaultAddress) async {
     isLoading.value = true;
-    var response =
-        await DataBaseService().addDeliveryAddresses(userID, address);
+    var response = await DataBaseService()
+        .addDeliveryAddresses(userID, address, defaultAddress);
 
     if (response == 'success') {
       isLoading.value = false;
@@ -75,6 +96,50 @@ class UserController extends GetxController {
       Get.snackbar(
         "Error",
         "A problem occured while adding delivery address",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[400],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return 'failed';
+    }
+  }
+
+  //edit delivery address
+  Future<String?> editDeliveryAddress(
+      String userID, Address address, bool defaultAddress) async {
+    isLoading.value = true;
+    var response = await DataBaseService()
+        .editDeliveryAddresses(userID, address, defaultAddress);
+
+    if (response == 'success') {
+      isLoading.value = false;
+      Get.snackbar(
+        "Success",
+        "Delivery Address Edited",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return 'success';
+    } else {
+      isLoading.value = false;
+      Get.snackbar(
+        "Error",
+        "A problem occured while editing delivery address",
         snackPosition: SnackPosition.BOTTOM,
         duration: Duration(seconds: 1, milliseconds: 800),
         forwardAnimationCurve: Curves.decelerate,
@@ -163,7 +228,7 @@ class UserController extends GetxController {
       var response =
           await AuthService().createUserWithEmailandPassword(email, password);
       if (response is MyUser) {
-        myUser.value = response;
+        userState.value = response;
         isLoading.value = false;
         Get.snackbar(
           "Success",
@@ -199,7 +264,7 @@ class UserController extends GetxController {
         );
       }
       if (response is MyUser) {
-        myUser.value = response;
+        userState.value = response;
         isLoading.value = false;
         Get.snackbar(
           "Success",
@@ -221,12 +286,13 @@ class UserController extends GetxController {
         isLoading.value = false;
         Get.snackbar(
           "Error",
-          response.code.toString().split("_").join(" "),
+          response.code.toString().split("_").join(" ").titleCase,
           snackPosition: SnackPosition.BOTTOM,
           duration: Duration(seconds: 1, milliseconds: 800),
           forwardAnimationCurve: Curves.decelerate,
           reverseAnimationCurve: Curves.easeOut,
-          backgroundColor: Colors.red[400],
+          backgroundColor: Colors.red[200],
+          colorText: Colors.black,
           margin: EdgeInsets.only(
             left: 12,
             right: 12,
@@ -243,12 +309,10 @@ class UserController extends GetxController {
   // signIn
   dynamic signIn(String? email, String? password) async {
     try {
-      print("on Init");
       var response =
           await AuthService().signInWithEmailandPassword(email, password);
       if (response is MyUser) {
-        print("e don happen");
-        myUser.value = response;
+        userState.value = response;
         isLoading.value = false;
         Get.snackbar(
           "Success",
@@ -264,24 +328,28 @@ class UserController extends GetxController {
             bottom: screenHeight * 0.08,
           ),
         );
+        error.value = "";
         Get.offAll(() => HomePage());
+        Get.find<BottomNavController>().changeTabIndex(0);
       } else {
         isLoading.value = false;
+        Get.back();
         Get.snackbar(
           "Error",
-          response.code.toString().split("_").join(" "),
+          response.code.toString().split("_").join(" ").titleCase,
           snackPosition: SnackPosition.BOTTOM,
           duration: Duration(seconds: 1, milliseconds: 800),
-          colorText: Colors.white,
+          colorText: Colors.black,
           forwardAnimationCurve: Curves.decelerate,
           reverseAnimationCurve: Curves.easeOut,
-          backgroundColor: Colors.red[700],
+          backgroundColor: Colors.red[200],
           margin: EdgeInsets.only(
             left: 12,
             right: 12,
             bottom: screenHeight * 0.08,
           ),
         );
+        error.value = response.code.toString().split("_").join(" ");
         return null;
       }
     } catch (e) {
@@ -308,27 +376,55 @@ class UserController extends GetxController {
       ),
     );
     Get.offAll(() => HomePage());
+    Get.find<BottomNavController>().changeTabIndex(0);
+  }
+
+  //delete account
+  deleteAccount() {
+    AuthService().deleteAccount();
+    Get.snackbar(
+      "Success",
+      "User Signed Out",
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 1, milliseconds: 800),
+      forwardAnimationCurve: Curves.decelerate,
+      reverseAnimationCurve: Curves.easeOut,
+      backgroundColor: Colors.green[200],
+      margin: EdgeInsets.only(
+        left: 12,
+        right: 12,
+        bottom: screenHeight * 0.08,
+      ),
+    );
+    Get.offAll(() => HomePage());
   }
 
   //edit user profile
-  editUserProfile(String fieldName, value) async {
-    var result = await DataBaseService().updateUserProfile(fieldName, value);
-    userState.update((myUser) {
-      myUser!.fullname = result['fullname'];
-      myUser.address = Address.fromJson(result['address']);
-      myUser.phoneNumber = result['phoneNumber'];
-      myUser.profilePhoto = result['profile photo'];
-      // Update other fields if necessary
-    });
-    return "success";
+  Future<String> editUserProfile(Map<String, dynamic> updatedFields) async {
+    var result = await DataBaseService().updateUserProfile(updatedFields);
+    if (result["result"] == "success") {
+      userState.update((myUser) {
+        myUser!.fullname = result['fullname'];
+        myUser.address = result['address'] != null
+            ? Address.fromJson(result['address'])
+            : null;
+        myUser.phoneNumber = result['phoneNumber'];
+        myUser.profilePhoto = result['profile photo'];
+        // Update other fields if necessary
+      });
+      return "success";
+    } else {
+      return "error";
+    }
   }
 
   changePassword(String oldPassword, String newPassword) async {
     var result = await AuthService().changePassword(oldPassword, newPassword);
     if (result == 'changed Password') {
+      isLoading.value = false;
       Get.snackbar(
         "Success",
-        "User Signed Out",
+        "Password changed successfully",
         snackPosition: SnackPosition.BOTTOM,
         duration: Duration(seconds: 1, milliseconds: 800),
         forwardAnimationCurve: Curves.decelerate,
@@ -340,6 +436,7 @@ class UserController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
+      Get.close(2);
     } else if (result == 'wrong password') {
       Get.snackbar(
         "Error",
@@ -432,7 +529,8 @@ class UserController extends GetxController {
 
   profileUploadImage(List<File> images, String imagePath) async {
     var imageUrl = await DataBaseService().imageUpload(images, imagePath);
-    var response = await editUserProfile("profile photo", imageUrl.first);
+    Map<String, dynamic> updatedField = {"profile photo": imageUrl.first};
+    var response = await editUserProfile(updatedField);
     print(response);
     if (response == "success") {
       Get.back();
@@ -482,6 +580,90 @@ class UserController extends GetxController {
         ),
       );
       Get.close(2);
+    }
+  }
+
+  sendResetPasswordEmail(String email) async {
+    var result = await AuthService().resetPasswordEmail(email);
+    if (result == 'success') {
+      isLoading.value = false;
+      Get.close(1);
+      Get.snackbar(
+        "Success",
+        "Code sent to your email, Kindly check",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return 'success';
+    } else if (result.runtimeType == FirebaseAuthException) {
+      isLoading.value = false;
+      Get.close(1);
+      Get.snackbar(
+        "Error",
+        result.code.toString().split("_").join(" ").titleCase,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        colorText: Colors.black,
+        backgroundColor: Colors.red[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return 'failed';
+    }
+  }
+
+  passwordReset(String newPassword, String code) async {
+    var result = await AuthService().resetPasswordProper(newPassword, code);
+    if (result == 'success') {
+      isLoading.value = false;
+      Get.close(1);
+      Get.snackbar(
+        "Success",
+        "Password Reset",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return 'success';
+    } else if (result.runtimeType == FirebaseAuthException) {
+      isLoading.value = false;
+      Get.close(1);
+      Get.snackbar(
+        "Password reset Failed",
+        result.code.toString().split("_").join(" ").titleCase,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[200],
+        colorText: Colors.black,
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      return 'failed';
     }
   }
 }

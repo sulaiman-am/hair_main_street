@@ -1,65 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hair_main_street/widgets/cards.dart';
+import 'package:hair_main_street/blankPage.dart';
+import 'package:hair_main_street/controllers/userController.dart';
+import 'package:hair_main_street/controllers/vendorController.dart';
+import 'package:hair_main_street/models/productModel.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/add_product.dart';
+import 'package:hair_main_street/pages/vendor_dashboard/edit_product.dart';
+import 'package:hair_main_street/services/database.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class ShopPage extends StatelessWidget {
-  const ShopPage({super.key});
+import '../../widgets/cards.dart';
+
+// ignore: must_be_immutable
+class ShopSetupPage extends StatefulWidget {
+  ShopSetupPage({super.key});
+
+  @override
+  State<ShopSetupPage> createState() => _ShopSetupPageState();
+}
+
+class _ShopSetupPageState extends State<ShopSetupPage> {
+  VendorController vendorController = Get.find<VendorController>();
+
+  UserController userController = Get.find<UserController>();
 
   @override
   Widget build(BuildContext context) {
+    var productList = vendorController.productList;
+
     num screenHeight = MediaQuery.of(context).size.height;
     num screenWidth = MediaQuery.of(context).size.width;
-
-    Gradient myGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 255, 224, 139),
-        Color.fromARGB(255, 200, 242, 237)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
-    Gradient appBarGradient = const LinearGradient(
-      colors: [
-        Color.fromARGB(255, 200, 242, 237),
-        Color.fromARGB(255, 255, 224, 139)
-      ],
-      stops: [
-        0.05,
-        0.99,
-      ],
-      end: Alignment.topCenter,
-      begin: Alignment.bottomCenter,
-      //transform: GradientRotation(math.pi / 4),
-    );
     return Scaffold(
       appBar: AppBar(
-        // flexibleSpace: Container(
-        //   decoration: BoxDecoration(gradient: appBarGradient),
-        // ),
-        centerTitle: true,
         leading: IconButton(
+          icon: const Icon(
+            Symbols.arrow_back_ios_new_rounded,
+            size: 24,
+            color: Colors.black,
+          ),
           onPressed: () => Get.back(),
-          icon: const Icon(Symbols.arrow_back_ios_new_rounded,
-              size: 24, color: Colors.black),
         ),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text(
-          'Shop Details',
+          "Shop Setup",
           style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
+            fontSize: 25,
+            fontFamily: 'Lato',
+            fontWeight: FontWeight.w700,
             color: Colors.black,
           ),
         ),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(0.7), // Adjust height as needed
+          child: Divider(
+            thickness: 0.5, // Adjust thickness as needed
+            color: Colors.black.withOpacity(0.2), // Adjust color as needed
+          ),
+        ),
+        // flexibleSpace: Container(
+        //   decoration: BoxDecoration(gradient: appBarGradient),
+        // ),
       ),
-      body: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: const ShopDetailsCard()),
+      backgroundColor: Colors.white,
+      body: ShopDetailsCard(),
     );
   }
 }

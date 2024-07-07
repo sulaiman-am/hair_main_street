@@ -1,87 +1,70 @@
 /* eslint-disable */
 
-const { firestore, pubsub, https } = require('firebase-functions')
+const {
+  onDocumentUpdated,
+  onDocumentCreated
+} = require('firebase-functions/v2/firestore')
+const { logger } = require('firebase-functions')
+const { onSchedule } = require('firebase-functions/v2/scheduler')
 const admin = require('firebase-admin')
-const { createTransport } = require('nodemailer')
-require('dotenv').config()
-const { FieldValue, Timestamp } = require('firebase-admin/firestore')
-admin.initializeApp()
-const messaging = admin.messaging()
-const t = Timestamp.now()
-const db = admin.firestore()
+const nodemailer = require('nodemailer')
+const axios = require('axios')
 const express = require('express')
-const { get, post, default: axios } = require('axios')
 const cors = require('cors')
 const { json } = require('body-parser')
 
+admin.initializeApp()
+const messaging = admin.messaging()
+const db = admin.firestore()
+const { event } = require('firebase-functions/v1/analytics')
+const { onCall, onRequest } = require('firebase-functions/v2/https')
 const app = express()
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL
-const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY
-
-//middle ware
 app.use(json())
 app.use(cors({ origin: true }))
+app.use(express.json())
 
-app.post('/refund', async (req, res) => {
-  const { transactionId, refundAmount, customerEmail } = req.body
-  const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY
-
-  try {
-    const response = await post(
-      'https://api.paystack.co/refund',
-      {
-        transaction: transactionId,
-        amount: refundAmount, // Optional: Specify the refund amount
-        customerEmail: customerEmail
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${paystackSecretKey}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-
-    if (response.status === 200) {
-      res
-        .status(200)
-        .send({ message: 'Refund initiated successfully', data: response.data })
-    } else {
-      res
-        .status(response.status)
-        .send({ message: 'Failed to initiate refund', error: response.data })
-    }
-  } catch (error) {
-    console.error('Error initiating refund:', error)
-    res
-      .status(500)
-      .send({ message: 'Internal server error', error: error.message })
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY
+const paystackApi = axios.create({
+  baseURL: 'https://api.paystack.co',
+  headers: {
+    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+    'Content-Type': 'application/json'
   }
 })
 
-async function sendFcmNotification(topic, body, title, data) {
+async function getAdminVariables() {
+  try {
+    const data = await db.collection('admin variables').doc('admin').get()
+    const adminVaribles = data.data()
+    return adminVaribles
+  } catch (error) {
+    logger.error(`An error occured ${error}`)
+  }
+}
+
+async function sendFcmNotification(topic, body, title, data, receiver) {
   const message = {
     notification: {
       title: title,
       body: body
     },
     data: {
-      orderID: data
+      orderID: data,
+      receiver: receiver
     },
     topic: topic
   }
 
   try {
     await messaging.send(message)
-    console.log('FCM notification sent successfully')
+    logger.info('FCM notification sent successfully')
   } catch (error) {
-    console.error('Error sending FCM notification:', error)
+    logger.error('Error sending FCM notification:', error)
   }
 }
 
 async function sendEmail(email, subject, body) {
-  const transporter = createTransport({
+  const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL,
@@ -98,17 +81,17 @@ async function sendEmail(email, subject, body) {
 
   try {
     await transporter.sendMail(mailOptions)
-    console.log('Email sent successfully')
+    logger.info('Email sent successfully')
   } catch (error) {
-    console.error('Error sending email:', error)
+    logger.error('Error sending email:', error)
   }
 }
 
-exports.notifyBuyerOnOrderStatusChange = firestore
-  .document('orders/{orderId}')
-  .onUpdate(async (change, context) => {
-    const newOrderData = change.after.data()
-    const oldOrderData = change.before.data()
+exports.notifyBuyerOnOrderStatusChange = onDocumentUpdated(
+  'orders/{orderId}',
+  async event => {
+    const newOrderData = event.data.after.data()
+    const oldOrderData = event.data.before.data()
 
     if (
       newOrderData['order status'] !== oldOrderData['order status'] &&
@@ -117,7 +100,7 @@ exports.notifyBuyerOnOrderStatusChange = firestore
       const buyerId = newOrderData['buyerID']
       const buyerDoc = await db.collection('userProfile').doc(buyerId).get()
       const buyerData = buyerDoc.data()
-      const orderID = context.params.orderId
+      const orderID = event.params.orderId
       const fcmTitle = 'Order Status Update'
       const fcmBody = `Your order has been ${newOrderData['order status']},\nKindly Confirm`
 
@@ -127,10 +110,10 @@ exports.notifyBuyerOnOrderStatusChange = firestore
         .collection('notifications')
         .add({
           userID: buyerId,
-          'extra data': orderID,
+          'extra data': { orderID: orderID, receiver: 'buyer' },
           title: fcmTitle,
           body: fcmBody,
-          'time stamp': t
+          'time stamp': admin.firestore.FieldValue.serverTimestamp()
         })
 
       if (buyerId && buyerData['token']) {
@@ -138,46 +121,48 @@ exports.notifyBuyerOnOrderStatusChange = firestore
           `buyer_${buyerId}`,
           fcmBody,
           fcmTitle,
-          orderID
+          orderID,
+          'buyer'
         )
       }
 
       if (buyerData && buyerData['email']) {
         const emailSubject = 'Order Status Update'
         const emailBody = `
-          <p>Dear ${buyerData['fullname']},</p>
-          <p>Your order with ID: ${orderID} has been ${newOrderData['order status']}, Kindly Confirm.</p>
-        `
+        <p>Dear ${buyerData['fullname']},</p>
+        <p>Your order with ID: ${orderID} has been ${newOrderData['order status']}, Kindly Confirm.</p>
+      `
         await sendEmail(buyerData['email'], emailSubject, emailBody)
       }
     }
 
     return null
-  })
+  }
+)
 
-exports.notifyOnOrderCreation = firestore
-  .document('orders/{orderId}')
-  .onCreate(async (snapshot, context) => {
-    const orderData = snapshot.data()
+exports.notifyOnOrderCreation = onDocumentCreated(
+  'orders/{orderId}',
+  async event => {
+    const orderData = event.data.data()
     const buyerId = orderData.buyerID
     const buyerDoc = await db.collection('userProfile').doc(buyerId).get()
     const buyerData = buyerDoc.data()
     const vendorID = orderData.vendorID
     const vendorDoc = await db.collection('userProfile').doc(vendorID).get()
     const vendorData = vendorDoc.data()
-    const orderID = context.params.orderId
+    const orderID = event.params.orderId
     const fcmTitle = 'New Order Created'
     const vendorFcmBody = 'You have a new order for your product'
     const buyerFcmBody = 'Your order has been created'
     const emailSubject = 'New Order Created'
     const buyerEmailBody = `
-      <p>Dear ${buyerData['fullname']},</p>
-      <p>Your order with ID: ${orderID} has been successfully created.</p>
-    `
+    <p>Dear ${buyerData['fullname']},</p>
+    <p>Your order with ID: ${orderID} has been successfully created.</p>
+  `
     const vendorEmailBody = `
-      <p>Dear ${vendorData['fullname']},</p>
-      <p>You have a new order for your product with ID: ${orderID}.</p>
-    `
+    <p>Dear ${vendorData['fullname']},</p>
+    <p>You have a new order for your product with ID: ${orderID}.</p>
+  `
 
     await db
       .collection('notifications')
@@ -185,10 +170,10 @@ exports.notifyOnOrderCreation = firestore
       .collection('notifications')
       .add({
         userID: buyerId,
-        'extra data': orderID,
+        'extra data': { orderID: orderID, receiver: 'buyer' },
         title: fcmTitle,
         body: buyerFcmBody,
-        'time stamp': t
+        'time stamp': admin.firestore.FieldValue.serverTimestamp()
       })
 
     await db
@@ -197,17 +182,18 @@ exports.notifyOnOrderCreation = firestore
       .collection('notifications')
       .add({
         userID: vendorID,
-        'extra data': orderID,
+        'extra data': { orderID: orderID, receiver: 'vendor' },
         title: fcmTitle,
         body: vendorFcmBody,
-        'time stamp': t
+        'time stamp': admin.firestore.FieldValue.serverTimestamp()
       })
 
     await sendFcmNotification(
       `buyer_${buyerId}`,
       buyerFcmBody,
       fcmTitle,
-      orderID
+      orderID,
+      'buyer'
     )
     await sendEmail(buyerData['email'], emailSubject, buyerEmailBody)
 
@@ -215,20 +201,22 @@ exports.notifyOnOrderCreation = firestore
       `vendor_${vendorID}`,
       vendorFcmBody,
       fcmTitle,
-      orderID
+      orderID,
+      'vendor'
     )
     await sendEmail(vendorData['email'], emailSubject, vendorEmailBody)
 
     return null
-  })
+  }
+)
 
-exports.updateWalletAfterOrderPlacement = firestore
-  .document('orders/{orderId}')
-  .onCreate(async (snapshot, context) => {
-    const order = snapshot.data()
+exports.updateWalletAfterOrderPlacement = onDocumentCreated(
+  'orders/{orderId}',
+  async event => {
+    const order = event.data.data()
     const vendorId = order.vendorID
     const paymentPrice = order['payment price']
-    const orderId = context.params.orderId
+    const orderId = event.params.orderId
 
     // Check if wallet exists for the vendor
     const walletRef = db.collection('wallet').doc(vendorId)
@@ -258,20 +246,52 @@ exports.updateWalletAfterOrderPlacement = firestore
     await transactionRef.set({
       orderId: orderId,
       type: 'credit',
-      timestamp: _firestore.FieldValue.serverTimestamp(),
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
       amount: paymentPrice
     })
 
-    console.log('Wallet updated successfully')
+    logger.info('Wallet updated successfully')
     return null
-  })
+  }
+)
 
-exports.processConfirmedOrder = firestore
-  .document('orders/{orderId}')
-  .onUpdate(async (change, context) => {
-    const orderId = context.params.orderId
-    const orderData = change.after.data()
-    const previousOrderData = change.before.data()
+exports.updateProductStockOnOrderPlacement = onDocumentCreated(
+  'orders/{orderId}',
+  async event => {
+    const orderId = event.params.orderId
+    const orderData = event.data.after.data()
+
+    try {
+      await db.runTransaction(async transaction => {
+        const orderItemDoc = await db
+          .collection('orders')
+          .doc(orderId)
+          .collection('order items')
+          .doc(orderId)
+          .get()
+        const orderItemData = orderItemDoc.data()
+        const productRef = db
+          .collection('products')
+          .doc(orderItemData['productID'])
+        const snapshot = transaction.get(productRef)
+        const subtractingQuantity = Number(orderItemData['quantity'])
+        const previousQuantity = (await snapshot).data().quantity
+        const newQuantity = previousQuantity - subtractingQuantity
+
+        transaction.update(productRef, { quantity: newQuantity })
+      })
+      logger.info('Stock quantity updated successfully')
+    } catch (error) {
+      logger.error(`Stock update failed ${error}`)
+    }
+  }
+)
+
+exports.processConfirmedOrder = onDocumentUpdated(
+  'orders/{orderId}',
+  async event => {
+    const orderData = event.data.after.data()
+    const previousOrderData = event.data.before.data()
 
     // Check if the order status changed to "confirmed"
     if (
@@ -289,84 +309,230 @@ exports.processConfirmedOrder = firestore
         const data = walletDoc.data()
         const currentAmount = data['withdrawable balance'] || 0
         const updatedAmount = Number(currentAmount) + Number(amountToRemit)
-        //console.log(`current amount: ${currentAmount}`);
-        //console.log(`updated amount: ${updatedAmount}`);
+
         // Update the wallet with the new amount
         await walletRef.update({
           'withdrawable balance': updatedAmount
         })
 
-        //console.log(`Amount remitted to vendor (${vendorId}): ${amountToRemit}`);
+        logger.info(`Amount remitted to vendor (${vendorId}): ${amountToRemit}`)
+
+        const orderData = event.data.data()
+        const buyerId = orderData.buyerID
+        const buyerDoc = await db.collection('userProfile').doc(buyerId).get()
+        const buyerData = buyerDoc.data()
+        const vendorID = orderData.vendorID
+        const vendorDoc = await db.collection('userProfile').doc(vendorID).get()
+        const vendorData = vendorDoc.data()
+        const orderID = event.params.orderId
+        const fcmTitle = 'Order Confirmed'
+        const vendorFcmBody =
+          'The buyer has confirmed receipt of the order for your product'
+        const buyerFcmBody =
+          'Your order has been confirmed, kindly leave a review'
+        const emailSubject = 'Order Confirmed'
+        const buyerEmailBody = `
+        <p>Dear ${buyerData['fullname']},</p>
+        <p>Your order with ID: ${orderID} has been successfully confirmed. Kindly the app to leave a review</p>
+      `
+        const vendorEmailBody = `
+        <p>Dear ${vendorData['fullname']},</p>
+        <p>The buyer has confirmed the receipt of the order for your product with ID: ${orderID}.</p>
+      `
+
+        await db
+          .collection('notifications')
+          .doc(buyerId)
+          .collection('notifications')
+          .add({
+            userID: buyerId,
+            'extra data': { orderID: orderID, receiver: 'buyer' },
+            title: fcmTitle,
+            body: buyerFcmBody,
+            'time stamp': admin.firestore.FieldValue.serverTimestamp()
+          })
+
+        await db
+          .collection('notifications')
+          .doc(vendorID)
+          .collection('notifications')
+          .add({
+            userID: vendorID,
+            'extra data': { orderID: orderID, receiver: 'vendor' },
+            title: fcmTitle,
+            body: vendorFcmBody,
+            'time stamp': admin.firestore.FieldValue.serverTimestamp()
+          })
+
+        await sendFcmNotification(
+          `buyer_${buyerId}`,
+          buyerFcmBody,
+          fcmTitle,
+          orderID,
+          'buyer'
+        )
+        await sendEmail(buyerData['email'], emailSubject, buyerEmailBody)
+
+        await sendFcmNotification(
+          `vendor_${vendorID}`,
+          vendorFcmBody,
+          fcmTitle,
+          orderID,
+          'vendor'
+        )
+        await sendEmail(vendorData['email'], emailSubject, vendorEmailBody)
         return null
       } else {
-        console.error(`Wallet not found for vendor (${vendorId})`)
+        logger.error(`Wallet not found for vendor (${vendorId})`)
         return null
       }
     }
 
     return null
-  })
+  }
+)
 
-exports.processExpiredOrder = firestore
-  .document('orders/{orderId}')
-  .onUpdate(async (change, context) => {
-    const orderId = context.params.orderId
-    const orderData = change.after.data()
-    const previousOrderData = change.before.data()
+exports.processRefundApproval = onDocumentUpdated(
+  'refunds/{refundId}',
+  async event => {
+    const oldData = event.data.before.data()
+    const newData = event.data.after.data()
+    const refundId = event.params.refundId
 
-    // Check if the order status changed to "confirmed"
+    //check if refund status has been approved
+    if (
+      newData['refund status'] === 'approved' &&
+      oldData['refund status'] !== 'approved'
+    ) {
+      const refundAccountNumber = newData['refund account']
+      const refundBankCode = newData['refund bank_code']
+      const refundAmount = newData['refund amount']
+      const refundReason = newData['reason']
+
+      try {
+        const transfer = makeTransfersLocally(
+          refundBankCode,
+          refundAccountNumber,
+          refundAmount,
+          refundReason
+        )
+        if (transfer['success'] == true) {
+          await db.collection('refunds').doc(refundId).update({
+            'refund status': 'confirmed',
+            'refund transactionID': transfer['transfer'],
+            'refund timestamp': admin.FieldValue.serverTimestamp()
+          })
+
+          logger.info(
+            'Refund successful and the status has been updated to confirmed'
+          )
+        } else {
+          logger.info('Transaction failed to refund amount to user')
+        }
+      } catch (error) {
+        logger.error(
+          `An error occured in trying to make refund transfer ${error}`
+        )
+      }
+    }
+  }
+)
+
+exports.processExpiredOrder = onDocumentUpdated(
+  'orders/{orderId}',
+  async event => {
+    const orderId = event.params.orderId
+    const orderData = event.data.after.data()
+    const previousOrderData = event.data.before.data()
+
+    // Check if the order status changed to "expired"
     if (
       orderData['order status'] === 'expired' &&
       previousOrderData['order status'] !== 'expired'
     ) {
-      const vendorId = orderData.vendorID // Assuming there's a field called "vendorId" in your order document
-      const transactionIDs = orderData['transactionID']
-      const installments = transactionIDs.length
+      const adminVaribles = await getAdminVariables()
+      const buyerId = orderData.buyerID
+      const buyerDoc = await db.collection('userProfile').doc(buyerId).get()
+      const buyerData = buyerDoc.data()
+      const vendorID = orderData.vendorID
+      const vendorDoc = await db.collection('userProfile').doc(vendorID).get()
+      const vendorData = vendorDoc.data()
       const paymentPrice = orderData['payment price'] // Adjust this based on your data model
-      const refundAmount = (paymentPrice - paymentPrice * 0.1) / installments
+      const refundAmount =
+        paymentPrice - paymentPrice * (adminVaribles['expired fee'] / 100)
       const orderRef = db.collection('orders').doc(orderId)
-      await orderRef.update({
-        'refund operations': 0
-      })
-      const metadata = {
-        orderId: orderId
-      }
-      for (const transactionID in transactionIDs) {
-        try {
-          const transactionResponse = await axios.get(
-            `https://api.paystack.co/transaction/verify/${transactionID}`,
-            {
-              headers: {
-                Authorization: `Bearer ${paystackSecretKey}`
-              }
-            }
-          )
-          if (transactionResponse.status === 200) {
-            if (transactionResponse.data.data.amount >= refundAmount) {
-              await initiateRefund(transactionID, refundAmount, metadata)
-              orderRef.update({
-                'refund operations': FieldValue.increment(1)
-              })
-            } else {
-              console.log(
-                'cannot complete the refund because amount less than refund'
-              )
-            }
-          } else {
-            console.log(transactionResponse.status)
-          }
-        } catch (error) {
-          console.error('Cannot verify transaction:', error)
-        }
-      }
+      const recipientCode = orderData['recipient code']
+      const fcmTitle = 'Order Expired'
+      const vendorFcmBody = `The order for your product with ID: ${orderId} has expired.  Amount paid already would be refunded back to the buyers account `
+      const buyerFcmBody = `Your order with ID: ${orderId} has expired, The amount paid for the order will be refunded according to terms and conditions.`
+      const emailSubject = 'Order Expired'
+      const buyerEmailBody = `
+    <p>Dear ${buyerData['fullname']},</p>
+    <p>Your order with ID: ${orderId} has expired.</p>
+    <p>The amount paid for the order will be refunded according to terms and conditions.</p>
+  `
+      const vendorEmailBody = `
+    <p>Dear ${vendorData['fullname']},</p>
+    <p>The order for your product with ID: ${orderId} has expired. Amount paid already would be refunded back to the buyers account </p>
+    
+  `
+
+      const adminEmail = process.env.ADMIN_EMAIL
+      const adminBody = `An order with ID : ${orderId} from the vendor ${vendorData['shop name']} has expired`
+      const adminSubject = `Order Expired`
+
+      await db
+        .collection('notifications')
+        .doc(buyerId)
+        .collection('notifications')
+        .add({
+          userID: buyerId,
+          'extra data': { orderID: orderId, receiver: 'buyer' },
+          title: fcmTitle,
+          body: buyerFcmBody,
+          'time stamp': admin.firestore.FieldValue.serverTimestamp()
+        })
+
+      await db
+        .collection('notifications')
+        .doc(vendorID)
+        .collection('notifications')
+        .add({
+          userID: vendorID,
+          'extra data': { orderID: orderId, receiver: 'vendor' },
+          title: fcmTitle,
+          body: vendorFcmBody,
+          'time stamp': admin.firestore.FieldValue.serverTimestamp()
+        })
+
+      await sendFcmNotification(
+        `buyer_${buyerId}`,
+        buyerFcmBody,
+        fcmTitle,
+        orderId,
+        'buyer'
+      )
+      await sendEmail(buyerData['email'], emailSubject, buyerEmailBody)
+
+      await sendFcmNotification(
+        `vendor_${vendorID}`,
+        vendorFcmBody,
+        fcmTitle,
+        orderId,
+        'vendor'
+      )
+      await sendEmail(vendorData['email'], emailSubject, vendorEmailBody)
+
+      await sendEmail(adminEmail, adminSubject, adminBody)
+
+      return null
     }
+  }
+)
 
-    return null
-  })
-
-exports.checkInstallmentPayments = pubsub
-  .schedule('every 10 minutes')
-  .onRun(async context => {
+exports.checkInstallmentPayments = onSchedule(
+  'every 10 minutes',
+  async event => {
     const currentTime = Date.now()
 
     // Query orders with "installment" payment method
@@ -387,7 +553,7 @@ exports.checkInstallmentPayments = pubsub
         .doc(order['buyerID'])
         .get()
       const totalInstallments = order['installment number'] || 1 // Default to 1 if not specified
-      const installmentDuration = vendorRef.data()['installment duration'] || 0 // Default to 3 days if not specified
+      const installmentDuration = vendorRef.data()['installment duration'] || 0 // Default to 0 days if not specified
       const installmentsMade = order['installment paid'] || 1
       const firstInstallmentTime =
         order['created at'].seconds * 1000 +
@@ -420,7 +586,8 @@ exports.checkInstallmentPayments = pubsub
             `buyer_${order['buyerID']}`,
             fcmBody,
             fcmTitle,
-            orderID
+            orderID,
+            'buyer'
           )
           await db
             .collection('notifications')
@@ -428,8 +595,8 @@ exports.checkInstallmentPayments = pubsub
             .collection('notifications')
             .add({
               body: fcmBody,
-              'extra data': orderID,
-              'time stamp': t,
+              'extra data': { orderID: orderID, receiver: 'buyer' },
+              'time stamp': admin.firestore.FieldValue.serverTimestamp(),
               title: fcmTitle,
               userID: order['buyerID']
             })
@@ -458,7 +625,8 @@ exports.checkInstallmentPayments = pubsub
               `buyer_${order['buyerID']}`,
               buyerFcmBody,
               fcmTitle,
-              orderID
+              orderID,
+              'buyer'
             )
             await db
               .collection('notifications')
@@ -466,8 +634,8 @@ exports.checkInstallmentPayments = pubsub
               .collection('notifications')
               .add({
                 body: buyerFcmBody,
-                'extra data': orderID,
-                'time stamp': t,
+                'extra data': { orderID: orderID, receiver: 'buyer' },
+                'time stamp': admin.firestore.FieldValue.serverTimestamp(),
                 title: fcmTitle,
                 userID: order['buyerID']
               })
@@ -501,7 +669,8 @@ exports.checkInstallmentPayments = pubsub
               `buyer_${order['buyerID']}`,
               buyerFcmBody,
               fcmTitle,
-              orderID
+              orderID,
+              'buyer'
             )
             await db
               .collection('notifications')
@@ -509,8 +678,8 @@ exports.checkInstallmentPayments = pubsub
               .collection('notifications')
               .add({
                 body: buyerFcmBody,
-                'extra data': orderID,
-                'time stamp': t,
+                'extra data': { orderID: orderID, receiver: 'buyer' },
+                'time stamp': admin.firestore.FieldValue.serverTimestamp(),
                 title: fcmTitle,
                 userID: order['buyerID']
               })
@@ -528,959 +697,278 @@ exports.checkInstallmentPayments = pubsub
         }
       }
     })
-    //console.log('this ran')
+
+    logger.info('Installment payment check completed')
     return null
-  })
-
-exports.api = https.onRequest(app)
-
-exports.handleRefundRequestCreation = firestore
-  .document('refunds/{requestId}')
-  .onCreate(async (snapshot, context) => {
-    try {
-      // Get the refund request data
-      const refundRequestData = snapshot.data()
-      if (!refundRequestData) {
-        throw new Error('Refund request data is missing')
-      }
-
-      // Get the order associated with the refund request
-      const orderId = refundRequestData['orderID']
-      const orderSnapshot = await db.collection('orders').doc(orderId).get()
-      const orderData = orderSnapshot.data()
-      if (!orderData) {
-        throw new Error('Order data is missing')
-      }
-
-      // Get user and vendor data
-      const buyerId = orderData['buyerID']
-      const vendorId = orderData['vendorID']
-      const buyerSnapshot = await db
-        .collection('userProfile')
-        .doc(buyerId)
-        .get()
-      const vendorSnapshot = await db
-        .collection('userProfile')
-        .doc(vendorId)
-        .get()
-      const buyerData = buyerSnapshot.data()
-      const vendorData = vendorSnapshot.data()
-      if (!buyerData || !vendorData) {
-        throw new Error('Buyer or vendor data is missing')
-      }
-
-      // Send email notifications
-      await sendEmail(
-        buyerData['email'],
-        'Refund Request Submitted',
-        'Your refund request has been submitted successfully.'
-      )
-      await sendEmail(
-        vendorData['email'],
-        'New Refund Request',
-        'A new refund request has been submitted by a buyer.'
-      )
-      await sendEmail(
-        ADMIN_EMAIL,
-        'New Refund Request',
-        'A new refund request has been submitted.'
-      )
-
-      //send FCM notifications
-      await sendFcmNotification(
-        `buyer_${buyerId}`,
-        'Your refund request has been submitted successfully.',
-        'Refund Request Submitted',
-        orderId
-      )
-
-      await sendFcmNotification(
-        `vendor_${vendorId}`,
-        'A new refund request has been submitted by a buyer.',
-        'New Refund Request',
-        orderId
-      )
-
-      //update notifications in db
-      await db
-        .collection('notifications')
-        .doc(buyerId)
-        .collection('notifications')
-        .add({
-          userID: buyerId,
-          'extra data': orderId,
-          title: 'Refund Request Submitted',
-          body: 'Your refund request has been submitted successfully.',
-          'time stamp': t
-        })
-
-      await db
-        .collection('notifications')
-        .doc(vendorId)
-        .collection('notifications')
-        .add({
-          userID: vendorId,
-          'extra data': orderId,
-          title: 'New Refund Request',
-          body: 'A new refund request has been submitted by a buyer.',
-          'time stamp': t
-        })
-
-      return null
-    } catch (error) {
-      console.error('Error handling refund request creation:', error)
-      return null
-    }
-  })
-
-exports.handleOrderCancelRequestCreation = firestore
-  .document('cancellations/{requestID}')
-  .onCreate(async (snapshot, context) => {
-    try {
-      // Get the cancel request data
-      const cancelRequestData = snapshot.data()
-      if (!cancelRequestData) {
-        throw new Error('Cancel request data is missing')
-      }
-
-      // Get the order associated with the cancel request
-      const orderId = cancelRequestData['orderID']
-      const orderSnapshot = await db.collection('orders').doc(orderId).get()
-      const orderData = orderSnapshot.data()
-      if (!orderData) {
-        throw new Error('Order data is missing')
-      }
-
-      // Get user and vendor data
-      const buyerId = orderData['buyerID']
-      const vendorId = orderData['vendorID']
-      const buyerSnapshot = await db
-        .collection('userProfile')
-        .doc(buyerId)
-        .get()
-      const vendorSnapshot = await db
-        .collection('userProfile')
-        .doc(vendorId)
-        .get()
-      const buyerData = buyerSnapshot.data()
-      const vendorData = vendorSnapshot.data()
-      if (!buyerData || !vendorData) {
-        throw new Error('Buyer or vendor data is missing')
-      }
-
-      // Send email notifications
-      await sendEmail(
-        buyerData['email'],
-        'Order Cancel Request Submitted',
-        'Your order cancel request has been submitted successfully.'
-      )
-      await sendEmail(
-        vendorData['email'],
-        'New Order Cancel Request',
-        'A new order cancel request has been submitted by a buyer.'
-      )
-      await sendEmail(
-        ADMIN_EMAIL,
-        'New Order Cancel Request',
-        'A new order cancel request has been submitted.'
-      )
-
-      //send fcm notification to buyer and vendor
-      await sendFcmNotification(
-        `buyer_${buyerId}`,
-        'Your order cancel request has been submitted successfully.',
-        'Order Cancel Request Submitted',
-        orderId
-      )
-
-      await sendFcmNotification(
-        `vendor_${vendorId}`,
-        'A new order cancel request has been submitted by a buyer.',
-        'New Order Cancel Request',
-        orderId
-      )
-
-      await db
-        .collection('notifications')
-        .doc(buyerId)
-        .collection('notifications')
-        .add({
-          userID: buyerId,
-          'extra data': orderId,
-          title: 'Order Cancel Request Submitted',
-          body: 'Your order cancel request has been submitted successfully.',
-          'time stamp': t
-        })
-
-      await db
-        .collection('notifications')
-        .doc(vendorId)
-        .collection('notifications')
-        .add({
-          userID: vendorId,
-          'extra data': orderId,
-          title: 'New Order Cancel Request',
-          body: 'A new order cancel request has been submitted by a buyer.',
-          'time stamp': t
-        })
-
-      return null
-    } catch (error) {
-      console.error('Error handling order cancel request creation:', error)
-      return null
-    }
-  })
-
-async function initiateRefund(transactionId, refundAmount, metadata = {}) {
-  try {
-    const response = await axios.post(
-      'https://api.paystack.co/refund',
-      {
-        transaction: transactionId,
-        amount: refundAmount,
-        metadata: metadata
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${paystackSecretKey}`
-        }
-      }
-    )
-    return response.data
-  } catch (error) {
-    console.error('Error initiating refund:', error.response.data)
-    throw error
   }
-}
+)
 
-exports.handleRefunds = firestore
-  .document('refunds/{refundId}')
-  .onUpdate(async (change, context) => {
-    const refundId = context.params.refundId
-    const newValue = change.after.data()
-    const oldValue = change.before.data()
-
-    if (
-      newValue['refund status'] === 'approved' &&
-      oldValue['refund status'] !== 'approved'
-    ) {
-      try {
-        // ... (Retrieve order data, calculate refund amount, get user and vendor data)
-        const orderId = newValue['orderID']
-        const orderSnapshot = await db.collection('orders').doc(orderId).get()
-        const orderData = orderSnapshot.data()
-        if (!orderData) {
-          throw new Error('Order data is missing')
-        }
-
-        // Get user and vendor data
-        const buyerId = orderData['buyerID']
-        const vendorId = orderData['vendorID']
-        const buyerSnapshot = await db
-          .collection('userProfile')
-          .doc(buyerId)
-          .get()
-        const vendorSnapshot = await db
-          .collection('userProfile')
-          .doc(vendorId)
-          .get()
-        const buyerData = buyerSnapshot.data()
-        const vendorData = vendorSnapshot.data()
-        if (!buyerData || !vendorData) {
-          throw new Error('Buyer or vendor data is missing')
-        }
-
-        // Send email notifications
-        await Promise.all([
-          sendEmail(
-            buyerData['email'],
-            'Refund Approved',
-            'Your refund has been approved.'
-          ),
-          sendEmail(
-            vendorData['email'],
-            'Refund Approved',
-            'A refund has been approved.'
-          ),
-          sendEmail(
-            ADMIN_EMAIL,
-            'Refund Approved',
-            'A refund has been approved.'
-          )
-        ])
-
-        //send notification to both vendor and buyer
-        const buyerFcmBody = 'Refund has been approved.'
-        const fcmTitle = 'Refund Approved'
-
-        await Promise.all([
-          sendFcmNotification(
-            `buyer_${buyerId}`,
-            buyerFcmBody,
-            fcmTitle,
-            orderId
-          ),
-          db
-            .collection('notifications')
-            .doc(buyerId)
-            .collection('notifications')
-            .add({
-              body: buyerFcmBody,
-              'extra data': orderId,
-              'time stamp': t,
-              title: fcmTitle,
-              userID: buyerId
-            }),
-
-          sendFcmNotification(
-            `vendor_${vendorId}`,
-            buyerFcmBody,
-            fcmTitle,
-            orderId
-          ),
-          db
-            .collection('notifications')
-            .doc(vendorId)
-            .collection('notifications')
-            .add({
-              body: buyerFcmBody,
-              'extra data': orderId,
-              'time stamp': t,
-              title: fcmTitle,
-              userID: vendorId
-            })
-        ])
-
-        // Get payment amount and calculate refund amount based on the reason
-        const paymentAmount = orderData['payment price']
-        const transactionIDs = orderData['transactionID']
-        const installments = transactionIDs.length
-        console.log('transactionID:', transactionIDs)
-        const refundRef = db.collection('refunds').doc(refundId)
-        await refundRef.update({
-          'refund operations': 0
-        })
-        let refundAmount
-        const metadata = {
-          refundId: refundId,
-          orderId: orderId
-        }
-        if (
-          newValue['reason'] === 'Defective Product' ||
-          newValue['reason'] === 'Received Wrong Item'
-        ) {
-          for (const transactionID in transactionIDs) {
-            try {
-              const transactionResponse = await axios.get(
-                `https://api.paystack.co/transaction/verify/${transactionID}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${paystackSecretKey}`
-                  }
-                }
-              )
-              if (transactionResponse.status === 200) {
-                refundAmount = paymentAmount / installments
-                if (transactionResponse.data.data.amount >= refundAmount) {
-                  await initiateRefund(transactionID, refundAmount, metadata)
-                  refundRef.update({
-                    'refund operations': FieldValue.increment(1)
-                  })
-                } else {
-                  console.log(
-                    'cannot complete the refund because amount less than refund'
-                  )
-                }
-              } else {
-                console.log(transactionResponse.status)
-              }
-            } catch (error) {
-              console.error('Cannot verify transaction:', error)
-            }
-          }
-        } else {
-          for (const transactionID in transactionIDs) {
-            try {
-              const transactionResponse = await axios.get(
-                `https://api.paystack.co/transaction/verify/${transactionID}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${paystackSecretKey}`
-                  }
-                }
-              )
-              if (transactionResponse.status === 200) {
-                refundAmount =
-                  (paymentAmount - paymentPrice * 0.1) / installments
-                if (transactionResponse.data.data.amount >= refundAmount) {
-                  await initiateRefund(transactionID, refundAmount, metadata)
-                  refundRef.update({
-                    'refund operations': FieldValue.increment(1)
-                  })
-                } else {
-                  console.log(
-                    'cannot complete the refund because amount less than refund'
-                  )
-                }
-              } else {
-                console.log(transactionResponse.status)
-              }
-            } catch (error) {
-              console.error('Cannot verify payment:', error)
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error processing refund:', error)
-      }
-    }
-  })
-
-exports.handleOrderCancellations = firestore
-  .document('cancellations/{cancellationId}')
-  .onUpdate(async (change, context) => {
-    const cancellationId = context.params.cancellationId
-    const newValue = change.after.data()
-    const oldValue = change.before.data()
-
-    if (
-      newValue['cancellation status'] === 'approved' &&
-      oldValue['cancellation status'] !== 'approved'
-    ) {
-      try {
-        // ... (Retrieve order data, calculate refund amount, get user and vendor data)
-        const orderId = newValue['orderID']
-        const orderSnapshot = await db.collection('orders').doc(orderId).get()
-        const orderData = orderSnapshot.data()
-        if (!orderData) {
-          throw new Error('Order data is missing')
-        }
-
-        // Get user and vendor data
-        const buyerId = orderData['buyerID']
-        const vendorId = orderData['vendorID']
-        const buyerSnapshot = await db
-          .collection('userProfile')
-          .doc(buyerId)
-          .get()
-        const vendorSnapshot = await db
-          .collection('userProfile')
-          .doc(vendorId)
-          .get()
-        const buyerData = buyerSnapshot.data()
-        const vendorData = vendorSnapshot.data()
-        if (!buyerData || !vendorData) {
-          throw new Error('Buyer or vendor data is missing')
-        }
-
-        // Send email notifications
-        await Promise.all([
-          sendEmail(
-            buyerData['email'],
-            'Order Cancellation Approved',
-            'Your Order Cancellation Request has been approved.'
-          ),
-          sendEmail(
-            vendorData['email'],
-            'Order Cancellation Approved',
-            'An Order Cancellation Request has been approved by Admin.'
-          ),
-          sendEmail(
-            ADMIN_EMAIL,
-            'Order Cancellation Approved',
-            'A Order Cancellation has been approved.'
-          )
-        ])
-
-        //send notification to both vendor and buyer
-        const buyerFcmBody = 'Order Cancellation has been approved.'
-        const fcmTitle = 'Order Cancellattion Approved'
-
-        await Promise.all([
-          sendFcmNotification(
-            `buyer_${buyerId}`,
-            buyerFcmBody,
-            fcmTitle,
-            orderId
-          ),
-          db
-            .collection('notifications')
-            .doc(buyerId)
-            .collection('notifications')
-            .add({
-              body: buyerFcmBody,
-              'extra data': orderId,
-              'time stamp': t,
-              title: fcmTitle,
-              userID: buyerId
-            }),
-
-          sendFcmNotification(
-            `vendor_${vendorId}`,
-            buyerFcmBody,
-            fcmTitle,
-            orderId
-          ),
-          db
-            .collection('notifications')
-            .doc(vendorId)
-            .collection('notifications')
-            .add({
-              body: buyerFcmBody,
-              'extra data': orderId,
-              'time stamp': t,
-              title: fcmTitle,
-              userID: vendorId
-            })
-        ])
-
-        const paymentAmount = orderData['payment price']
-        const transactionIDs = orderData['transactionID']
-        const installments = transactionIDs.length
-        console.log('transactionID:', transactionIDs)
-        const cancellationRef = db
-          .collection('cancellations')
-          .doc(cancellationId)
-        await cancellationRef.update({
-          'cancellation operations': 0
-        })
-        let refundAmount
-        const metadata = {
-          cancellationId: cancellationId,
-          orderId: orderId
-        }
-        for (const transactionID in transactionIDs) {
-          try {
-            const transactionResponse = await axios.get(
-              `https://api.paystack.co/transaction/verify/${transactionID}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${paystackSecretKey}`
-                }
-              }
-            )
-            if (transactionResponse.status === 200) {
-              refundAmount =
-                (paymentAmount - paymentAmount * 0.1) / installments
-              if (transactionResponse.data.data.amount >= refundAmount) {
-                await initiateRefund(transactionID, refundAmount, metadata)
-                cancellationRef.update({
-                  'cancellation operations': FieldValue.increment(1)
-                })
-              } else {
-                console.log(
-                  'cannot complete the refund because amount less than refund'
-                )
-              }
-            } else {
-              console.log(transactionResponse.status)
-            }
-          } catch (error) {
-            console.error('Cannot verify transaction:', error)
-          }
-        }
-      } catch (error) {
-        console.error('Error processing refund:', error)
-      }
-    }
-  })
-
-exports.paystackRefundWebhook = https.onRequest(async (req, res) => {
-  // Verify the Paystack webhook signature
-  const signature = req.headers['x-paystack-signature']
-  if (!signature || !validateSignature(req.rawBody, signature)) {
-    console.error('Invalid signature:', signature)
-    res.status(400).send('Invalid signature')
-    return
-  }
-
-  const event = req.body
-  let inRefunds
-  let inCancellations
-
-  if (event.event === 'refund.processed') {
-    const orderId = event.data.metadata['orderId']
-
-    try {
-      //get order
-      const orderSnapshot = await db.collection('orders').doc(orderId).get()
-      const orderData = orderSnapshot.data()
-
-      // Get buyer and vendor data from the order document
-      const buyerId = orderData['buyerID']
-      const vendorId = orderData['vendorID']
-      const buyerSnapshot = await db
-        .collection('userProfile')
-        .doc(buyerId)
-        .get()
-      const vendorSnapshot = await db
-        .collection('userProfile')
-        .doc(vendorId)
-        .get()
-      const buyerData = buyerSnapshot.data()
-      const vendorData = vendorSnapshot.data()
-
-      //get refund details
-      const refundSnapshot = await db
-        .collection('refunds')
-        .where('orderID', '==', orderData['orderID'])
-        .get()
-      if (refundSnapshot.size > 1) {
-        console.error('Multiple refunds found for the same orderID')
-        res.status(400).send('Multiple refunds found for the same orderID')
-        return
-      } else if (refundSnapshot.empty) {
-        inRefunds = false
-      } else {
-        inRefunds = true
-      }
-
-      //get cancellation details
-      const cancellationSnapshot = await db
-        .collection('cancellations')
-        .where('orderID', '==', orderData['orderID'])
-        .get()
-      if (cancellationSnapshot.size > 1) {
-        console.error('Multiple cancellations found for the same orderID')
-        res
-          .status(400)
-          .send('Multiple cancellations found for the same orderID')
-        return
-      } else if (cancellationSnapshot.empty) {
-        inCancellations = false
-      } else {
-        inCancellations = true
-      }
-
-      //do the conditional checks
-      if (orderData['order status'] === 'expired') {
-        //update the vendors wallet
-        const orderRef = db.collection('orders').doc(orderId)
-        await orderRef.update({
-          'refund operations': FieldValue.increment(-1)
-        })
-        if (orderSnapshot.exists && orderData['refund operations'] === 0) {
-          const installments = orderData['transactionID'].length
-          const paymentAmount = orderData['payment price']
-          const refundAmount =
-            paymentAmount - (paymentAmount * 0.1) / installments
-          await processExpiredOrder(
-            refundAmount,
-            vendorId,
-            orderData['orderID']
-          )
-        } else {
-          console.log('Refund Process not yet complete or it failed')
-        }
-      } else if (inRefunds) {
-        //update refunds to complete
-        const refundData = refundSnapshot.docs[0].data()
-        const refundId = refundData['requestID']
-        const refundDocRef = db.collection('refunds').doc(refundId)
-        await refundDocRef.update({
-          'refund operations': FieldValue.increment(-1) // Decrement the counter
-        })
-        if (refundSnapshot.exists && refundData['refund operations'] === 0) {
-          const installments = orderData['transactionID'].length
-          const paymentAmount = orderData['payment price']
-          let refundAmount
-          if (
-            refundData['reason'] === 'Defective Product' ||
-            refundData['reason'] === 'Received Wrong Item'
-          ) {
-            refundAmount = paymentAmount / installments
-          }else{
-            refundAmount = paymentAmount - (paymentAmount * 0.1) / installments
-          }
-          await processRefunds(refundData, buyerData, vendorData, refundAmount)
-        } else {
-          console.log('Refund Process not yet complete or it failed')
-        }
-      } else if (inCancellations) {
-        //update cancellations to complete
-        const cancellationData = cancellationSnapshot.docs[0].data()
-        const cancellationId = cancellationData['requestID']
-        const cancellationRef = db
-          .collection('cancellations')
-          .doc(cancellationId)
-        await cancellationRef.update({
-          'cancellation operations': FieldValue.increment(-1)
-        })
-        if (
-          cancellationSnapshot.exists &&
-          cancellationData['cancellation operations'] === 0
-        ) {
-          const installments = orderData['transactionID'].length
-          const paymentAmount = orderData['payment price']
-          const refundAmount =
-            paymentAmount - (paymentAmount * 0.1) / installments
-          await processCancellations(
-            cancellationData,
-            buyerData,
-            vendorData,
-            refundAmount
-          )
-        } else {
-          console.log('Refund Process not yet complete or it failed')
-        }
-      }
-
-      res.status(200).send('Webhook received and processed successfully.')
-    } catch (error) {
-      console.error('Error processing refund webhook:', error)
-      res.status(500).send('Error processing webhook')
-    }
-  } else {
-    res.status(200).send('Webhook received but not processed.')
-  }
-})
-
-// Helper function to validate Paystack webhook signature
-function validateSignature(body, signature) {
-  const crypto = require('crypto')
-  const bodyString = body.toString('utf8')
-  const hash = crypto
-    .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
-    .update(bodyString)
-    .digest('hex')
-
-  return hash === signature
-}
-
-async function processExpiredOrder(refundAmount, vendorId, orderID) {
-  const transaction = db.runTransaction(async t => {
-    const vendorWalletRef = db.collection('wallet').doc(vendorId)
-    const vendorWalletSnapshot = await t.get(vendorWalletRef)
-
-    if (!vendorWalletSnapshot.exists) {
-      throw new Error('Vendor wallet not found')
-    }
-
-    t.update(vendorWalletRef, {
-      balance: db.FieldValue.increment(-refundAmount)
-    })
-  })
-
-  try {
-    await transaction
-    console.log('Transaction successfully committed!')
-
-    //add a transaction for vendor
-    await db.collection('wallet').doc(vendorId).collection('transactions').add({
-      type: 'debit',
-      timestamp: FieldValue.serverTimestamp(),
-      orderId: orderID,
-      amount: refundAmount
-    })
-  } catch (error) {
-    console.error('Transaction failed:', error)
-  }
-}
-
-async function processRefunds(refundData, buyerData, vendorData, refundAmount) {
-  const buyerFcmBody = 'Refund has been completed.'
-  const fcmTitle = 'Refund Completed'
-  const buyerId = buyerData['uid']
-  const vendorId = vendorData['uid']
-  await db
-    .collection('refunds')
-    .doc(refundData['requestID'])
-    .update({ 'refund status': 'completed' })
-
-  await Promise.all([
-    sendEmail(ADMIN_EMAIL, 'Refund Completed', 'A refund has been completed.'),
-    sendEmail(
-      vendorData['email'],
-      'Refund Completed',
-      'A refund has been completed.'
-    ),
-    sendEmail(
-      buyerData['email'],
-      'Refund Completed',
-      'Your refund has been completed.'
-    ),
-    //send notification to both vendor and buyer
-
-    sendFcmNotification(
-      `buyer_${buyerId}`,
-      buyerFcmBody,
-      fcmTitle,
-      refundData['orderID']
-    ),
-    db
-      .collection('notifications')
-      .doc(buyerId)
-      .collection('notifications')
-      .add({
-        body: buyerFcmBody,
-        'extra data': refundData['orderID'],
-        'time stamp': t,
-        title: fcmTitle,
-        userID: buyerId
-      }),
-
-    sendFcmNotification(
-      `vendor_${vendorId}`,
-      buyerFcmBody,
-      fcmTitle,
-      refundData['orderID']
-    ),
-    db
-      .collection('notifications')
-      .doc(vendorId)
-      .collection('notifications')
-      .add({
-        body: buyerFcmBody,
-        'extra data': refundData['orderID'],
-        'time stamp': t,
-        title: fcmTitle,
-        userID: vendorId
-      })
-  ])
-  //update vendor wallet
-  const transaction = db.runTransaction(async t => {
-    const vendorWalletRef = db.collection('wallet').doc(vendorId)
-    const vendorWalletSnapshot = await t.get(vendorWalletRef)
-
-    if (!vendorWalletSnapshot.exists) {
-      throw new Error('Vendor wallet not found')
-    }
-
-    t.update(vendorWalletRef, {
-      balance: db.FieldValue.increment(-refundAmount),
-      'withdrawable balance': db.FieldValue.increment(-refundAmount)
-    })
-  })
-  try {
-    await transaction
-    console.log('Transaction successfully committed!')
-
-    //add a transaction for vendor
-    await db.collection('wallet').doc(vendorId).collection('transactions').add({
-      type: 'debit',
-      timestamp: FieldValue.serverTimestamp(),
-      orderId: orderID,
-      amount: refundAmount
-    })
-  } catch (error) {
-    console.error('Transaction failed:', error)
-  }
-}
-
-async function processCancellations(
-  cancellationData,
-  buyerData,
-  vendorData,
-  refundAmount
-) {
-  const buyerFcmBody = 'Order Cancellation has been completed.'
-  const fcmTitle = 'Order Cancellation Completed'
-  const buyerId = buyerData['uid']
-  const vendorId = vendorData['uid']
-  await db
-    .collection('cancellations')
-    .doc(cancellationData['requestID'])
-    .update({ 'cancellation status': 'completed' })
-
-  await Promise.all([
-    sendEmail(
-      ADMIN_EMAIL,
-      'Order Cancellation Completed',
-      'An Order Cancellation has been completed.'
-    ),
-    sendEmail(
-      vendorData['email'],
-      'Order Cancellation Completed',
-      'An Order Cancellation has been completed.'
-    ),
-    sendEmail(
-      buyerData['email'],
-      'Order Cancellation Completed',
-      'Your Order Cancellation has been completed.'
-    ),
-    //send notification to both vendor and buyer
-
-    sendFcmNotification(
-      `buyer_${buyerId}`,
-      buyerFcmBody,
-      fcmTitle,
-      refundData['orderID']
-    ),
-    db
-      .collection('notifications')
-      .doc(buyerId)
-      .collection('notifications')
-      .add({
-        body: buyerFcmBody,
-        'extra data': refundData['orderID'],
-        'time stamp': t,
-        title: fcmTitle,
-        userID: buyerId
-      }),
-
-    sendFcmNotification(
-      `vendor_${vendorId}`,
-      buyerFcmBody,
-      fcmTitle,
-      refundData['orderID']
-    ),
-    db
-      .collection('notifications')
-      .doc(vendorId)
-      .collection('notifications')
-      .add({
-        body: buyerFcmBody,
-        'extra data': refundData['orderID'],
-        'time stamp': t,
-        title: fcmTitle,
-        userID: vendorId
-      })
-  ])
-  //update vendor wallet
-  const transaction = db.runTransaction(async t => {
-    const vendorWalletRef = db.collection('wallet').doc(vendorId)
-    const vendorWalletSnapshot = await t.get(vendorWalletRef)
-
-    if (!vendorWalletSnapshot.exists) {
-      throw new Error('Vendor wallet not found')
-    }
-
-    t.update(vendorWalletRef, {
-      balance: db.FieldValue.increment(-refundAmount)
-    })
-  })
-  try {
-    await transaction
-    console.log('Transaction successfully committed!')
-    //add a transaction for vendor
-    await db.collection('wallet').doc(vendorId).collection('transactions').add({
-      type: 'debit',
-      timestamp: FieldValue.serverTimestamp(),
-      orderId: orderID,
-      amount: refundAmount
-    })
-  } catch (error) {
-    console.error('Transaction failed:', error)
-  }
-}
-
-//send admin email on become a seller request
-exports.sendEmailToAdminOnVendorCreation = firestore
-  .document('vendors/{vendorId}')
-  .onCreate(async (snapshot, context) => {
+exports.sendEmailToAdminOnVendorCreation = onDocumentCreated(
+  'vendors/{vendorId}',
+  async event => {
     try {
       // Get the newly created vendor data
-      const vendorData = snapshot.data()
+      const vendorData = event.data.data()
 
       // Send email notification to admin
-      const adminEmail = 'admin@example.com' // Replace with your admin email
+      const adminEmail = process.env.ADMIN_EMAIL // Replace with your admin email
       const subject = 'Someone Wants to Become A Seller With Us'
       const message = `Become a seller form has been Submitted\n\nDetails:\nShop Name: ${vendorData['shop name']}`
 
-      await sendEmail(ADMIN_EMAIL, subject, message)
+      await sendEmail(adminEmail, subject, message)
 
-      console.log('Email notification sent to admin successfully')
+      logger.info('Email notification sent to admin successfully')
     } catch (error) {
-      console.error('Error sending email notification:', error)
+      logger.error('Error sending email notification:', error)
     }
-  })
+  }
+)
+
+async function getOrCreateTransferRecipient(accountNumber, bankCode) {
+  // Fetch existing recipients from Paystack
+  let page = 1
+  let recipientCode = null
+  let hasMore = true
+
+  while (hasMore) {
+    const response = await paystackApi.get('/transferrecipient', {
+      params: {
+        perPage: 50,
+        page: page
+      }
+    })
+
+    const recipients = response.data.data
+
+    for (const recipient of recipients) {
+      if (
+        recipient.details.account_number === accountNumber &&
+        recipient.details.bank_code === bankCode
+      ) {
+        recipientCode = recipient.recipient_code
+        break
+      }
+    }
+
+    if (recipientCode) break
+    hasMore = response.data.meta.next
+    page++
+  }
+
+  // If recipient doesn't exist, create one
+  if (!recipientCode) {
+    const response = await paystackApi.post('/transferrecipient', {
+      type: 'nuban',
+      name: 'Refund Recipient',
+      account_number: accountNumber,
+      bank_code: bankCode,
+      currency: 'NGN'
+    })
+
+    recipientCode = response.data.data.recipient_code
+  }
+
+  return recipientCode
+}
+
+//function to pay a customer
+exports.makeTransfer = onCall(async request => {
+  const { bank_code, account_number, amount, reason } = request.data
+
+  // Input validation
+  if (!bank_code || !account_number || !amount) {
+    logger.error('The request failed due to missing body parameters')
+    return {
+      success: false,
+      message: 'Missing required parameters'
+    }
+  }
+
+  try {
+    const recipientCode = await getOrCreateTransferRecipient(
+      account_number,
+      bank_code
+    )
+
+    // Make transfer
+    const response = await paystackApi.post('/transfer', {
+      reason: reason,
+      amount: amount * 100,
+      recipient: recipientCode,
+      source: 'balance'
+    })
+
+    return {
+      success: true,
+      message: 'Transfer successful',
+      transfer: response.data.data
+    }
+  } catch (error) {
+    logger.error(`An error occurred in making the transfer: ${error}`)
+    return {
+      success: false,
+      message: 'Transfer failed',
+      error: error.message
+    }
+  }
+})
+
+// make transfers locally
+async function makeTransfersLocallyForExpiredOrders({
+  recipientCode,
+  amount,
+  reason
+}) {
+  try {
+    //make transfer
+    const response = paystackApi.post('/transfer', {
+      reason: reason,
+      amount: amount * 100,
+      recipient: recipientCode,
+      source: 'balance'
+    })
+
+    return {
+      success: true,
+      message: 'transfer successful',
+      transfer: response.data.data
+    }
+  } catch (error) {
+    logger.error(`An error occured in making the transfer ${error}`)
+  }
+}
+
+//make transfers locally
+async function makeTransfersLocally({
+  bank_code,
+  account_number,
+  amount,
+  reason
+}) {
+  const recipientCode = await getOrCreateTransferRecipient(
+    account_number,
+    bank_code
+  )
+
+  try {
+    //make transfer
+    const response = paystackApi.post('/transfer', {
+      reason: reason,
+      amount: amount * 100,
+      recipient: recipientCode,
+      source: 'balance'
+    })
+
+    return {
+      success: true,
+      message: 'transfer successful',
+      transfer: response.data.data
+    }
+  } catch (error) {
+    logger.error(`An error occured in making the transfer ${error}`)
+  }
+}
+
+//function to initialize transaction and send access code
+exports.initiateTransaction = onCall(async request => {
+  const { amount, email, callbackUrl, reference } = request.data
+
+  try {
+    const response = await axios.post(
+      'https://api.paystack.co/transaction/initialize',
+      {
+        amount: amount * 100, // amount in kobo
+        email: email,
+        callback_url: callbackUrl,
+        reference: reference
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+
+    if (!response.data.status) {
+      throw new Error(
+        `Paystack transaction initialization failed: ${response.data.message}`
+      )
+    }
+
+    return { accessCode: response.data.data.access_code }
+  } catch (error) {
+    console.error('Error initiating transaction:', error)
+    throw new Error('Failed to initiate transaction')
+  }
+})
+
+// Express route to handle Paystack callback
+app.post('/paystack/callback', async (req, res) => {
+  const transactionDetails = req.body
+
+  console.log('Transaction callback received:', transactionDetails)
+
+  if (transactionDetails.event === 'charge.success') {
+    const transactionId = transactionDetails.data.id
+    const amount = transactionDetails.data.amount
+    const email = transactionDetails.data.customer.email
+    const status = transactionDetails.data.status
+
+    // Handle successful transaction
+    console.log(
+      `Transaction ${transactionId} of amount ${amount} for email ${email} was successful.`
+    )
+
+    // Update the database or perform necessary actions
+
+    res.status(200).send('Transaction processed successfully')
+  } else {
+    console.log(`Transaction event received: ${transactionDetails.event}`)
+    res.status(200).send('Event received')
+  }
+})
+
+app.post('/makeTransfer', async (req, res) => {
+  const { bank_code, account_number, amount, reason } = req.body
+
+  // Input validation
+  if (!bank_code || !account_number || !amount) {
+    logger.error('The request failed due to missing body parameters')
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required parameters'
+    })
+  }
+
+  try {
+    const recipientCode = await getOrCreateTransferRecipient(
+      account_number,
+      bank_code
+    )
+
+    // Make transfer
+    const response = await paystackApi.post('/transfer', {
+      reason: reason,
+      amount: amount * 100,
+      recipient: recipientCode,
+      source: 'balance'
+    })
+
+    return res.status(200).json({
+      success: true,
+      message: 'Transfer successful',
+      transfer: response.data.data
+    })
+  } catch (error) {
+    logger.error(`An error occurred in making the transfer: ${error}`)
+    return res.status(500).json({
+      success: false,
+      message: 'Transfer failed',
+      error: error.message
+    })
+  }
+})
+
+// Cloud Function to deploy Express app
+exports.api = onRequest(app)

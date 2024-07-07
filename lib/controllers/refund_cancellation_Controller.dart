@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hair_main_street/models/refund_request_model.dart';
+import 'package:hair_main_street/pages/orders_stuff/payment_successful_page.dart';
 import 'package:hair_main_street/services/database.dart';
 
 class RefundCancellationController extends GetxController {
@@ -27,7 +28,15 @@ class RefundCancellationController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
-      Get.close(2);
+      Get.close(1);
+      Get.to(
+        RequestProcessingPage(
+          thingBeingProcessed: "Refund",
+          getTo: () {
+            Get.offNamedUntil('/orders', ModalRoute.withName('/orders'));
+          },
+        ),
+      );
     } else {
       isLoading.value = false;
       Get.snackbar(
@@ -68,7 +77,15 @@ class RefundCancellationController extends GetxController {
           bottom: screenHeight * 0.08,
         ),
       );
-      Get.close(2);
+      Get.close(1);
+      Get.to(
+        RequestProcessingPage(
+          thingBeingProcessed: "Cancellation",
+          getTo: () {
+            Get.offNamedUntil('/orders', ModalRoute.withName('/orders'));
+          },
+        ),
+      );
     } else {
       isLoading.value = false;
       Get.snackbar(
