@@ -3,6 +3,7 @@ import 'package:hair_main_street/models/userModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hair_main_street/services/database.dart';
 import 'package:hair_main_street/services/notification.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth auth = FirebaseAuth.instance;
@@ -164,6 +165,87 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       print(e.message);
       return e;
+    }
+  }
+
+  Future<Object?> signInWithGoogle() async {
+    print("executing this");
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+
+      final authenticatedUser = await googleUser?.authentication;
+
+      final userCredentials = GoogleAuthProvider.credential(
+        accessToken: authenticatedUser?.accessToken,
+        idToken: authenticatedUser?.idToken,
+      );
+      UserCredential result = await auth.signInWithCredential(userCredentials);
+      User? user = result.user;
+      String? token = await NotificationService().getDeviceToken();
+      var profile = await userProfileCollection.doc(user!.uid).get();
+      if (!profile.exists) {
+        await DataBaseService(uid: user.uid).createUserProfile();
+        var referralCode = DataBaseService().generateReferralCode();
+        var referralLink = DataBaseService().generateReferralLink(referralCode);
+        String? token = await NotificationService().getDeviceToken();
+        await userProfileCollection.doc(user.uid).update({
+          "token": token,
+          "referral code": referralCode,
+          "referral link": referralLink
+        });
+        return await convertToMyUserType(user);
+      } else {
+        var data = profile.data() as Map<String, dynamic>;
+        if (data["referral code"] == null && data["referral link"] == null) {
+          var referralCode = DataBaseService().generateReferralCode();
+          var referralLink =
+              DataBaseService().generateReferralLink(referralCode);
+          await userProfileCollection.doc(user.uid).update(
+              {"referral code": referralCode, "referral link": referralLink});
+        }
+        await userProfileCollection.doc(user.uid).set({
+          "token": token,
+        }, SetOptions(merge: true));
+        return await convertToMyUserType(user);
+      }
+    } on FirebaseAuthException catch (e) {
+      return e;
+    } catch (e) {
+      print("the google sign in error: $e");
+    }
+    return null;
+  }
+
+  Future linkWithGoogle() async {
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+
+      final authenticatedUser = await googleUser?.authentication;
+
+      final userCredentials = GoogleAuthProvider.credential(
+        accessToken: authenticatedUser?.accessToken,
+        idToken: authenticatedUser?.idToken,
+      );
+
+      await auth.currentUser?.linkWithCredential(userCredentials);
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case "provider-already-linked":
+          print("The provider has already been linked to the user.");
+          break;
+        case "invalid-credential":
+          print("The provider's credential is not valid.");
+          break;
+        case "credential-already-in-use":
+          print("The account corresponding to the credential already exists, "
+              "or is already linked to a Firebase User.");
+          break;
+        // See the API reference for the full list of error codes.
+        default:
+          print("Unknown error");
+      }
+    } catch (e) {
+      print(e);
     }
   }
 }

@@ -424,216 +424,442 @@ class _EditSpecificationsPageState extends State<EditSpecificationsPage> {
           ),
           centerTitle: true,
         ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Form(
-              key: formKey,
-              child: Column(
-                children: [
-                  ...List.generate(
-                    numberOfTextBox!,
-                    (index) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextInputWidgetWithoutLabel(
-                            initialValue: widget.specificationList == null ||
-                                    widget.specificationList!.isEmpty
-                                ? ""
-                                : widget.specificationList![index].title,
-                            controller: titleControllers[index],
-                            hintText: "Enter Specification Title",
-                            autovalidateMode:
-                                AutovalidateMode.onUserInteraction,
-                            validator: (value) {
-                              if (widget.specificationList != null) {
-                                return null;
-                              } else {
-                                if (titleControllers[0].text.isEmpty &&
-                                    specControllers[0].text.isEmpty) {
-                                  return "You must fill at least 1 specification";
-                                } else if (specControllers[index]
-                                        .text
-                                        .isNotEmpty !=
-                                    titleControllers[index].text.isNotEmpty) {
-                                  return "You must enter a specification for this title";
-                                }
-                                return null;
-                              }
-                            },
-                            onChanged: (value) {
-                              setState(() {
-                                titleControllers[index].text = value!;
-                                if (specifications == null ||
-                                    specifications!.isEmpty) {
-                                  final productSpec =
-                                      ProductSpecification(title: value);
-                                  specifications!.add(productSpec);
-                                } else {
-                                  specifications![index].title = value;
-                                }
-                              });
-                              return null;
-                            },
+        body: widget.specificationList == null ||
+                widget.specificationList!.isEmpty
+            ? SafeArea(
+                child: SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      children: [
+                        ...List.generate(
+                          numberOfTextBox!,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextInputWidgetWithoutLabel(
+                                  controller: titleControllers[index],
+                                  hintText: "Enter Specification Title",
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
+                                  validator: (value) {
+                                    if (widget.specificationList != null) {
+                                      return null;
+                                    } else {
+                                      if (titleControllers[0].text.isEmpty &&
+                                          specControllers[0].text.isEmpty) {
+                                        return "You must fill at least 1 specification";
+                                      } else if (specControllers[index]
+                                              .text
+                                              .isNotEmpty !=
+                                          titleControllers[index]
+                                              .text
+                                              .isNotEmpty) {
+                                        return "You must enter a specification for this title";
+                                      }
+                                      return null;
+                                    }
+                                  },
+                                  onChanged: (value) {
+                                    setState(() {
+                                      titleControllers[index].text = value!;
+                                      if (specifications == null ||
+                                          specifications!.isEmpty) {
+                                        final productSpec =
+                                            ProductSpecification(title: value);
+                                        specifications!.add(productSpec);
+                                      } else {
+                                        specifications![index].title = value;
+                                      }
+                                    });
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                TextInputWidgetWithoutLabel(
+                                  controller: specControllers[index],
+                                  hintText: "Enter Product Specification",
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
+                                  validator: (value) {
+                                    if (widget.specificationList != null) {
+                                      return null;
+                                    } else {
+                                      if (titleControllers[0].text == "" &&
+                                          specControllers[0].text == "") {
+                                        return "You must fill at least 1 specification";
+                                      } else if (specControllers[index]
+                                              .text
+                                              .isNotEmpty !=
+                                          titleControllers[index]
+                                              .text
+                                              .isNotEmpty) {
+                                        return "You must enter a title for this specification";
+                                      }
+                                      return null;
+                                    }
+                                  },
+                                  onChanged: (value) {
+                                    setState(() {
+                                      specControllers[index].text = value!;
+                                      if (specifications == null ||
+                                          specifications!.isEmpty) {
+                                        final productSpec =
+                                            ProductSpecification(
+                                                specification: value);
+                                        specifications!.add(productSpec);
+                                      } else {
+                                        specifications![index].specification =
+                                            value;
+                                      }
+                                    });
+                                    return null;
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(
-                            height: 6,
-                          ),
-                          TextInputWidgetWithoutLabel(
-                            initialValue: widget.specificationList == null ||
-                                    widget.specificationList!.isEmpty
-                                ? ""
-                                : widget
-                                    .specificationList![index].specification,
-                            controller: specControllers[index],
-                            hintText: "Enter Product Specification",
-                            autovalidateMode:
-                                AutovalidateMode.onUserInteraction,
-                            validator: (value) {
-                              if (widget.specificationList != null) {
-                                return null;
-                              } else {
-                                if (titleControllers[0].text == "" &&
-                                    specControllers[0].text == "") {
-                                  return "You must fill at least 1 specification";
-                                } else if (specControllers[index]
-                                        .text
-                                        .isNotEmpty !=
-                                    titleControllers[index].text.isNotEmpty) {
-                                  return "You must enter a title for this specification";
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  numberOfTextBox = numberOfTextBox! + 1;
+                                  specifications!.add(ProductSpecification());
+                                  titleControllers.add(TextEditingController());
+                                  specControllers.add(TextEditingController());
+                                  // print(titleControllers.length);
+                                });
+                              },
+                              child: Container(
+                                color: Colors.white,
+                                width: double.infinity,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(2),
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: const Color(0xFF673AB7)
+                                                .withOpacity(0.75)),
+                                        child: const Icon(
+                                          Icons.add,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        width: 12,
+                                      ),
+                                      Text(
+                                        "Add New Specification",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontFamily: 'Raleway',
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black.withOpacity(0.65),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                if (numberOfTextBox! > 1) {
+                                  setState(() {
+                                    numberOfTextBox = numberOfTextBox! - 1;
+                                    specifications!.removeLast();
+                                    titleControllers.removeLast();
+                                    specControllers.removeLast();
+                                    // print(titleControllers.length);
+                                  });
                                 }
-                                return null;
-                              }
-                            },
-                            onChanged: (value) {
-                              setState(() {
-                                specControllers[index].text = value!;
-                                if (specifications == null ||
-                                    specifications!.isEmpty) {
-                                  final productSpec = ProductSpecification(
-                                      specification: value);
-                                  specifications!.add(productSpec);
-                                } else {
-                                  specifications![index].specification = value;
-                                }
-                              });
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
+                              },
+                              child: Container(
+                                color: Colors.white,
+                                width: double.infinity,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(2),
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: const Color(0xFF673AB7)
+                                                .withOpacity(0.75)),
+                                        child: const Icon(
+                                          Icons.remove,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        width: 12,
+                                      ),
+                                      Text(
+                                        "Remove Specification",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontFamily: 'Raleway',
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black.withOpacity(0.65),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 12,
+                ),
+              )
+            : SafeArea(
+                child: SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      children: [
+                        ...List.generate(
+                          numberOfTextBox!,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextInputWidgetWithoutLabel(
+                                  initialValue: specifications == null ||
+                                          specifications!.isEmpty
+                                      ? ""
+                                      : specifications![index].title,
+                                  controller: titleControllers[index],
+                                  hintText: "Enter Specification Title",
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
+                                  validator: (value) {
+                                    if (widget.specificationList != null) {
+                                      return null;
+                                    } else {
+                                      if (titleControllers[0].text.isEmpty &&
+                                          specControllers[0].text.isEmpty) {
+                                        return "You must fill at least 1 specification";
+                                      } else if (specControllers[index]
+                                              .text
+                                              .isNotEmpty !=
+                                          titleControllers[index]
+                                              .text
+                                              .isNotEmpty) {
+                                        return "You must enter a specification for this title";
+                                      }
+                                      return null;
+                                    }
+                                  },
+                                  onChanged: (value) {
+                                    setState(() {
+                                      titleControllers[index].text = value!;
+                                      if (specifications == null ||
+                                          specifications!.isEmpty) {
+                                        final productSpec =
+                                            ProductSpecification(title: value);
+                                        specifications!.add(productSpec);
+                                      } else {
+                                        specifications![index].title = value;
+                                      }
+                                    });
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                TextInputWidgetWithoutLabel(
+                                  initialValue:
+                                      widget.specificationList == null ||
+                                              widget.specificationList!.isEmpty
+                                          ? ""
+                                          : widget.specificationList![index]
+                                              .specification,
+                                  controller: specControllers[index],
+                                  hintText: "Enter Product Specification",
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
+                                  validator: (value) {
+                                    if (widget.specificationList != null) {
+                                      return null;
+                                    } else {
+                                      if (titleControllers[0].text == "" &&
+                                          specControllers[0].text == "") {
+                                        return "You must fill at least 1 specification";
+                                      } else if (specControllers[index]
+                                              .text
+                                              .isNotEmpty !=
+                                          titleControllers[index]
+                                              .text
+                                              .isNotEmpty) {
+                                        return "You must enter a title for this specification";
+                                      }
+                                      return null;
+                                    }
+                                  },
+                                  onChanged: (value) {
+                                    setState(() {
+                                      specControllers[index].text = value!;
+                                      if (specifications == null ||
+                                          specifications!.isEmpty) {
+                                        final productSpec =
+                                            ProductSpecification(
+                                                specification: value);
+                                        specifications!.add(productSpec);
+                                      } else {
+                                        specifications![index].specification =
+                                            value;
+                                      }
+                                    });
+                                    return null;
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  numberOfTextBox = numberOfTextBox! + 1;
+                                  specifications!.add(ProductSpecification());
+                                  titleControllers.add(TextEditingController());
+                                  specControllers.add(TextEditingController());
+                                  // print(titleControllers.length);
+                                });
+                              },
+                              child: Container(
+                                color: Colors.white,
+                                width: double.infinity,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(2),
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: const Color(0xFF673AB7)
+                                                .withOpacity(0.75)),
+                                        child: const Icon(
+                                          Icons.add,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        width: 12,
+                                      ),
+                                      Text(
+                                        "Add New Specification",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontFamily: 'Raleway',
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black.withOpacity(0.65),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                if (numberOfTextBox! > 1) {
+                                  setState(() {
+                                    numberOfTextBox = numberOfTextBox! - 1;
+                                    specifications!.removeLast();
+                                    titleControllers.removeLast();
+                                    specControllers.removeLast();
+                                    // print(titleControllers.length);
+                                  });
+                                }
+                              },
+                              child: Container(
+                                color: Colors.white,
+                                width: double.infinity,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(2),
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: const Color(0xFF673AB7)
+                                                .withOpacity(0.75)),
+                                        child: const Icon(
+                                          Icons.remove,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        width: 12,
+                                      ),
+                                      Text(
+                                        "Remove Specification",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontFamily: 'Raleway',
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black.withOpacity(0.65),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
-                  Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            numberOfTextBox = numberOfTextBox! + 1;
-                            titleControllers.add(TextEditingController());
-                            specControllers.add(TextEditingController());
-                            // print(titleControllers.length);
-                          });
-                        },
-                        child: Container(
-                          color: Colors.white,
-                          width: double.infinity,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(2),
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: const Color(0xFF673AB7)
-                                          .withOpacity(0.75)),
-                                  child: const Icon(
-                                    Icons.add,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 12,
-                                ),
-                                Text(
-                                  "Add New Specification",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontFamily: 'Raleway',
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black.withOpacity(0.65),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          if (numberOfTextBox! > 1) {
-                            setState(() {
-                              numberOfTextBox = numberOfTextBox! - 1;
-                              titleControllers.remove(TextEditingController());
-                              specControllers.remove(TextEditingController());
-                              // print(titleControllers.length);
-                            });
-                          }
-                        },
-                        child: Container(
-                          color: Colors.white,
-                          width: double.infinity,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(2),
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: const Color(0xFF673AB7)
-                                          .withOpacity(0.75)),
-                                  child: const Icon(
-                                    Icons.remove,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 12,
-                                ),
-                                Text(
-                                  "Remove Specification",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontFamily: 'Raleway',
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black.withOpacity(0.65),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                ],
+                ),
               ),
-            ),
-          ),
-        ),
         bottomNavigationBar: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),

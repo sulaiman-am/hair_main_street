@@ -116,7 +116,7 @@ class MenuPage extends StatelessWidget {
                             if (userController.userState.value!.profilePhoto ==
                                 null)
                               CircleAvatar(
-                                radius: 48,
+                                radius: 40,
                                 backgroundColor: Colors.brown[300],
                                 child: SvgPicture.asset(
                                   "assets/Icons/user.svg",
@@ -127,23 +127,29 @@ class MenuPage extends StatelessWidget {
                               )
                             else
                               CircleAvatar(
-                                radius: 48,
+                                radius: 40,
                                 backgroundImage: NetworkImage(
                                   userController.userState.value!.profilePhoto!,
                                 ),
                               ),
                             const SizedBox(
-                              width: 16,
+                              width: 10,
                             ),
                             Expanded(
                               child: Text(
-                                userController.userState.value!.fullname ??
-                                    "Set your Full Name",
+                                userController.userState.value!.fullname !=
+                                            null ||
+                                        userController
+                                                .userState.value!.fullname! !=
+                                            ""
+                                    ? userController.userState.value!.fullname!
+                                    : "Set your Full Name",
                                 style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.black,
-                                    fontFamily: 'Lato'),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
+                                  fontFamily: 'Lato',
+                                ),
                               ),
                             ),
                           ],
@@ -220,25 +226,11 @@ class MenuPage extends StatelessWidget {
                         thickness: 1.5,
                         color: Colors.black.withOpacity(0.10),
                       ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          icon: const Iconify(
-                            MaterialSymbols.logout,
-                            size: 20,
-                            color: Color(0xFFEA4335),
-                          ),
-                          style: TextButton.styleFrom(
-                            //alignment: Alignment.centerLeft,
-                            backgroundColor: Colors.transparent,
-                            shape: const RoundedRectangleBorder(
-                              side: BorderSide(color: Colors.white, width: 2),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                            ),
-                          ),
-                          onPressed: () {
+                      SizedBox(
+                        height: 48,
+                        width: double.infinity,
+                        child: InkWell(
+                          onTap: () {
                             userController.signOut();
                             checkOutController.checkoutList.clear();
                             checkOutController.itemCheckboxState.clear();
@@ -247,14 +239,27 @@ class MenuPage extends StatelessWidget {
                             checkOutController.deletableCartItems.clear();
                             Get.offAll(() => const HomePage());
                           },
-                          label: const Text(
-                            "Sign Out",
-                            style: TextStyle(
-                              color: Color(0xFFEA4335),
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Raleway',
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              const Iconify(
+                                MaterialSymbols.logout,
+                                size: 20,
+                                color: Color(0xFFEA4335),
+                              ),
+                              SizedBox(
+                                width: screenWidth * 0.02,
+                              ),
+                              const Text(
+                                "Sign Out",
+                                style: TextStyle(
+                                  color: Color(0xFFEA4335),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Raleway',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

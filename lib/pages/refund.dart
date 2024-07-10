@@ -239,10 +239,11 @@ class _RefundPageState extends State<RefundPage> {
                   const SizedBox(height: 10.0),
                   widget.reason != null
                       ? Container(
+                          alignment: Alignment.centerLeft,
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
-                          height: 50,
+                              horizontal: 10, vertical: 5),
+                          height: 45,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(5),
                             color: Colors.white,
@@ -358,46 +359,52 @@ class _RefundPageState extends State<RefundPage> {
               ),
 
               // Text for additional details (optional)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  "Please provide additional details about your refund request (optional):",
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontFamily: 'Lato',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
+              widget.reason != null
+                  ? const SizedBox.shrink()
+                  : Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            "Please provide additional details about your refund request (optional):",
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontFamily: 'Lato',
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
 
-              TextInputWidgetWithoutLabel(
-                controller: detailsController,
-                hintText: "Add extra details (optional)",
-                onChanged: (value) {
-                  setState(() {
-                    if (value!.isEmpty) {
-                      detailsController.text = "";
-                    }
-                    detailsController.text = value;
-                  });
-                  return null;
-                },
-                maxLines: 5,
-                minLines: 3,
-                // decoration: const InputDecoration(
-                //   filled: true,
-                //   fillColor: Colors.white,
-                //   hintText: "Added Details",
-                //   border: OutlineInputBorder(
-                //     borderSide: BorderSide(color: Colors.black, width: 1),
-                //     borderRadius: BorderRadius.all(
-                //       Radius.circular(10),
-                //     ),
-                //   ),
-                // ),
-              ),
+                        TextInputWidgetWithoutLabel(
+                          controller: detailsController,
+                          hintText: "Add extra details (optional)",
+                          onChanged: (value) {
+                            setState(() {
+                              if (value!.isEmpty) {
+                                detailsController.text = "";
+                              }
+                              detailsController.text = value;
+                            });
+                            return null;
+                          },
+                          maxLines: 5,
+                          minLines: 3,
+                          // decoration: const InputDecoration(
+                          //   filled: true,
+                          //   fillColor: Colors.white,
+                          //   hintText: "Added Details",
+                          //   border: OutlineInputBorder(
+                          //     borderSide: BorderSide(color: Colors.black, width: 1),
+                          //     borderRadius: BorderRadius.all(
+                          //       Radius.circular(10),
+                          //     ),
+                          //   ),
+                          // ),
+                        ),
 
-              // Add a TextField or other widgets here for additional details
+                        // Add a TextField or other widgets here for additional details
+                      ],
+                    ),
               const SizedBox(
                 height: 12,
               ),

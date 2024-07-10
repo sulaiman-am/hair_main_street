@@ -385,8 +385,15 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               SizedBox(
                 width: screenWidth * 0.85,
                 child: TextButton(
-                  onPressed: () {
-                    userController.showMyToast("To be implemented Soon");
+                  onPressed: () async {
+                    userController.isLoading.value = true;
+                    if (userController.isLoading.isTrue) {
+                      Get.dialog(
+                        const LoadingWidget(),
+                        barrierDismissible: true,
+                      );
+                    }
+                    await userController.signInWithGoogle();
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.all(10),

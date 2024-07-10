@@ -171,15 +171,17 @@ class DatabaseOrderResponse {
       this.vendorId});
 
   factory DatabaseOrderResponse.fromJson(Map<String, dynamic> json) {
+    // print(
+    //     "${Address.fromJson(json["shipping address"]).addressID} and the type is : ${json["shipping address"].runtimeType}");
     return DatabaseOrderResponse(
       orderId: json["orderID"],
       buyerId: json["buyerID"],
       vendorId: json["vendorID"],
       totalPrice: json["totalPrice"],
       recipientCode: json['recipient code'],
-      // shippingAddress: json["shipping address"] != null
-      //     ? json['shipping address'].map((element) => Address.fromJson(element))
-      //     : null,
+      shippingAddress: json["shipping address"] != null
+          ? Address.fromJson(json["shipping address"])
+          : null,
       orderStatus: json["order status"],
       createdAt: json["created at"],
       refundStatus: json['refund status'],

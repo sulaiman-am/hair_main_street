@@ -206,21 +206,27 @@ class _NewFeedPageState extends State<NewFeedPage>
                                                 .productMap["All"]!.length;
 
                                             // Check if the list length is greater than itemCount
-                                            if (listLength > itemCount!) {
-                                              // Increment itemCount by 2
-                                              itemCount = itemCount! + 2;
-                                            } else if (listLength ==
-                                                itemCount! + 1) {
-                                              // If the list length is equal to itemCount plus 1, increment itemCount by 1
-                                              itemCount = itemCount! + 1;
-                                            }
+                                            if (itemCount! < listLength) {
+                                              // Calculate the difference between listLength and current item count
+                                              final difference =
+                                                  listLength - itemCount!;
 
-                                            // Check if itemCount has reached a value that makes the button unresponsive
-                                            if (itemCount! >= listLength) {
-                                              // Disable the button or set a flag to make it unresponsive
-                                              // This is just an example. You'll need to implement the actual logic to disable the button.
-                                              //isButtonDisabled = true;
+                                              // Check if the difference is even and divisible by 2
+                                              if (difference % 2 == 0) {
+                                                // Add 2 elements if the difference is even
+                                                itemCount = itemCount! + 2;
+                                              } else {
+                                                // Add 1 element if the difference is odd
+                                                itemCount = itemCount! + 1;
+                                              }
+                                            } else {
+                                              // List is already full, return it without changes
+                                              itemCount;
+                                              productController.showMyToast(
+                                                  "Thats all the products for now");
                                             }
+                                            // Check if itemCount has reached a value that makes the button unresponsive
+                                            // if (itemCount! >= listLength) {}
                                           });
                                         },
                                         style: TextButton.styleFrom(

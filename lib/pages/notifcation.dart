@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -261,15 +262,20 @@ class NotificationsPage extends StatelessWidget {
                                                         ),
                                                       );
                                                     },
-                                                    child: const Text(
-                                                      "Leave Review",
-                                                      style: TextStyle(
-                                                        color:
-                                                            Color(0xFF673AB7),
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        fontFamily: 'Lato',
+                                                    child: const Padding(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                              vertical: 6),
+                                                      child: Text(
+                                                        "Leave Review",
+                                                        style: TextStyle(
+                                                          color:
+                                                              Color(0xFF673AB7),
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontFamily: 'Lato',
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -287,10 +293,10 @@ class NotificationsPage extends StatelessWidget {
                                                                           index]
                                                                       .extraData![
                                                                   "orderID"]!);
-                                                      String productID = order
-                                                          .orderItem!
-                                                          .first
-                                                          .productId!;
+                                                      // String productID = order
+                                                      //     .orderItem!
+                                                      //     .first
+                                                      //     .productId!;
                                                       Get.to(
                                                         () => RefundPage(
                                                           orderId: notification[
@@ -304,15 +310,20 @@ class NotificationsPage extends StatelessWidget {
                                                         ),
                                                       );
                                                     },
-                                                    child: const Text(
-                                                      "Request Refund",
-                                                      style: TextStyle(
-                                                        color:
-                                                            Color(0xFF673AB7),
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        fontFamily: 'Lato',
+                                                    child: const Padding(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                              vertical: 6),
+                                                      child: Text(
+                                                        "Request Refund",
+                                                        style: TextStyle(
+                                                          color:
+                                                              Color(0xFF673AB7),
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontFamily: 'Lato',
+                                                        ),
                                                       ),
                                                     ),
                                                   ),

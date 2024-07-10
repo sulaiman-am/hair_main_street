@@ -16,11 +16,11 @@ import 'package:recase/recase.dart';
 class CartCheckoutConfirmationPage extends StatefulWidget {
   final List<CheckOutTickBoxModel> products;
   final List<Map<String, dynamic>> productStates;
-  num? payableAmount;
+  final num? payableAmount;
   final num totalPrice;
   final Address selectedAddress;
-  CartCheckoutConfirmationPage({
-    this.payableAmount,
+  const CartCheckoutConfirmationPage({
+    required this.payableAmount,
     required this.productStates,
     required this.totalPrice,
     required this.products,
@@ -40,10 +40,12 @@ class _CartCheckoutConfirmationPageState
   ProductController productController = Get.find<ProductController>();
   CheckOutController checkOutController = Get.find<CheckOutController>();
   String? publicKey = dotenv.env["PAYSTACK_PUBLIC_KEY"];
+  num? payableAmount;
 
   @override
   void initState() {
     plugin.initialize(publicKey: publicKey!);
+    payableAmount = widget.payableAmount;
     super.initState();
   }
 
@@ -180,7 +182,7 @@ class _CartCheckoutConfirmationPageState
       canPop: true,
       onPopInvoked: (bool didPop) async {
         if (didPop) {
-          widget.payableAmount = 0.0;
+          payableAmount = 0.0;
         }
       },
       child: Scaffold(
@@ -288,55 +290,116 @@ class _CartCheckoutConfirmationPageState
                           width: 8,
                         ),
                         Expanded(
-                          child: SizedBox(
-                            height: 140,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${theProduct.name}',
-                                  maxLines: 1,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'Lato',
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${theProduct.name}',
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Lato',
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Visibility(
+                                visible:
+                                    widget.products[index].optionName != null &&
+                                        widget.products[index].optionName!
+                                            .isNotEmpty,
+                                child: Container(
+                                  padding: EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.black.withOpacity(0.5),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${widget.products[index].optionName}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Lato',
+                                      color: Colors.black.withOpacity(0.65),
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'NGN${formatCurrency(widget.products[index].price.toString())}', // Replace with actual price
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF673AB7),
-                                        fontFamily: 'Lato',
-                                      ),
+                              ),
+                              widget.products[index].optionName != null &&
+                                      widget.products[index].optionName!
+                                          .isNotEmpty
+                                  ? const SizedBox(height: 8)
+                                  : const SizedBox.shrink(),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'NGN${formatCurrency(widget.products[index].price.toString())}', // Replace with actual price
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF673AB7),
+                                      fontFamily: 'Lato',
                                     ),
-                                    Text(
-                                      'Qty: ${widget.products[index].quantity}pcs', // Replace with actual quantity
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        fontFamily: 'Lato',
-                                        color: Colors.black.withOpacity(0.65),
-                                      ),
+                                  ),
+                                  Text(
+                                    'Qty: ${widget.products[index].quantity}pcs', // Replace with actual quantity
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Lato',
+                                      color: Colors.black.withOpacity(0.65),
                                     ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 6,
-                                ),
-                                Row(
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Payment Method:',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black,
+                                      fontFamily: 'Lato',
+                                    ),
+                                  ),
+                                  Text(
+                                    widget.productStates[index]["paymentMethod"]
+                                        .toString()
+                                        .titleCase,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black,
+                                      fontFamily: 'Lato',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              Visibility(
+                                visible: widget.productStates[index]
+                                        ["paymentMethod"] ==
+                                    "installment",
+                                child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text(
-                                      'Payment Method:',
+                                      'No of Installments:',
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
@@ -346,7 +409,7 @@ class _CartCheckoutConfirmationPageState
                                     ),
                                     Text(
                                       widget.productStates[index]
-                                              ["paymentMethod"]
+                                              ["numberOfInstallments"]
                                           .toString()
                                           .titleCase,
                                       style: const TextStyle(
@@ -358,75 +421,40 @@ class _CartCheckoutConfirmationPageState
                                     ),
                                   ],
                                 ),
-                                const SizedBox(
-                                  height: 6,
-                                ),
-                                Visibility(
-                                  visible: widget.productStates[index]
-                                          ["paymentMethod"] ==
-                                      "installment",
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text(
-                                        'No of Installments:',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black,
-                                          fontFamily: 'Lato',
-                                        ),
+                              ),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              Visibility(
+                                visible: widget.productStates[index]
+                                        ["paymentMethod"] ==
+                                    "installment",
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'Installment Amount: ',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color.fromRGBO(0, 0, 0, 1),
+                                        fontFamily: 'Lato',
                                       ),
-                                      Text(
-                                        widget.productStates[index]
-                                                ["numberOfInstallments"]
-                                            .toString()
-                                            .titleCase,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black,
-                                          fontFamily: 'Lato',
-                                        ),
+                                    ),
+                                    Text(
+                                      'NGN${formatCurrency(widget.productStates[index]["installmentAmountPaid"].toString())}',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
+                                        fontFamily: 'Lato',
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(
-                                  height: 6,
-                                ),
-                                Visibility(
-                                  visible: widget.productStates[index]
-                                          ["paymentMethod"] ==
-                                      "installment",
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text(
-                                        'Installment Amount: ',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color.fromRGBO(0, 0, 0, 1),
-                                          fontFamily: 'Lato',
-                                        ),
-                                      ),
-                                      Text(
-                                        'NGN${formatCurrency(widget.productStates[index]["installmentAmountPaid"].toString())}',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black,
-                                          fontFamily: 'Lato',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

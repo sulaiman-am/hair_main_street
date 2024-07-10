@@ -391,8 +391,8 @@ class _ProductPageState extends State<ProductPage> {
         elevation: 0,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
-            topRight: Radius.circular(5),
-            topLeft: Radius.circular(5),
+            topRight: Radius.circular(12),
+            topLeft: Radius.circular(12),
           ),
         ),
         Card(
@@ -482,6 +482,8 @@ class _ProductPageState extends State<ProductPage> {
       },
       child: Scaffold(
         appBar: AppBar(
+          elevation: 0,
+          scrolledUnderElevation: 0,
           leading: IconButton(
             onPressed: () {
               Get.back();
@@ -1180,7 +1182,7 @@ class _ProductPageState extends State<ProductPage> {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 8),
+                                vertical: 10, horizontal: 10),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
                               color: Color(0xFFF5F5F5),
@@ -1194,12 +1196,12 @@ class _ProductPageState extends State<ProductPage> {
                                   style: TextStyle(
                                     fontFamily: 'Lato',
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 20,
+                                    fontSize: 18,
                                     color: Colors.black,
                                   ),
                                 ),
                                 const SizedBox(
-                                  height: 6,
+                                  height: 2,
                                 ),
                                 SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,

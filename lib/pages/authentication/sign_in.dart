@@ -274,7 +274,9 @@ class _SignInState extends State<SignIn> {
                   SizedBox(
                     width: screenWidth * 0.85,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        userController.showMyToast("Under development");
+                      },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.all(10),
                         backgroundColor:
@@ -312,7 +314,16 @@ class _SignInState extends State<SignIn> {
                   SizedBox(
                     width: screenWidth * 0.85,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        userController.isLoading.value = true;
+                        if (userController.isLoading.isTrue) {
+                          Get.dialog(
+                            const LoadingWidget(),
+                            barrierDismissible: true,
+                          );
+                        }
+                        await userController.signInWithGoogle();
+                      },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.all(10),
                         backgroundColor:

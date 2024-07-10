@@ -131,7 +131,7 @@ class DataBaseService {
         "uid": uid,
         'fullname': "",
         'phonenumber': "",
-        'address': "",
+        'address': null,
         'isVendor': false,
         'isBuyer': true,
         'isAdmin': false,

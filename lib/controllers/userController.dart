@@ -472,6 +472,55 @@ class UserController extends GetxController {
     }
   }
 
+  //sign in with google
+  Future signInWithGoogle() async {
+    var response = await AuthService().signInWithGoogle();
+    if (response is MyUser) {
+      userState.value = response;
+      isLoading.value = false;
+      Get.snackbar(
+        "Success",
+        "User Signed In",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.green[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      error.value = "";
+      Get.offAll(() => HomePage());
+      Get.find<BottomNavController>().changeTabIndex(0);
+    } else if (response is FirebaseAuthException) {
+      isLoading.value = false;
+      Get.close(1);
+      Get.snackbar(
+        "Error",
+        response.code.toString().split("_").join(" ").titleCase,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 1, milliseconds: 800),
+        colorText: Colors.black,
+        forwardAnimationCurve: Curves.decelerate,
+        reverseAnimationCurve: Curves.easeOut,
+        backgroundColor: Colors.red[200],
+        margin: EdgeInsets.only(
+          left: 12,
+          right: 12,
+          bottom: screenHeight * 0.08,
+        ),
+      );
+      error.value = response.code.toString().split("_").join(" ");
+      return null;
+    } else if (response == null) {
+      isLoading.value = false;
+      Get.close(1);
+    }
+  }
+
   void getBuyerDetails(String userID) async {
     buyerDetails.value = await DataBaseService().getBuyerDetails(userID);
     update();
